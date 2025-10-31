@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WiFi Portal - Get Connected</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1 class="logo">🌐 WiFi Portal</h1>
+            <p class="tagline">Connect in Seconds • Stay Connected Longer</p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Plans Section -->
+            <section class="plans-section" id="plansSection">
+                <!-- Instructions Card -->
+                <div class="instructions-card">
+                    <h2 class="instructions-title">🚀 How To Get Connected</h2>
+                    <ol class="instructions-list">
+                        <li>Select your preferred plan below</li>
+                        <li>Enter your mobile number</li>
+                        <li>Click "Continue to Payment"</li>
+                        <li>Enter M-Pesa PIN when prompted (wait 30 seconds for confirmation)</li>
+                    </ol>
+                    <div class="support-contact">
+                        <strong>Need Help?</strong><br>
+                        📞 Call Support: <a href="tel:1-800-HOTSPOT">1-800-HOTSPOT</a><br>
+                        <span style="font-size: 0.875rem; opacity: 0.8;">Available 24/7</span>
+                    </div>
+                </div>
+
+                <h2 class="section-title">Select Your Plan</h2>
+                <div class="plans-grid" id="plansGrid">
+                    <!-- Plans will be dynamically loaded here -->
+                </div>
+            </section>
+
+            <!-- Payment Section (Hidden Initially) -->
+            <section class="payment-section hidden" id="paymentSection">
+                <button class="back-button" id="backButton">← Change Plan</button>
+                
+                <div class="selected-plan-info" id="selectedPlanInfo">
+                    <!-- Selected plan details will appear here -->
+                </div>
+
+                <form class="payment-form" id="paymentForm">
+                    <h2 class="form-title">📱 Complete Your Purchase</h2>
+                    
+                    <div class="form-group">
+                        <label for="phoneNumber" class="form-label">Mobile Number</label>
+                        <input 
+                            type="tel" 
+                            id="phoneNumber" 
+                            name="phoneNumber" 
+                            class="form-input" 
+                            placeholder="07XXXXXXXX or 01XXXXXXXX"
+                            required
+                            autocomplete="tel"
+                            maxlength="10"
+                            pattern="0[17][0-9]{8}"
+                        >
+                        <p class="input-hint">Enter 10 digits starting with 07 or 01</p>
+                    </div>
+
+                    <button type="submit" class="submit-button" id="submitButton">
+                        <span class="button-text">Continue to Payment</span>
+                        <span class="button-loader hidden">Processing...</span>
+                    </button>
+                </form>
+            </section>
+
+            <!-- Success Message (Hidden Initially) -->
+            <section class="success-section hidden" id="successSection">
+                <div class="success-card">
+                    <div class="success-icon">✓</div>
+                    <h2 class="success-title">You're All Set!</h2>
+                    <p class="success-message" id="successMessage"></p>
+                    <button class="primary-button" id="newPurchaseButton">Purchase Another Plan</button>
+                </div>
+            </section>
+
+            <!-- Error Message (Hidden Initially) -->
+            <section class="error-section hidden" id="errorSection">
+                <div class="error-card">
+                    <div class="error-icon">✕</div>
+                    <h2 class="error-title">Oops! Something Went Wrong</h2>
+                    <p class="error-message" id="errorMessage"></p>
+                    <button class="primary-button" id="retryButton">Try Again</button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Questions? We're here to help • Contact: 1-800-HOTSPOT</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,658 @@
+/* ========================================
+   Global Styles & Reset
+   ======================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    /* Color Palette - High Contrast & Vibrant */
+    --primary-color: #2563eb;
+    --primary-hover: #1d4ed8;
+    --success-color: #22c55e;
+    --success-hover: #16a34a;
+    --error-color: #ef4444;
+    --accent-color: #f59e0b;
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --text-light: #9ca3af;
+    --background: #0f172a;
+    --background-light: #1e293b;
+    --white: #ffffff;
+    --border: #334155;
+    --border-bright: #3b82f6;
+    --shadow: rgba(0, 0, 0, 0.3);
+    --overlay-bg: rgba(30, 41, 59, 0.95);
+    
+    /* Spacing */
+    --spacing-xs: 0.5rem;
+    --spacing-sm: 1rem;
+    --spacing-md: 1.5rem;
+    --spacing-lg: 2rem;
+    --spacing-xl: 3rem;
+    
+    /* Border Radius */
+    --radius-sm: 0.5rem;
+    --radius-md: 0.75rem;
+    --radius-lg: 1rem;
+    
+    /* Font Sizes - Large for Easy Reading */
+    --font-xs: 0.875rem;
+    --font-sm: 1rem;
+    --font-md: 1.125rem;
+    --font-lg: 1.5rem;
+    --font-xl: 2rem;
+    --font-2xl: 2.5rem;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--background);
+    color: var(--white);
+    line-height: 1.6;
+    font-size: var(--font-md);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ========================================
+   Container & Layout
+   ======================================== */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ========================================
+   Header
+   ======================================== */
+.header {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: var(--white);
+    padding: var(--spacing-md) var(--spacing-md);
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+}
+
+.logo {
+    font-size: var(--font-xl);
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tagline {
+    font-size: var(--font-sm);
+    opacity: 0.95;
+    font-weight: 400;
+}
+
+/* ========================================
+   Main Content
+   ======================================== */
+.main-content {
+    flex: 1;
+    padding: var(--spacing-md);
+}
+
+/* ========================================
+   Instructions Card
+   ======================================== */
+.instructions-card {
+    background: var(--overlay-bg);
+    backdrop-filter: blur(10px);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+    box-shadow: 0 8px 16px var(--shadow);
+}
+
+.instructions-title {
+    font-size: var(--font-lg);
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: var(--spacing-md);
+    text-align: center;
+}
+
+.instructions-list {
+    list-style: decimal;
+    padding-left: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+    color: var(--white);
+}
+
+.instructions-list li {
+    padding: var(--spacing-xs) 0;
+    font-size: var(--font-sm);
+    line-height: 1.6;
+}
+
+.support-contact {
+    text-align: center;
+    padding: var(--spacing-md);
+    background: var(--background-light);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-sm);
+    color: var(--white);
+    margin-top: var(--spacing-md);
+}
+
+.support-contact a {
+    color: var(--success-color);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: var(--font-md);
+}
+
+.support-contact a:hover {
+    text-decoration: underline;
+}
+
+.section-title {
+    font-size: var(--font-lg);
+    text-align: center;
+    margin-bottom: var(--spacing-md);
+    color: var(--white);
+    font-weight: 600;
+}
+
+/* ========================================
+   Plans Grid - Mobile First
+   ======================================== */
+.plans-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-lg);
+}
+
+/* Plan Card - Simplified & Compact */
+.plan-card {
+    background: var(--white);
+    border: 3px solid var(--border-bright);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px var(--shadow);
+    text-align: center;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Subtle pulse animation for popular plans */
+.plan-card.popular::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: var(--radius-md);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+    animation: pulse-border 2s infinite;
+    pointer-events: none;
+}
+
+@keyframes pulse-border {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
+    }
+}
+
+.plan-card:hover,
+.plan-card:focus {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+    border-color: var(--success-color);
+}
+
+.plan-card:active {
+    transform: translateY(0);
+}
+
+.plan-duration {
+    font-size: var(--font-lg);
+    font-weight: 700;
+    color: var(--success-color);
+    margin-bottom: var(--spacing-xs);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.plan-price {
+    font-size: var(--font-xl);
+    font-weight: 800;
+    color: var(--error-color);
+    margin-bottom: var(--spacing-xs);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    line-height: 1.2;
+}
+
+.plan-price .currency-code {
+    font-size: 0.5em;
+    font-weight: 600;
+    vertical-align: top;
+    opacity: 0.8;
+    margin-right: 2px;
+}
+
+.plan-speed {
+    font-size: var(--font-md);
+    color: var(--text-primary);
+    font-weight: 500;
+    opacity: 0.8;
+}
+
+/* UX Enhancement: Visual feedback when card is pressed */
+.plan-card:active {
+    transform: scale(0.98);
+    box-shadow: 0 2px 4px var(--shadow);
+}
+
+/* Popular/Featured Plans - Enhanced visibility */
+.plan-card.popular {
+    border-color: var(--success-color);
+    border-width: 4px;
+    background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+}
+
+.plan-card.popular::before {
+    content: '⭐ RECOMMENDED';
+    position: absolute;
+    top: 8px;
+    right: -30px;
+    background: var(--success-color);
+    color: var(--white);
+    padding: 4px 40px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    transform: rotate(45deg);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    letter-spacing: 0.5px;
+}
+
+.plan-card.popular:hover {
+    border-color: var(--success-color);
+    box-shadow: 0 8px 20px rgba(34, 197, 94, 0.4);
+}
+
+/* ========================================
+   Payment Section
+   ======================================== */
+.payment-section {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.back-button {
+    background: transparent;
+    border: none;
+    color: var(--success-color);
+    font-size: var(--font-md);
+    font-weight: 600;
+    cursor: pointer;
+    padding: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    transition: transform 0.2s ease;
+    min-height: 48px;
+}
+
+.back-button:hover {
+    transform: translateX(-4px);
+    color: var(--white);
+}
+
+.selected-plan-info {
+    background: var(--white);
+    border: 3px solid var(--border-bright);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+    box-shadow: 0 4px 8px var(--shadow);
+    text-align: center;
+}
+
+.selected-plan-name {
+    font-size: var(--font-lg);
+    font-weight: 700;
+    margin-bottom: var(--spacing-xs);
+    color: var(--success-color);
+}
+
+.selected-plan-price {
+    font-size: var(--font-xl);
+    font-weight: 800;
+    color: var(--error-color);
+    margin-bottom: var(--spacing-xs);
+    line-height: 1.2;
+}
+
+.selected-plan-price .currency-code {
+    font-size: 0.5em;
+    font-weight: 600;
+    vertical-align: top;
+    opacity: 0.8;
+    margin-right: 2px;
+}
+
+.selected-plan-speed {
+    font-size: var(--font-md);
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+/* Payment Form */
+.payment-form {
+    background: var(--overlay-bg);
+    backdrop-filter: blur(10px);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+    box-shadow: 0 4px 12px var(--shadow);
+}
+
+.form-title {
+    font-size: var(--font-lg);
+    margin-bottom: var(--spacing-lg);
+    text-align: center;
+    color: var(--white);
+}
+
+.form-group {
+    margin-bottom: var(--spacing-lg);
+}
+
+.form-label {
+    display: block;
+    font-size: var(--font-md);
+    font-weight: 600;
+    margin-bottom: var(--spacing-sm);
+    color: var(--white);
+}
+
+.form-input {
+    width: 100%;
+    padding: var(--spacing-md);
+    font-size: var(--font-lg);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    transition: border-color 0.3s ease;
+    min-height: 60px;
+    background: var(--white);
+    color: var(--text-primary);
+}
+
+.form-input::placeholder {
+    color: var(--text-light);
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--success-color);
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+}
+
+.input-hint {
+    margin-top: var(--spacing-xs);
+    font-size: var(--font-xs);
+    color: var(--text-light);
+    font-style: italic;
+}
+
+.submit-button {
+    width: 100%;
+    padding: var(--spacing-md);
+    background: var(--success-color);
+    color: var(--white);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: var(--font-lg);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-height: 60px;
+    position: relative;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.submit-button:hover {
+    background: var(--success-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(34, 197, 94, 0.4);
+}
+
+.submit-button:active {
+    transform: translateY(0);
+}
+
+.submit-button:disabled {
+    background: var(--text-secondary);
+    cursor: not-allowed;
+    transform: none;
+}
+
+.button-loader {
+    display: inline-block;
+}
+
+/* ========================================
+   Success & Error Sections
+   ======================================== */
+.success-section,
+.error-section {
+    max-width: 500px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.success-card,
+.error-card {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    box-shadow: 0 4px 16px var(--shadow);
+}
+
+.success-icon,
+.error-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-2xl);
+    font-weight: bold;
+    margin: 0 auto var(--spacing-lg);
+}
+
+.success-icon {
+    background: var(--success-color);
+    color: var(--white);
+}
+
+.error-icon {
+    background: var(--error-color);
+    color: var(--white);
+}
+
+.success-title,
+.error-title {
+    font-size: var(--font-xl);
+    font-weight: 700;
+    margin-bottom: var(--spacing-md);
+}
+
+.success-title {
+    color: var(--success-color);
+}
+
+.error-title {
+    color: var(--error-color);
+}
+
+.success-message,
+.error-message {
+    font-size: var(--font-md);
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-lg);
+    line-height: 1.8;
+}
+
+.primary-button {
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: var(--primary-color);
+    color: var(--white);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: var(--font-md);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    min-height: 56px; /* Large touch target */
+    min-width: 200px;
+}
+
+.primary-button:hover {
+    background: var(--primary-hover);
+}
+
+/* ========================================
+   Footer
+   ======================================== */
+.footer {
+    background: var(--background-light);
+    text-align: center;
+    padding: var(--spacing-md);
+    color: var(--text-light);
+    border-top: 1px solid var(--border);
+    font-size: var(--font-sm);
+}
+
+/* ========================================
+   Utility Classes
+   ======================================== */
+.hidden {
+    display: none !important;
+}
+
+/* ========================================
+   Responsive Design - Tablet & Desktop
+   ======================================== */
+
+/* Tablet (2 columns) */
+@media (min-width: 640px) {
+    .plans-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-md);
+    }
+    
+    .main-content {
+        padding: var(--spacing-lg);
+    }
+    
+    .instructions-card {
+        margin-bottom: var(--spacing-xl);
+    }
+}
+
+/* Desktop (3 columns) */
+@media (min-width: 1024px) {
+    .plans-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .container {
+        max-width: 1200px;
+    }
+    
+    .main-content {
+        padding: var(--spacing-xl);
+    }
+    
+    /* Hover effects are more prominent on desktop */
+    .plan-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px var(--shadow);
+    }
+}
+
+/* Extra large screens (4+ columns for many plans) */
+@media (min-width: 1400px) {
+    .plans-grid {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+}
+
+/* ========================================
+   Loading Animation
+   ======================================== */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.button-loader::after {
+    content: "";
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-left: var(--spacing-xs);
+    border: 2px solid var(--white);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+/* ========================================
+   Accessibility Improvements
+   ======================================== */
+.plan-card:focus-visible,
+.plan-button:focus-visible,
+.form-input:focus-visible,
+.submit-button:focus-visible,
+.primary-button:focus-visible,
+.back-button:focus-visible {
+    outline: 3px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* High contrast for better readability */
+@media (prefers-contrast: high) {
+    :root {
+        --border: #000000;
+        --text-secondary: #000000;
+    }
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
