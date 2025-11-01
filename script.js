@@ -5,6 +5,10 @@ const API_BASE_URL = 'https://isp.bitwavetechnologies.com/api';
 const PLANS_ENDPOINT = `${API_BASE_URL}/plans?user_id=1`;
 const PAYMENT_ENDPOINT = `${API_BASE_URL}/hotspot/register-and-pay`;
 
+// Router ID - Replace with your actual router ID from backend
+// This is the database ID of the router, not the MikroTik identity string
+const ROUTER_ID = 2; // TODO: Update this with your actual router ID from backend
+
 // TEMPORARY: Use CORS proxy for development/testing ONLY if backend CORS is not configured
 // Remove this in production once backend adds proper CORS headers!
 const USE_CORS_PROXY = false; // Set to true only for local testing
@@ -383,7 +387,7 @@ async function processPayment(phoneNumber, plan) {
     
     console.log('📦 Plan:', plan);
     console.log('🔧 MAC:', mikrotikParams.mac);
-    console.log('🌐 IP:', mikrotikParams.ip);
+    console.log('🆔 Router ID:', ROUTER_ID);
     
     try {
         // Add timeout to payment request (60 seconds for M-Pesa processing)
@@ -391,13 +395,11 @@ async function processPayment(phoneNumber, plan) {
         const timeoutId = setTimeout(() => controller.abort(), 60000);
         
         const requestBody = {
-            phone_number: formattedPhone,  // Use formatted phone number
+            phone: formattedPhone,
             plan_id: plan.id,
             mac_address: mikrotikParams.mac,
-            ip_address: mikrotikParams.ip,
-            gateway: mikrotikParams.gw,
-            router: mikrotikParams.router,
-            destination: mikrotikParams.dst
+            router_id: ROUTER_ID,  // Database ID of router (number)
+            payment_method: "mobile_money"
         };
         
         console.log('📤 Sending payment request:', requestBody);
@@ -553,8 +555,8 @@ console.log('  - Payment:', PAYMENT_ENDPOINT);
 console.log('💡 Ready to connect!');
 
 // Validate MikroTik parameters on load
-if (!mikrotikParams.mac || !mikrotikParams.ip) {
-    console.warn('⚠️ Warning: Missing MikroTik parameters (mac/ip). Payment may fail.');
+if (!mikrotikParams.mac) {
+    console.warn('⚠️ Warning: Missing MAC address from MikroTik. Payment may fail.');
     console.log('💡 This page should be accessed via MikroTik hotspot redirect.');
 }
 
