@@ -1,48 +1,35 @@
 // ========================================
-// DEMO DATA - Replace with actual API call
+// API CONFIGURATION
 // ========================================
-const demoPlans = [
-    {
-        id: 3,
-        duration: "24 Hours",
-        price: "KSH 30/-",
-        speed: "MAX 10mbps",
-        popular: true
-    },
-    {
-        id: 1,
-        duration: "1 Hour",
-        price: "KSH 10/-",
-        speed: "MAX 5mbps",
-        popular: false
-    },
-    {
-        id: 2,
-        duration: "4 Hours",
-        price: "KSH 20/-",
-        speed: "MAX 5mbps",
-        popular: false
-    },
-    {
-        id: 4,
-        duration: "7 Days",
-        price: "KSH 100/-",
-        speed: "MAX 10mbps",
-        popular: false
-    },
-    {
-        id: 5,
-        duration: "30 Days",
-        price: "KSH 300/-",
-        speed: "MAX 20mbps",
-        popular: false
-    }
-];
+const API_BASE_URL = 'https://isp.bitwavetechnologies.com/api';
+const PLANS_ENDPOINT = `${API_BASE_URL}/plans?user_id=1`;
+const PAYMENT_ENDPOINT = `${API_BASE_URL}/hotspot/register-and-pay`;
+
+// ========================================
+// EXTRACT MIKROTIK URL PARAMETERS
+// ========================================
+function getUrlParams() {
+    const params = new URLSearchParams(window.location.search);
+    return {
+        mac: params.get('mac') || '',
+        ip: params.get('ip') || '',
+        dst: params.get('dst') || '',
+        gw: params.get('gw') || '',
+        router: params.get('router') || ''
+    };
+}
+
+// Store MikroTik parameters globally
+const mikrotikParams = getUrlParams();
+
+// Log extracted parameters for debugging
+console.log('🔧 MikroTik Parameters:', mikrotikParams);
 
 // ========================================
 // STATE MANAGEMENT
 // ========================================
 let selectedPlan = null;
+let allPlans = [];
 
 // ========================================
 // DOM ELEMENTS
@@ -76,30 +63,83 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ========================================
-// LOAD PLANS FROM "BACKEND"
+// LOAD PLANS FROM API
 // ========================================
 async function loadPlans() {
     try {
-        // Simulate API call delay
-        await simulateDelay(300);
+        console.log('📡 Fetching plans from API...');
         
-        // In production, replace with actual API call:
-        // const response = await fetch('YOUR_BACKEND_API/plans');
-        // const plans = await response.json();
+        const response = await fetch(PLANS_ENDPOINT);
         
-        const plans = demoPlans;
+        if (!response.ok) {
+            throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        }
+        
+        const apiPlans = await response.json();
+        console.log('✅ Plans loaded:', apiPlans);
+        
+        // Transform API data to UI format
+        const plans = transformPlansData(apiPlans);
+        allPlans = plans; // Store for later use
+        
         renderPlans(plans);
     } catch (error) {
-        console.error('Error loading plans:', error);
+        console.error('❌ Error loading plans:', error);
         plansGrid.innerHTML = `
             <div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: var(--error-color);">
                 <p style="font-size: 1.125rem; margin-bottom: 1rem;">Unable to load available plans</p>
+                <p style="font-size: 0.875rem; opacity: 0.8; margin-bottom: 1rem;">${error.message}</p>
                 <button onclick="loadPlans()" style="padding: 1rem 2rem; background: var(--primary-color); color: white; border: none; border-radius: 0.5rem; cursor: pointer; font-size: 1rem;">
                     Try Again
                 </button>
             </div>
         `;
     }
+}
+
+// ========================================
+// TRANSFORM API PLANS DATA
+// ========================================
+function transformPlansData(apiPlans) {
+    return apiPlans.map((plan, index) => {
+        // Parse duration
+        const duration = formatDuration(plan.duration_value, plan.duration_unit);
+        
+        // Format price
+        const price = `KSH ${plan.price}/-`;
+        
+        // Format speed
+        const speed = plan.speed || 'Unlimited';
+        
+        // Mark popular plan (you can customize this logic)
+        const popular = index === 0; // First plan is popular by default
+        
+        return {
+            id: plan.id,
+            duration: duration,
+            price: price,
+            speed: speed,
+            popular: popular,
+            // Keep original data for API submission
+            originalData: plan
+        };
+    });
+}
+
+// ========================================
+// FORMAT DURATION TEXT
+// ========================================
+function formatDuration(value, unit) {
+    // Convert unit to readable format
+    const unitMap = {
+        'HOURS': value === 1 ? 'Hour' : 'Hours',
+        'DAYS': value === 1 ? 'Day' : 'Days',
+        'WEEKS': value === 1 ? 'Week' : 'Weeks',
+        'MONTHS': value === 1 ? 'Month' : 'Months'
+    };
+    
+    const unitText = unitMap[unit] || unit.toLowerCase();
+    return `${value} ${unitText}`;
 }
 
 // ========================================
@@ -286,45 +326,48 @@ async function handlePayment(e) {
 // PROCESS PAYMENT - Backend API Call
 // ========================================
 async function processPayment(phoneNumber, plan) {
-    // Simulate network delay
-    await simulateDelay(2000);
+    console.log('💳 Processing payment...');
+    console.log('📞 Phone:', phoneNumber);
+    console.log('📦 Plan:', plan);
+    console.log('🔧 MAC:', mikrotikParams.mac);
+    console.log('🌐 IP:', mikrotikParams.ip);
     
-    // In production, replace with actual API call:
-    /*
-    const response = await fetch('YOUR_BACKEND_API/process-payment', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            phoneNumber: phoneNumber,
-            planId: plan.id,
-            duration: plan.duration,
-            amount: plan.price,
-            speed: plan.speed
-        })
-    });
-    
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Payment failed');
+    try {
+        const response = await fetch(PAYMENT_ENDPOINT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                phone_number: phoneNumber,
+                plan_id: plan.id,
+                mac_address: mikrotikParams.mac,
+                ip_address: mikrotikParams.ip,
+                gateway: mikrotikParams.gw,
+                router: mikrotikParams.router,
+                destination: mikrotikParams.dst
+            })
+        });
+        
+        const responseData = await response.json();
+        console.log('📨 API Response:', responseData);
+        
+        if (!response.ok) {
+            throw new Error(responseData.message || responseData.error || 'Payment failed. Please try again.');
+        }
+        
+        return responseData;
+        
+    } catch (error) {
+        console.error('❌ Payment error:', error);
+        
+        // Handle network errors
+        if (error instanceof TypeError && error.message.includes('fetch')) {
+            throw new Error('Network error. Please check your connection and try again.');
+        }
+        
+        throw error;
     }
-    
-    return await response.json();
-    */
-    
-    // Simulate random success/failure for demo
-    const isSuccess = Math.random() > 0.2; // 80% success rate
-    
-    if (!isSuccess) {
-        throw new Error('Unable to process payment at this time. Please verify your information and try again.');
-    }
-    
-    return {
-        success: true,
-        transactionId: 'TXN' + Date.now(),
-        message: 'Payment successful'
-    };
 }
 
 // ========================================
@@ -367,17 +410,13 @@ function resetForm() {
     selectedPlan = null;
 }
 
-function simulateDelay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 // ========================================
 // UTILITY: Format Currency (if needed)
 // ========================================
 function formatCurrency(amount) {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-KE', {
         style: 'currency',
-        currency: 'USD'
+        currency: 'KES'
     }).format(amount);
 }
 
@@ -409,6 +448,14 @@ phoneNumberInput.addEventListener('blur', function() {
 // CONSOLE LOGS FOR DEBUGGING
 // ========================================
 console.log('🌐 WiFi Portal Initialized');
-console.log('📦 Available plans:', demoPlans.length);
-console.log('💡 Ready to connect! Update API endpoints in script.js for production use');
+console.log('🔗 API Endpoints:');
+console.log('  - Plans:', PLANS_ENDPOINT);
+console.log('  - Payment:', PAYMENT_ENDPOINT);
+console.log('💡 Ready to connect!');
+
+// Validate MikroTik parameters on load
+if (!mikrotikParams.mac || !mikrotikParams.ip) {
+    console.warn('⚠️ Warning: Missing MikroTik parameters (mac/ip). Payment may fail.');
+    console.log('💡 This page should be accessed via MikroTik hotspot redirect.');
+}
 

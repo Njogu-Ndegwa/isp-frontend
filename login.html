@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Redirecting…</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script>
+    (function () {
+      var portal = "https://isp-frontend-two.vercel.app/";
+      var url = portal
+        + "?mac=" + encodeURIComponent("$(mac)")
+        + "&ip=" + encodeURIComponent("$(ip)")
+        + "&dst=" + encodeURIComponent("$(link-orig-esc)")
+        + "&gw=" + encodeURIComponent("$(hostname)")
+        + "&router=" + encodeURIComponent("$(identity)");
+      window.location.replace(url);
+    })();
+  </script>
+  <noscript>
+    <meta http-equiv="refresh" content="0; url=https://isp-frontend-two.vercel.app/?mac=$(mac)&ip=$(ip)&dst=$(link-orig-esc)&gw=$(hostname)&router=$(identity)">
+  </noscript>
+  <style>
+    body{font-family:system-ui,Arial,sans-serif;padding:24px}
+    .note{opacity:.65}
+  </style>
+</head>
+<body>
+  <h1>Connecting…</h1>
+  <p class="note">If you are not redirected automatically, <a href="https://isp-frontend-two.vercel.app/?mac=$(mac)&ip=$(ip)&dst=$(link-orig-esc)&gw=$(hostname)&router=$(identity)">tap here</a>.</p>
+</body>
+</html>
