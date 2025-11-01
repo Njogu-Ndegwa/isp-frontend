@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phone Number Formatter Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .test-case {
+            background: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #4caf50;
+        }
+        .test-case.fail {
+            border-left-color: #f44336;
+        }
+        .input {
+            font-weight: 600;
+            color: #666;
+        }
+        .output {
+            font-weight: 600;
+            color: #2196f3;
+            font-family: 'Courier New', monospace;
+        }
+        .expected {
+            font-weight: 600;
+            color: #4caf50;
+            font-family: 'Courier New', monospace;
+        }
+        .live-test {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #e0e0e0;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+        .result {
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        .status.pass {
+            background: #4caf50;
+            color: white;
+        }
+        .status.fail {
+            background: #f44336;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 Phone Number Formatter Test</h1>
+        <p class="subtitle">Testing M-Pesa phone number formatting (0xxx → 254xxx)</p>
+
+        <h2>Automated Tests:</h2>
+        <div id="testResults"></div>
+
+        <div class="live-test">
+            <h2>Live Test:</h2>
+            <input 
+                type="tel" 
+                id="phoneInput" 
+                placeholder="Enter phone number (e.g., 0795635364)"
+                maxlength="10"
+            >
+            <div class="result" id="liveResult">
+                Enter a phone number to see the formatted output
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Same formatting function from script.js
+        function formatPhoneForMpesa(phoneNumber) {
+            // Convert Kenyan format to international format
+            // Input: 0795635364 or 0112345678
+            // Output: 254795635364 or 254112345678
+            
+            // Remove any spaces, dashes, or special characters
+            let cleaned = phoneNumber.replace(/[\s\-\(\)]/g, '');
+            
+            // If starts with 0, replace with 254
+            if (cleaned.startsWith('0')) {
+                cleaned = '254' + cleaned.substring(1);
+            }
+            
+            // If already has 254, keep as is
+            // If starts with +254, remove the +
+            if (cleaned.startsWith('+254')) {
+                cleaned = cleaned.substring(1);
+            }
+            
+            return cleaned;
+        }
+
+        // Test cases
+        const testCases = [
+            { input: '0795635364', expected: '254795635364', description: 'Safaricom (07)' },
+            { input: '0795635364', expected: '254795635364', description: 'Standard Safaricom' },
+            { input: '0712345678', expected: '254712345678', description: 'Safaricom (071)' },
+            { input: '0722345678', expected: '254722345678', description: 'Safaricom (072)' },
+            { input: '0733345678', expected: '254733345678', description: 'Safaricom (073)' },
+            { input: '0112345678', expected: '254112345678', description: 'Airtel (011)' },
+            { input: '0101234567', expected: '254101234567', description: 'Airtel (010)' },
+            { input: '0173456789', expected: '254173456789', description: 'Telkom (017)' },
+            { input: '254795635364', expected: '254795635364', description: 'Already formatted' },
+            { input: '+254795635364', expected: '254795635364', description: 'With + prefix' },
+        ];
+
+        // Run automated tests
+        function runTests() {
+            const resultsDiv = document.getElementById('testResults');
+            let html = '';
+            let passCount = 0;
+            let failCount = 0;
+
+            testCases.forEach((test, index) => {
+                const output = formatPhoneForMpesa(test.input);
+                const passed = output === test.expected;
+                
+                if (passed) passCount++;
+                else failCount++;
+
+                html += `
+                    <div class="test-case ${passed ? 'pass' : 'fail'}">
+                        <div><strong>${test.description}</strong> <span class="status ${passed ? 'pass' : 'fail'}">${passed ? '✓ PASS' : '✗ FAIL'}</span></div>
+                        <div style="margin-top: 8px;">
+                            Input: <span class="input">${test.input}</span><br>
+                            Output: <span class="output">${output}</span><br>
+                            Expected: <span class="expected">${test.expected}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html = `
+                <div style="margin-bottom: 20px; padding: 15px; background: ${failCount === 0 ? '#e8f5e9' : '#fff3e0'}; border-radius: 6px;">
+                    <strong>Results:</strong> ${passCount} passed, ${failCount} failed (${testCases.length} total)
+                </div>
+            ` + html;
+
+            resultsDiv.innerHTML = html;
+        }
+
+        // Live test
+        const phoneInput = document.getElementById('phoneInput');
+        const liveResult = document.getElementById('liveResult');
+
+        phoneInput.addEventListener('input', function(e) {
+            const value = e.target.value;
+            
+            if (!value) {
+                liveResult.innerHTML = 'Enter a phone number to see the formatted output';
+                liveResult.style.background = '#e3f2fd';
+                return;
+            }
+
+            const formatted = formatPhoneForMpesa(value);
+            const isValid = /^0[17][0-9]{8}$/.test(value);
+
+            liveResult.innerHTML = `
+                <strong>Input:</strong> ${value}<br>
+                <strong>Formatted:</strong> <span style="color: #2196f3; font-size: 18px;">${formatted}</span><br>
+                <strong>Valid format:</strong> ${isValid ? '✓ Yes' : '✗ No (must be 07xxx or 01xxx, 10 digits)'}
+            `;
+            
+            liveResult.style.background = isValid ? '#e8f5e9' : '#fff3e0';
+        });
+
+        // Run tests on load
+        runTests();
+    </script>
+</body>
+</html>
+

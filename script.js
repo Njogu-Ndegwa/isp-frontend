@@ -375,7 +375,12 @@ async function handlePayment(e) {
 // ========================================
 async function processPayment(phoneNumber, plan) {
     console.log('💳 Processing payment...');
-    console.log('📞 Phone:', phoneNumber);
+    console.log('📞 Phone (original):', phoneNumber);
+    
+    // Format phone number for M-Pesa (convert 07xxx to 2547xxx)
+    const formattedPhone = formatPhoneForMpesa(phoneNumber);
+    console.log('📞 Phone (formatted):', formattedPhone);
+    
     console.log('📦 Plan:', plan);
     console.log('🔧 MAC:', mikrotikParams.mac);
     console.log('🌐 IP:', mikrotikParams.ip);
@@ -386,7 +391,7 @@ async function processPayment(phoneNumber, plan) {
         const timeoutId = setTimeout(() => controller.abort(), 60000);
         
         const requestBody = {
-            phone_number: phoneNumber,
+            phone_number: formattedPhone,  // Use formatted phone number
             plan_id: plan.id,
             mac_address: mikrotikParams.mac,
             ip_address: mikrotikParams.ip,
@@ -460,9 +465,12 @@ function setLoadingState(isLoading) {
 }
 
 function showSuccessMessage(phoneNumber, plan) {
+    // Format phone number for display
+    const formattedPhone = formatPhoneForMpesa(phoneNumber);
+    
     successMessage.innerHTML = `
         Your <strong>${plan.duration}</strong> plan is now active!<br>
-        Confirmation sent to <strong>${phoneNumber}</strong><br>
+        Confirmation sent to <strong>${formattedPhone}</strong><br>
         Start browsing now and enjoy fast internet!
     `;
 }
@@ -494,6 +502,31 @@ function validatePhoneNumber(phoneNumber) {
     // Accepts exactly 10 digits starting with 07 or 01
     const phoneRegex = /^0[17][0-9]{8}$/;
     return phoneRegex.test(phoneNumber);
+}
+
+// ========================================
+// PHONE NUMBER FORMATTING for M-Pesa
+// ========================================
+function formatPhoneForMpesa(phoneNumber) {
+    // Convert Kenyan format to international format
+    // Input: 0795635364 or 0112345678
+    // Output: 254795635364 or 254112345678
+    
+    // Remove any spaces, dashes, or special characters
+    let cleaned = phoneNumber.replace(/[\s\-\(\)]/g, '');
+    
+    // If starts with 0, replace with 254
+    if (cleaned.startsWith('0')) {
+        cleaned = '254' + cleaned.substring(1);
+    }
+    
+    // If already has 254, keep as is
+    // If starts with +254, remove the +
+    if (cleaned.startsWith('+254')) {
+        cleaned = cleaned.substring(1);
+    }
+    
+    return cleaned;
 }
 
 // Real-time validation feedback
