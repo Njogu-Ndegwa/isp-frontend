@@ -5,6 +5,15 @@ const API_BASE_URL = 'https://isp.bitwavetechnologies.com/api';
 const PLANS_ENDPOINT = `${API_BASE_URL}/plans?user_id=1`;
 const PAYMENT_ENDPOINT = `${API_BASE_URL}/hotspot/register-and-pay`;
 
+// TEMPORARY: Use CORS proxy for development/testing ONLY if backend CORS is not configured
+// Remove this in production once backend adds proper CORS headers!
+const USE_CORS_PROXY = false; // Set to true only for local testing
+const CORS_PROXY = 'https://corsproxy.io/?';
+
+function getProxiedUrl(url) {
+    return USE_CORS_PROXY ? CORS_PROXY + encodeURIComponent(url) : url;
+}
+
 // ========================================
 // EXTRACT MIKROTIK URL PARAMETERS
 // ========================================
@@ -69,7 +78,21 @@ async function loadPlans() {
     try {
         console.log('📡 Fetching plans from API...');
         
-        const response = await fetch(PLANS_ENDPOINT);
+        // Add timeout to fetch request (30 seconds)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000);
+        
+        const response = await fetch(getProxiedUrl(PLANS_ENDPOINT), {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            mode: 'cors', // Enable CORS
+            signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
         
         if (!response.ok) {
             throw new Error(`API Error: ${response.status} ${response.statusText}`);
@@ -78,6 +101,11 @@ async function loadPlans() {
         const apiPlans = await response.json();
         console.log('✅ Plans loaded:', apiPlans);
         
+        // Check if we got valid data
+        if (!Array.isArray(apiPlans) || apiPlans.length === 0) {
+            throw new Error('No plans available');
+        }
+        
         // Transform API data to UI format
         const plans = transformPlansData(apiPlans);
         allPlans = plans; // Store for later use
@@ -85,13 +113,33 @@ async function loadPlans() {
         renderPlans(plans);
     } catch (error) {
         console.error('❌ Error loading plans:', error);
+        
+        // Provide more specific error messages
+        let errorMessage = 'Unable to load available plans';
+        let detailMessage = '';
+        
+        if (error.name === 'AbortError') {
+            errorMessage = 'Request Timeout';
+            detailMessage = 'The server took too long to respond. Please check your connection.';
+        } else if (error.message.includes('CORS')) {
+            errorMessage = 'Connection Error';
+            detailMessage = 'Unable to connect to the API server. Please contact support.';
+        } else if (error.message.includes('fetch')) {
+            errorMessage = 'Network Error';
+            detailMessage = 'Unable to reach the server. Please check your internet connection.';
+        } else {
+            detailMessage = error.message;
+        }
+        
         plansGrid.innerHTML = `
             <div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: var(--error-color);">
-                <p style="font-size: 1.125rem; margin-bottom: 1rem;">Unable to load available plans</p>
-                <p style="font-size: 0.875rem; opacity: 0.8; margin-bottom: 1rem;">${error.message}</p>
-                <button onclick="loadPlans()" style="padding: 1rem 2rem; background: var(--primary-color); color: white; border: none; border-radius: 0.5rem; cursor: pointer; font-size: 1rem;">
-                    Try Again
+                <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
+                <p style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem;">${errorMessage}</p>
+                <p style="font-size: 0.875rem; opacity: 0.8; margin-bottom: 1.5rem;">${detailMessage}</p>
+                <button onclick="loadPlans()" style="padding: 1rem 2rem; background: var(--primary-color); color: white; border: none; border-radius: 0.5rem; cursor: pointer; font-size: 1rem; margin-bottom: 1rem;">
+                    🔄 Try Again
                 </button>
+                <p style="font-size: 0.75rem; opacity: 0.6;">If the problem persists, please contact support: 1-800-HOTSPOT</p>
             </div>
         `;
     }
@@ -333,21 +381,34 @@ async function processPayment(phoneNumber, plan) {
     console.log('🌐 IP:', mikrotikParams.ip);
     
     try {
-        const response = await fetch(PAYMENT_ENDPOINT, {
+        // Add timeout to payment request (60 seconds for M-Pesa processing)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000);
+        
+        const requestBody = {
+            phone_number: phoneNumber,
+            plan_id: plan.id,
+            mac_address: mikrotikParams.mac,
+            ip_address: mikrotikParams.ip,
+            gateway: mikrotikParams.gw,
+            router: mikrotikParams.router,
+            destination: mikrotikParams.dst
+        };
+        
+        console.log('📤 Sending payment request:', requestBody);
+        
+        const response = await fetch(getProxiedUrl(PAYMENT_ENDPOINT), {
             method: 'POST',
             headers: {
+                'Accept': 'application/json',
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                phone_number: phoneNumber,
-                plan_id: plan.id,
-                mac_address: mikrotikParams.mac,
-                ip_address: mikrotikParams.ip,
-                gateway: mikrotikParams.gw,
-                router: mikrotikParams.router,
-                destination: mikrotikParams.dst
-            })
+            mode: 'cors', // Enable CORS
+            body: JSON.stringify(requestBody),
+            signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
         
         const responseData = await response.json();
         console.log('📨 API Response:', responseData);
@@ -361,11 +422,16 @@ async function processPayment(phoneNumber, plan) {
     } catch (error) {
         console.error('❌ Payment error:', error);
         
-        // Handle network errors
-        if (error instanceof TypeError && error.message.includes('fetch')) {
-            throw new Error('Network error. Please check your connection and try again.');
+        // Handle specific error types
+        if (error.name === 'AbortError') {
+            throw new Error('Payment request timed out. Please check your connection and try again.');
         }
         
+        if (error instanceof TypeError && error.message.includes('fetch')) {
+            throw new Error('Network error. Please check your internet connection and try again.');
+        }
+        
+        // Re-throw error with original message
         throw error;
     }
 }
@@ -457,5 +523,11 @@ console.log('💡 Ready to connect!');
 if (!mikrotikParams.mac || !mikrotikParams.ip) {
     console.warn('⚠️ Warning: Missing MikroTik parameters (mac/ip). Payment may fail.');
     console.log('💡 This page should be accessed via MikroTik hotspot redirect.');
+}
+
+// Display CORS proxy status
+if (USE_CORS_PROXY) {
+    console.warn('⚠️ CORS PROXY MODE ENABLED - FOR TESTING ONLY!');
+    console.log('🔧 Make sure backend adds proper CORS headers for production.');
 }
 
