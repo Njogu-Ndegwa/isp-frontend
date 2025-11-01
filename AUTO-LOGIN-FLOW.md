@@ -111,10 +111,13 @@ Don't close this page
   "transaction_id": "MPX123456789",
   "hotspot_login": {
     "username": "E8:84:A5:05:06:DB",
-    "password": "E8:84:A5:05:06:DB"
+    "password": "E8:84:A5:05:06:DB",
+    "login_url": "http://192.168.88.1/login"
   }
 }
 ```
+
+**⚠️ CRITICAL:** Backend MUST include `login_url` in the response!
 
 **User sees:**
 ```
@@ -137,23 +140,36 @@ Please wait, you'll be connected automatically...
    - `username`: MAC address (e.g., `E8:84:A5:05:06:DB`)
    - `password`: MAC address (same as username)
    - `dst`: Original destination URL
-2. Submits form to `/login` (MikroTik endpoint)
+2. Submits form to router's login URL (e.g., `http://192.168.88.1/login`)
 
 **Form Data:**
 ```html
-<form method="POST" action="/login" style="display: none;">
+<form method="POST" action="http://192.168.88.1/login" style="display: none;">
   <input type="hidden" name="username" value="E8:84:A5:05:06:DB">
   <input type="hidden" name="password" value="E8:84:A5:05:06:DB">
   <input type="hidden" name="dst" value="http://www.msftconnecttest.com/redirect">
 </form>
 ```
 
+**⚠️ IMPORTANT:** 
+- The `action` URL comes from backend (`login_url`)
+- Form submits to MikroTik router's LOCAL IP (e.g., 192.168.88.1)
+- This works because user's device is on the same network as the router
+- Browser navigation happens (page redirects to router, then to destination)
+
 **Console Output:**
 ```
 🔐 Auto-logging in to hotspot...
+🌐 Login URL: http://192.168.88.1/login
 👤 Username: E8:84:A5:05:06:DB
 🔑 Password: E8:84:A5:05:06:DB
-📤 Submitting login form...
+📤 Submitting login form to MikroTik router...
+📍 Router URL: http://192.168.88.1/login
+📋 Credentials: {
+  username: "E8:84:A5:05:06:DB",
+  password: "E8:84:A5:05:06:DB",
+  destination: "http://www.msftconnecttest.com/redirect"
+}
 ```
 
 ---
@@ -246,16 +262,24 @@ Common Issues:
   "transaction_id": "MPX123456789",
   "hotspot_login": {
     "username": "E8:84:A5:05:06:DB",
-    "password": "E8:84:A5:05:06:DB"
+    "password": "E8:84:A5:05:06:DB",
+    "login_url": "http://192.168.88.1/login"
   }
 }
 ```
 
 **Important:**
 - `payment_complete`: Boolean (true/false)
-- `hotspot_login`: Object with username and password
+- `hotspot_login`: Object with username, password, and **login_url**
+- `login_url`: **CRITICAL** - Full URL to router's login endpoint (e.g., `http://192.168.88.1/login`)
 - Username and password should be the MAC address
 - Response must be returned quickly (< 500ms)
+
+**⚠️ Why login_url is Required:**
+- Frontend cannot hardcode router IP (you may have multiple routers)
+- Router IP comes from your database (associated with `router_id`)
+- Example: Router ID 2 → IP 192.168.88.1 → login_url: `http://192.168.88.1/login`
+- Backend constructs this URL from router configuration
 
 ### CORS Configuration
 
@@ -347,16 +371,27 @@ console.log('Customer ID:', customerId);
 
 **Check:**
 1. `hotspot_login` object exists in response
-2. Username/password match MAC address
-3. MikroTik user was created in backend
-4. MikroTik authentication is "regular"
-5. Form submits to correct `/login` endpoint
+2. **`login_url` is included** in hotspot_login object
+3. Username/password match MAC address
+4. MikroTik user was created in backend
+5. MikroTik authentication is "regular"
+6. Router IP in `login_url` is correct and accessible
 
 **Debug:**
 ```javascript
 console.log('Login credentials:', data.hotspot_login);
-// Should see: { username: "...", password: "..." }
+// Should see: { 
+//   username: "E8:84:A5:05:06:DB", 
+//   password: "E8:84:A5:05:06:DB",
+//   login_url: "http://192.168.88.1/login" 
+// }
 ```
+
+**Common Mistakes:**
+- ❌ Backend returns `login_url: "/login"` (relative path)
+- ✅ Backend must return `login_url: "http://192.168.88.1/login"` (full URL)
+- ❌ Backend omits `login_url` entirely
+- ✅ Backend always includes `login_url` with router's actual IP
 
 ### Issue: User Not Created in MikroTik
 
@@ -388,12 +423,19 @@ console.log('Login credentials:', data.hotspot_login);
 🔍 Polling attempt 3/30...
 📊 Payment status: { payment_complete: true, hotspot_login: {...} }
 ✅ Payment confirmed!
-🔐 Login credentials: { username: "E8:84:A5:05:06:DB", password: "E8:84:A5:05:06:DB" }
+🔐 Login credentials: { 
+  username: "E8:84:A5:05:06:DB", 
+  password: "E8:84:A5:05:06:DB",
+  login_url: "http://192.168.88.1/login"
+}
 👤 Username: E8:84:A5:05:06:DB
 🔑 Password: E8:84:A5:05:06:DB
 🔐 Auto-logging in to hotspot...
-📤 Submitting login form...
-[Page redirects to internet]
+🌐 Login URL: http://192.168.88.1/login
+📤 Submitting login form to MikroTik router...
+📍 Router URL: http://192.168.88.1/login
+📋 Credentials: {...}
+[Page redirects to router, then to internet]
 ```
 
 ---

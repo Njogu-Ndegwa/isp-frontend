@@ -536,45 +536,64 @@ async function pollPaymentStatusAndLogin(customerId, phoneNumber, plan) {
 // ========================================
 async function autoLoginToHotspot(loginCredentials) {
     console.log('🔐 Auto-logging in to hotspot...');
+    console.log('🌐 Login URL:', loginCredentials.login_url);
     console.log('👤 Username:', loginCredentials.username);
     console.log('🔑 Password:', loginCredentials.password);
     
-    // Create a hidden form and submit it
+    // Validate we have the login URL from backend
+    if (!loginCredentials.login_url) {
+        console.error('❌ No login URL provided by backend');
+        throw new Error('Login configuration missing. Please contact support.');
+    }
+    
+    // Create a hidden form and submit it to MikroTik router
     const form = document.createElement('form');
     form.method = 'POST';
-    form.action = '/login'; // MikroTik hotspot login endpoint
+    form.action = loginCredentials.login_url; // ✅ FIXED: Use backend-provided router URL
     form.style.display = 'none';
     
-    // Add username field
+    // Add username field (MAC address without colons)
     const usernameInput = document.createElement('input');
     usernameInput.type = 'hidden';
     usernameInput.name = 'username';
     usernameInput.value = loginCredentials.username;
     form.appendChild(usernameInput);
     
-    // Add password field
+    // Add password field (same as username)
     const passwordInput = document.createElement('input');
     passwordInput.type = 'hidden';
     passwordInput.name = 'password';
     passwordInput.value = loginCredentials.password;
     form.appendChild(passwordInput);
     
-    // Add destination (if available from MikroTik params)
-    if (mikrotikParams.dst) {
-        const dstInput = document.createElement('input');
-        dstInput.type = 'hidden';
-        dstInput.name = 'dst';
-        dstInput.value = mikrotikParams.dst;
-        form.appendChild(dstInput);
-    }
+    // Add destination (where to redirect after successful login)
+    const dstInput = document.createElement('input');
+    dstInput.type = 'hidden';
+    dstInput.name = 'dst';
+    dstInput.value = mikrotikParams.dst || 'http://google.com';
+    form.appendChild(dstInput);
     
-    // Append form to body and submit
+    // Append form to body
     document.body.appendChild(form);
     
-    console.log('📤 Submitting login form...');
+    // Log what we're about to submit
+    console.log('📤 Submitting login form to MikroTik router...');
+    console.log('📍 Router URL:', form.action);
+    console.log('📋 Credentials:', {
+        username: loginCredentials.username,
+        password: loginCredentials.password,
+        destination: mikrotikParams.dst || 'http://google.com'
+    });
+    
+    // Submit the form - this will:
+    // 1. POST credentials to MikroTik router (192.168.88.1)
+    // 2. Router authenticates the user
+    // 3. Router redirects to 'dst' parameter (google.com)
+    // 4. User now has internet access!
     form.submit();
     
-    // Note: After form.submit(), the page will redirect/reload
+    // Note: After form.submit(), the page will navigate away
+    // The browser will POST to router, then redirect to destination
 }
 
 // ========================================
