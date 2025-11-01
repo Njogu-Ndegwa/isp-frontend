@@ -4,10 +4,15 @@
 const API_BASE_URL = 'https://isp.bitwavetechnologies.com/api';
 const PLANS_ENDPOINT = `${API_BASE_URL}/plans?user_id=1`;
 const PAYMENT_ENDPOINT = `${API_BASE_URL}/hotspot/register-and-pay`;
+const PAYMENT_STATUS_ENDPOINT = `${API_BASE_URL}/hotspot/payment-status`; // New endpoint
 
 // Router ID - Replace with your actual router ID from backend
 // This is the database ID of the router, not the MikroTik identity string
 const ROUTER_ID = 2; // TODO: Update this with your actual router ID from backend
+
+// Payment polling configuration
+const PAYMENT_POLL_INTERVAL = 2000; // Poll every 2 seconds
+const PAYMENT_POLL_MAX_ATTEMPTS = 30; // Max 60 seconds (30 * 2s)
 
 // TEMPORARY: Use CORS proxy for development/testing ONLY if backend CORS is not configured
 // Remove this in production once backend adds proper CORS headers!
@@ -354,19 +359,34 @@ async function handlePayment(e) {
     setLoadingState(true);
     
     try {
-        // Simulate API call
-        await processPayment(phoneNumber, selectedPlan);
+        // Step 1: Initiate payment
+        const paymentResponse = await processPayment(phoneNumber, selectedPlan);
+        console.log('✅ Payment initiated:', paymentResponse);
         
-        // Show success
-        showSuccessMessage(phoneNumber, selectedPlan);
+        // Update UI to show waiting for payment confirmation
+        showPaymentPendingMessage(phoneNumber, selectedPlan);
         hideSection(paymentSection);
         showSection(successSection);
         window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        // Step 2: Poll for payment status and auto-login
+        // The backend should return customer_id in the payment response
+        const customerId = paymentResponse.customer_id || paymentResponse.id;
+        
+        if (customerId) {
+            await pollPaymentStatusAndLogin(customerId, phoneNumber, selectedPlan);
+            // If we reach here, payment was successful and user was logged in
+            // The page will redirect after login, but just in case:
+            showSuccessMessage(phoneNumber, selectedPlan);
+        } else {
+            throw new Error('Payment initiated but no customer ID returned. Please contact support.');
+        }
         
     } catch (error) {
         // Show error
         showErrorMessage(error.message);
         hideSection(paymentSection);
+        hideSection(successSection);
         showSection(errorSection);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
@@ -405,11 +425,11 @@ async function processPayment(phoneNumber, plan) {
         console.log('📤 Sending payment request:', requestBody);
         
         const response = await fetch(getProxiedUrl(PAYMENT_ENDPOINT), {
-            method: 'POST',
-            headers: {
+        method: 'POST',
+        headers: {
                 'Accept': 'application/json',
-                'Content-Type': 'application/json',
-            },
+            'Content-Type': 'application/json',
+        },
             mode: 'cors', // Enable CORS
             body: JSON.stringify(requestBody),
             signal: controller.signal
@@ -419,8 +439,8 @@ async function processPayment(phoneNumber, plan) {
         
         const responseData = await response.json();
         console.log('📨 API Response:', responseData);
-        
-        if (!response.ok) {
+    
+    if (!response.ok) {
             throw new Error(responseData.message || responseData.error || 'Payment failed. Please try again.');
         }
         
@@ -441,6 +461,120 @@ async function processPayment(phoneNumber, plan) {
         // Re-throw error with original message
         throw error;
     }
+}
+
+// ========================================
+// POLL PAYMENT STATUS & AUTO-LOGIN
+// ========================================
+async function pollPaymentStatusAndLogin(customerId, phoneNumber, plan) {
+    console.log('🔄 Starting payment status polling...');
+    console.log('📋 Customer ID:', customerId);
+    
+    let attempts = 0;
+    
+    return new Promise((resolve, reject) => {
+        const pollInterval = setInterval(async () => {
+            attempts++;
+            console.log(`🔍 Polling attempt ${attempts}/${PAYMENT_POLL_MAX_ATTEMPTS}...`);
+            
+            try {
+                const statusUrl = `${PAYMENT_STATUS_ENDPOINT}/${customerId}`;
+                const response = await fetch(getProxiedUrl(statusUrl), {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                    },
+                    mode: 'cors'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Status check failed: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('📊 Payment status:', data);
+                
+                // Check if payment is complete
+                if (data.payment_complete === true && data.hotspot_login) {
+                    clearInterval(pollInterval);
+                    console.log('✅ Payment confirmed!');
+                    console.log('🔐 Login credentials:', data.hotspot_login);
+                    console.log(`👤 Username: ${data.hotspot_login.username}`);
+                    console.log(`🔑 Password: ${data.hotspot_login.password}`);
+                    
+                    // Auto-login to hotspot
+                    await autoLoginToHotspot(data.hotspot_login);
+                    
+                    resolve(data);
+                } else if (data.payment_complete === true) {
+                    clearInterval(pollInterval);
+                    console.warn('⚠️ Payment complete but no login credentials received');
+                    reject(new Error('Payment successful but login failed. Please contact support.'));
+                } else if (attempts >= PAYMENT_POLL_MAX_ATTEMPTS) {
+                    clearInterval(pollInterval);
+                    console.warn('⏱️ Polling timeout - max attempts reached');
+                    reject(new Error('Payment verification timeout. Please check M-Pesa and refresh the page.'));
+                } else {
+                    console.log(`⏳ Payment not yet complete. Retrying in ${PAYMENT_POLL_INTERVAL/1000}s...`);
+                }
+                
+            } catch (error) {
+                console.error('❌ Error polling status:', error);
+                
+                if (attempts >= PAYMENT_POLL_MAX_ATTEMPTS) {
+                    clearInterval(pollInterval);
+                    reject(error);
+                }
+                // Continue polling on error (unless max attempts reached)
+            }
+        }, PAYMENT_POLL_INTERVAL);
+    });
+}
+
+// ========================================
+// AUTO-LOGIN TO MIKROTIK HOTSPOT
+// ========================================
+async function autoLoginToHotspot(loginCredentials) {
+    console.log('🔐 Auto-logging in to hotspot...');
+    console.log('👤 Username:', loginCredentials.username);
+    console.log('🔑 Password:', loginCredentials.password);
+    
+    // Create a hidden form and submit it
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/login'; // MikroTik hotspot login endpoint
+    form.style.display = 'none';
+    
+    // Add username field
+    const usernameInput = document.createElement('input');
+    usernameInput.type = 'hidden';
+    usernameInput.name = 'username';
+    usernameInput.value = loginCredentials.username;
+    form.appendChild(usernameInput);
+    
+    // Add password field
+    const passwordInput = document.createElement('input');
+    passwordInput.type = 'hidden';
+    passwordInput.name = 'password';
+    passwordInput.value = loginCredentials.password;
+    form.appendChild(passwordInput);
+    
+    // Add destination (if available from MikroTik params)
+    if (mikrotikParams.dst) {
+        const dstInput = document.createElement('input');
+        dstInput.type = 'hidden';
+        dstInput.name = 'dst';
+        dstInput.value = mikrotikParams.dst;
+        form.appendChild(dstInput);
+    }
+    
+    // Append form to body and submit
+    document.body.appendChild(form);
+    
+    console.log('📤 Submitting login form...');
+    form.submit();
+    
+    // Note: After form.submit(), the page will redirect/reload
 }
 
 // ========================================
@@ -466,19 +600,106 @@ function setLoadingState(isLoading) {
     }
 }
 
+function showPaymentPendingMessage(phoneNumber, plan) {
+    // Format phone number for display
+    const formattedPhone = formatPhoneForMpesa(phoneNumber);
+    
+    successMessage.innerHTML = `
+        <div style="text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">📱</div>
+            <h2 style="font-size: 1.5rem; margin-bottom: 1rem; color: #333;">M-Pesa Prompt Sent!</h2>
+            
+            <div style="background: #e3f2fd; padding: 20px; border-radius: 12px; margin: 20px 0; text-align: left;">
+                <div style="font-size: 1.1rem; margin-bottom: 15px;"><strong>📋 Payment Details:</strong></div>
+                <div style="margin-left: 10px; line-height: 1.8;">
+                    • Plan: <strong>${plan.duration}</strong><br>
+                    • Amount: <strong>${plan.price}</strong><br>
+                    • Phone: <strong>${formattedPhone}</strong>
+                </div>
+            </div>
+            
+            <div style="background: #fff3e0; padding: 20px; border-radius: 12px; margin-top: 15px; text-align: left;">
+                <div style="font-size: 1.1rem; margin-bottom: 15px;"><strong>⚡ Next Steps:</strong></div>
+                <div style="margin-left: 10px; line-height: 2;">
+                    <div style="margin-bottom: 10px;">
+                        <strong>1.</strong> Check your phone for M-Pesa prompt
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <strong>2.</strong> Enter your M-Pesa PIN
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <strong>3.</strong> Wait for confirmation (this may take up to 30 seconds)
+                    </div>
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 2px solid #ffc107;">
+                        <div class="spinner" style="display: inline-block; width: 20px; height: 20px; border: 3px solid #ddd; border-top-color: #667eea; border-radius: 50%; animation: spin 1s linear infinite; vertical-align: middle;"></div>
+                        <span style="margin-left: 10px; color: #666; font-size: 0.95rem;">
+                            <strong>Checking payment status...</strong><br>
+                            <span style="font-size: 0.85rem; opacity: 0.8;">Don't close this page</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 20px; padding: 12px; background: #f0f0f0; border-radius: 8px; font-size: 0.85rem; color: #666;">
+                💡 <strong>Tip:</strong> If you don't see the prompt, dial *334# on Safaricom
+            </div>
+        </div>
+    `;
+}
+
 function showSuccessMessage(phoneNumber, plan) {
     // Format phone number for display
     const formattedPhone = formatPhoneForMpesa(phoneNumber);
     
     successMessage.innerHTML = `
-        Your <strong>${plan.duration}</strong> plan is now active!<br>
-        Confirmation sent to <strong>${formattedPhone}</strong><br>
-        Start browsing now and enjoy fast internet!
+        <div style="text-align: center;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">✅</div>
+            <h2 style="font-size: 1.8rem; margin-bottom: 1rem; color: #22c55e;">Payment Successful!</h2>
+            
+            <div style="background: #dcfce7; padding: 20px; border-radius: 12px; margin: 20px 0; border: 2px solid #22c55e;">
+                <div style="font-size: 1.1rem; margin-bottom: 10px;">
+                    <strong>Your ${plan.duration} plan is now active!</strong>
+                </div>
+                <div style="font-size: 0.95rem; color: #166534;">
+                    Confirmation sent to ${formattedPhone}
+                </div>
+            </div>
+            
+            <div style="background: #e0f2fe; padding: 20px; border-radius: 12px; margin-top: 15px;">
+                <div style="font-size: 1.2rem; margin-bottom: 10px;">
+                    🔐 <strong>Logging you in...</strong>
+                </div>
+                <div class="spinner" style="display: inline-block; width: 24px; height: 24px; border: 3px solid #ddd; border-top-color: #2563eb; border-radius: 50%; animation: spin 1s linear infinite; margin: 10px 0;"></div>
+                <div style="font-size: 0.9rem; color: #666; margin-top: 10px;">
+                    Please wait, you'll be connected automatically...
+                </div>
+            </div>
+        </div>
     `;
 }
 
 function showErrorMessage(message) {
-    errorMessage.textContent = message;
+    errorMessage.innerHTML = `
+        <div style="text-align: center;">
+            <div style="font-size: 1.2rem; color: #ef4444; margin-bottom: 15px;">
+                ${message}
+            </div>
+            
+            <div style="background: #fee2e2; padding: 15px; border-radius: 8px; margin-top: 15px; text-align: left;">
+                <strong style="color: #991b1b;">Common Issues:</strong>
+                <ul style="margin: 10px 0 0 20px; color: #7f1d1d; line-height: 1.8;">
+                    <li>Insufficient M-Pesa balance</li>
+                    <li>Wrong PIN entered</li>
+                    <li>Transaction cancelled</li>
+                    <li>Network timeout</li>
+                </ul>
+            </div>
+            
+            <div style="margin-top: 15px; padding: 12px; background: #f0f0f0; border-radius: 8px; font-size: 0.9rem; color: #666;">
+                💡 Need help? Call support: <strong>1-800-HOTSPOT</strong>
+            </div>
+        </div>
+    `;
 }
 
 function resetForm() {
