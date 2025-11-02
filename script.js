@@ -375,9 +375,8 @@ async function handlePayment(e) {
         
         if (customerId) {
             await pollPaymentStatusAndLogin(customerId, phoneNumber, selectedPlan);
-            // If we reach here, payment was successful and user was logged in
-            // The page will redirect after login, but just in case:
-            showSuccessMessage(phoneNumber, selectedPlan);
+            // If we reach here, payment was successful and user was authenticated
+            // Success message already shown by pollPaymentStatusAndLogin
         } else {
             throw new Error('Payment initiated but no customer ID returned. Please contact support.');
         }
@@ -464,10 +463,10 @@ async function processPayment(phoneNumber, plan) {
 }
 
 // ========================================
-// POLL PAYMENT STATUS & AUTO-LOGIN
+// POLL PAYMENT STATUS & WAIT FOR AUTHENTICATION
 // ========================================
 async function pollPaymentStatusAndLogin(customerId, phoneNumber, plan) {
-    console.log('🔄 Starting payment status polling...');
+    console.log('🔄 Checking payment status and authentication...');
     console.log('📋 Customer ID:', customerId);
     
     let attempts = 0;
@@ -492,24 +491,34 @@ async function pollPaymentStatusAndLogin(customerId, phoneNumber, plan) {
                 }
                 
                 const data = await response.json();
-                console.log('📊 Payment status:', data);
+                console.log('📊 Status:', data);
                 
-                // Check if payment is complete
-                if (data.payment_complete === true && data.hotspot_login) {
+                // Check if user is authenticated and connected
+                if (data.authenticated === true) {
+                    // User is fully connected - this is the only "success" state
                     clearInterval(pollInterval);
                     console.log('✅ Payment confirmed!');
-                    console.log('🔐 Login credentials:', data.hotspot_login);
-                    console.log(`👤 Username: ${data.hotspot_login.username}`);
-                    console.log(`🔑 Password: ${data.hotspot_login.password}`);
+                    console.log('🎉 User authenticated! Internet access granted!');
+                    console.log('📡 Session info:', data.session_info);
                     
-                    // Auto-login to hotspot
-                    await autoLoginToHotspot(data.hotspot_login);
+                    // Show final success message
+                    showAuthenticatedMessage(phoneNumber, plan, data);
                     
                     resolve(data);
                 } else if (data.payment_complete === true) {
-                    clearInterval(pollInterval);
-                    console.warn('⚠️ Payment complete but no login credentials received');
-                    reject(new Error('Payment successful but login failed. Please contact support.'));
+                    // Payment was made, but not yet connected
+                    console.log('💳 Payment received, adding user to system...');
+                    console.log('⏳ Waiting for connection to be established...');
+                    console.log('💡 Tip: Try opening a new tab to any website');
+                    
+                    // Update UI to show processing/connecting state
+                    showProcessingPaymentMessage(phoneNumber, plan);
+                    
+                    if (attempts >= PAYMENT_POLL_MAX_ATTEMPTS) {
+                        clearInterval(pollInterval);
+                        console.warn('⏱️ Timeout - payment received but connection delayed');
+                        reject(new Error('Payment received but connection taking longer than expected. Please try opening google.com in a new tab or contact support.'));
+                    }
                 } else if (attempts >= PAYMENT_POLL_MAX_ATTEMPTS) {
                     clearInterval(pollInterval);
                     console.warn('⏱️ Polling timeout - max attempts reached');
@@ -532,68 +541,83 @@ async function pollPaymentStatusAndLogin(customerId, phoneNumber, plan) {
 }
 
 // ========================================
-// AUTO-LOGIN TO MIKROTIK HOTSPOT
+// SHOW PROCESSING PAYMENT MESSAGE
 // ========================================
-async function autoLoginToHotspot(loginCredentials) {
-    console.log('🔐 Auto-logging in to hotspot...');
-    console.log('🌐 Login URL:', loginCredentials.login_url);
-    console.log('👤 Username:', loginCredentials.username);
-    console.log('🔑 Password:', loginCredentials.password);
+function showProcessingPaymentMessage(phoneNumber, plan) {
+    const formattedPhone = formatPhoneForMpesa(phoneNumber);
     
-    // Validate we have the login URL from backend
-    if (!loginCredentials.login_url) {
-        console.error('❌ No login URL provided by backend');
-        throw new Error('Login configuration missing. Please contact support.');
-    }
+    successMessage.innerHTML = `
+        <div style="text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">⚡</div>
+            <h2 style="font-size: 1.5rem; margin-bottom: 1rem; color: #2563eb;">Processing Your Payment...</h2>
+            
+            <div style="background: #e0f2fe; padding: 20px; border-radius: 12px; margin: 20px 0; border: 2px solid #2563eb;">
+                <div style="font-size: 1.1rem; margin-bottom: 15px;">
+                    <strong>Setting up your ${plan.duration} plan</strong>
+                </div>
+                <div class="spinner" style="display: inline-block; width: 28px; height: 28px; border: 3px solid #ddd; border-top-color: #2563eb; border-radius: 50%; animation: spin 1s linear infinite; margin: 10px 0;"></div>
+                <div style="font-size: 0.95rem; color: #0369a1; margin-top: 15px; line-height: 1.8;">
+                    📱 Payment received<br>
+                    ⚙️ Adding you to the system<br>
+                    🔌 Establishing connection...
+                </div>
+            </div>
+            
+            <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin-top: 15px; text-align: left;">
+                <div style="font-size: 0.9rem; color: #d97706;">
+                    <strong>💡 Speed up your connection:</strong><br>
+                    Open a new tab and go to <strong>google.com</strong><br>
+                    This helps trigger the final connection step
+                </div>
+            </div>
+            
+            <div style="margin-top: 15px; padding: 10px; font-size: 0.85rem; color: #666;">
+                Please wait, this usually takes 5-15 seconds...
+            </div>
+        </div>
+    `;
+}
+
+// ========================================
+// SHOW AUTHENTICATED MESSAGE (PAYMENT CONFIRMED & CONNECTED)
+// ========================================
+function showAuthenticatedMessage(phoneNumber, plan, data) {
+    const formattedPhone = formatPhoneForMpesa(phoneNumber);
     
-    // Create a hidden form and submit it to MikroTik router
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = loginCredentials.login_url; // ✅ FIXED: Use backend-provided router URL
-    form.style.display = 'none';
-    
-    // Add username field (MAC address without colons)
-    const usernameInput = document.createElement('input');
-    usernameInput.type = 'hidden';
-    usernameInput.name = 'username';
-    usernameInput.value = loginCredentials.username;
-    form.appendChild(usernameInput);
-    
-    // Add password field (same as username)
-    const passwordInput = document.createElement('input');
-    passwordInput.type = 'hidden';
-    passwordInput.name = 'password';
-    passwordInput.value = loginCredentials.password;
-    form.appendChild(passwordInput);
-    
-    // Add destination (where to redirect after successful login)
-    const dstInput = document.createElement('input');
-    dstInput.type = 'hidden';
-    dstInput.name = 'dst';
-    dstInput.value = mikrotikParams.dst || 'http://google.com';
-    form.appendChild(dstInput);
-    
-    // Append form to body
-    document.body.appendChild(form);
-    
-    // Log what we're about to submit
-    console.log('📤 Submitting login form to MikroTik router...');
-    console.log('📍 Router URL:', form.action);
-    console.log('📋 Credentials:', {
-        username: loginCredentials.username,
-        password: loginCredentials.password,
-        destination: mikrotikParams.dst || 'http://google.com'
-    });
-    
-    // Submit the form - this will:
-    // 1. POST credentials to MikroTik router (192.168.88.1)
-    // 2. Router authenticates the user
-    // 3. Router redirects to 'dst' parameter (google.com)
-    // 4. User now has internet access!
-    form.submit();
-    
-    // Note: After form.submit(), the page will navigate away
-    // The browser will POST to router, then redirect to destination
+    successMessage.innerHTML = `
+        <div style="text-align: center;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">🎉</div>
+            <h2 style="font-size: 1.8rem; margin-bottom: 1rem; color: #22c55e;">Payment Confirmed!</h2>
+            <h3 style="font-size: 1.3rem; margin-bottom: 1.5rem; color: #22c55e;">You're Connected!</h3>
+            
+            <div style="background: #dcfce7; padding: 20px; border-radius: 12px; margin: 20px 0; border: 2px solid #22c55e;">
+                <div style="font-size: 1.2rem; margin-bottom: 10px;">
+                    <strong>✅ Internet Access Activated</strong>
+                </div>
+                <div style="font-size: 0.95rem; color: #166534; margin-top: 10px; line-height: 1.8;">
+                    Plan: <strong>${plan.duration}</strong><br>
+                    Status: <strong>Connected & Active</strong><br>
+                    Phone: <strong>${formattedPhone}</strong>
+                </div>
+            </div>
+            
+            <div style="background: #f0f9ff; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                <div style="font-size: 0.95rem; color: #0369a1; line-height: 1.6;">
+                    🌐 <strong>You can now browse the internet!</strong><br>
+                    Your connection is active and ready to use.<br>
+                    Close this page and enjoy browsing.
+                </div>
+            </div>
+            
+            <button onclick="window.location.href='http://google.com'" style="margin-top: 20px; padding: 14px 28px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1.1rem; font-weight: 600; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                Start Browsing 🚀
+            </button>
+            
+            <div style="margin-top: 20px; padding: 10px; font-size: 0.85rem; color: #666; opacity: 0.8;">
+                Thank you for your purchase! Enjoy your internet.
+            </div>
+        </div>
+    `;
 }
 
 // ========================================
@@ -626,7 +650,7 @@ function showPaymentPendingMessage(phoneNumber, plan) {
     successMessage.innerHTML = `
         <div style="text-align: center;">
             <div style="font-size: 3rem; margin-bottom: 1rem;">📱</div>
-            <h2 style="font-size: 1.5rem; margin-bottom: 1rem; color: #333;">M-Pesa Prompt Sent!</h2>
+            <h2 style="font-size: 1.5rem; margin-bottom: 1rem; color: #333;">M-Pesa Payment Request Sent!</h2>
             
             <div style="background: #e3f2fd; padding: 20px; border-radius: 12px; margin: 20px 0; text-align: left;">
                 <div style="font-size: 1.1rem; margin-bottom: 15px;"><strong>📋 Payment Details:</strong></div>
@@ -638,22 +662,22 @@ function showPaymentPendingMessage(phoneNumber, plan) {
             </div>
             
             <div style="background: #fff3e0; padding: 20px; border-radius: 12px; margin-top: 15px; text-align: left;">
-                <div style="font-size: 1.1rem; margin-bottom: 15px;"><strong>⚡ Next Steps:</strong></div>
+                <div style="font-size: 1.1rem; margin-bottom: 15px;"><strong>⚡ Complete Your Payment:</strong></div>
                 <div style="margin-left: 10px; line-height: 2;">
                     <div style="margin-bottom: 10px;">
                         <strong>1.</strong> Check your phone for M-Pesa prompt
                     </div>
                     <div style="margin-bottom: 10px;">
-                        <strong>2.</strong> Enter your M-Pesa PIN
+                        <strong>2.</strong> Enter your M-Pesa PIN to confirm
                     </div>
                     <div style="margin-bottom: 10px;">
-                        <strong>3.</strong> Wait for confirmation (this may take up to 30 seconds)
+                        <strong>3.</strong> We'll connect you automatically
                     </div>
                     <div style="margin-top: 15px; padding-top: 15px; border-top: 2px solid #ffc107;">
                         <div class="spinner" style="display: inline-block; width: 20px; height: 20px; border: 3px solid #ddd; border-top-color: #667eea; border-radius: 50%; animation: spin 1s linear infinite; vertical-align: middle;"></div>
                         <span style="margin-left: 10px; color: #666; font-size: 0.95rem;">
-                            <strong>Checking payment status...</strong><br>
-                            <span style="font-size: 0.85rem; opacity: 0.8;">Don't close this page</span>
+                            <strong>Waiting for payment...</strong><br>
+                            <span style="font-size: 0.85rem; opacity: 0.8;">Please don't close this page</span>
                         </span>
                     </div>
                 </div>
@@ -666,36 +690,7 @@ function showPaymentPendingMessage(phoneNumber, plan) {
     `;
 }
 
-function showSuccessMessage(phoneNumber, plan) {
-    // Format phone number for display
-    const formattedPhone = formatPhoneForMpesa(phoneNumber);
-    
-    successMessage.innerHTML = `
-        <div style="text-align: center;">
-            <div style="font-size: 4rem; margin-bottom: 1rem;">✅</div>
-            <h2 style="font-size: 1.8rem; margin-bottom: 1rem; color: #22c55e;">Payment Successful!</h2>
-            
-            <div style="background: #dcfce7; padding: 20px; border-radius: 12px; margin: 20px 0; border: 2px solid #22c55e;">
-                <div style="font-size: 1.1rem; margin-bottom: 10px;">
-                    <strong>Your ${plan.duration} plan is now active!</strong>
-                </div>
-                <div style="font-size: 0.95rem; color: #166534;">
-                    Confirmation sent to ${formattedPhone}
-                </div>
-            </div>
-            
-            <div style="background: #e0f2fe; padding: 20px; border-radius: 12px; margin-top: 15px;">
-                <div style="font-size: 1.2rem; margin-bottom: 10px;">
-                    🔐 <strong>Logging you in...</strong>
-                </div>
-                <div class="spinner" style="display: inline-block; width: 24px; height: 24px; border: 3px solid #ddd; border-top-color: #2563eb; border-radius: 50%; animation: spin 1s linear infinite; margin: 10px 0;"></div>
-                <div style="font-size: 0.9rem; color: #666; margin-top: 10px;">
-                    Please wait, you'll be connected automatically...
-                </div>
-            </div>
-        </div>
-    `;
-}
+// showSuccessMessage removed - now using showWaitingForConnectionMessage and showAuthenticatedMessage instead
 
 function showErrorMessage(message) {
     errorMessage.innerHTML = `
