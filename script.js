@@ -463,10 +463,10 @@ async function processPayment(phoneNumber, plan) {
 }
 
 // ========================================
-// POLL PAYMENT STATUS & WAIT FOR AUTHENTICATION
+// POLL PAYMENT STATUS & WAIT FOR INTERNET ACCESS
 // ========================================
 async function pollPaymentStatusAndLogin(customerId, phoneNumber, plan) {
-    console.log('🔄 Checking payment status and authentication...');
+    console.log('🔄 Checking payment status and internet access...');
     console.log('📋 Customer ID:', customerId);
     
     let attempts = 0;
@@ -493,13 +493,13 @@ async function pollPaymentStatusAndLogin(customerId, phoneNumber, plan) {
                 const data = await response.json();
                 console.log('📊 Status:', data);
                 
-                // Check if user is authenticated and connected
-                if (data.authenticated === true) {
+                // Check if user has internet access
+                if (data.has_internet_access === true) {
                     // User is fully connected - this is the only "success" state
                     clearInterval(pollInterval);
                     console.log('✅ Payment confirmed!');
-                    console.log('🎉 User authenticated! Internet access granted!');
-                    console.log('📡 Session info:', data.session_info);
+                    console.log('🎉 User has internet access! Connection established!');
+                    console.log('📡 Response:', data.message || 'Internet access granted');
                     
                     // Show final success message
                     showAuthenticatedMessage(phoneNumber, plan, data);
@@ -507,8 +507,8 @@ async function pollPaymentStatusAndLogin(customerId, phoneNumber, plan) {
                     resolve(data);
                 } else if (data.payment_complete === true) {
                     // Payment was made, but not yet connected
-                    console.log('💳 Payment received, adding user to system...');
-                    console.log('⏳ Waiting for connection to be established...');
+                    console.log('💳 Payment received, setting up your connection...');
+                    console.log('⏳ Waiting for internet access to be granted...');
                     console.log('💡 Tip: Try opening a new tab to any website');
                     
                     // Update UI to show processing/connecting state
@@ -516,7 +516,7 @@ async function pollPaymentStatusAndLogin(customerId, phoneNumber, plan) {
                     
                     if (attempts >= PAYMENT_POLL_MAX_ATTEMPTS) {
                         clearInterval(pollInterval);
-                        console.warn('⏱️ Timeout - payment received but connection delayed');
+                        console.warn('⏱️ Timeout - payment received but internet access delayed');
                         reject(new Error('Payment received but connection taking longer than expected. Please try opening google.com in a new tab or contact support.'));
                     }
                 } else if (attempts >= PAYMENT_POLL_MAX_ATTEMPTS) {
@@ -579,7 +579,7 @@ function showProcessingPaymentMessage(phoneNumber, plan) {
 }
 
 // ========================================
-// SHOW AUTHENTICATED MESSAGE (PAYMENT CONFIRMED & CONNECTED)
+// SHOW SUCCESS MESSAGE (PAYMENT CONFIRMED & INTERNET ACCESS GRANTED)
 // ========================================
 function showAuthenticatedMessage(phoneNumber, plan, data) {
     const formattedPhone = formatPhoneForMpesa(phoneNumber);
