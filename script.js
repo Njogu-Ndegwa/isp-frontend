@@ -584,47 +584,31 @@ function showAuthenticatedMessage(phoneNumber, plan, data) {
     
     successMessage.innerHTML = `
         <div style="text-align: center;">
-            <div style="font-size: 4rem; margin-bottom: 1rem;">🎉</div>
-            <h2 style="font-size: 1.8rem; margin-bottom: 1rem; color: #22c55e;">Payment Confirmed!</h2>
-            <h3 style="font-size: 1.3rem; margin-bottom: 1.5rem; color: #22c55e;">Your Plan is Active!</h3>
+            <div style="font-size: 3rem; margin-bottom: 0.5rem;">✅</div>
+            <h2 style="font-size: 1.5rem; margin-bottom: 0.75rem; color: #22c55e;">Connected!</h2>
             
-            <div style="background: #dcfce7; padding: 20px; border-radius: 12px; margin: 20px 0; border: 2px solid #22c55e;">
-                <div style="font-size: 1.2rem; margin-bottom: 10px;">
-                    <strong>✅ ${data.plan_name || plan.duration}</strong>
+            <div style="background: #dcfce7; padding: 15px; border-radius: 10px; margin: 15px 0; border: 2px solid #22c55e;">
+                <div style="font-size: 1.1rem; font-weight: 700; color: #166534; margin-bottom: 8px;">
+                    ${data.plan_name || plan.duration}
                 </div>
-                <div style="font-size: 0.95rem; color: #166534; margin-top: 10px; line-height: 1.8;">
-                    Status: <strong>Active</strong><br>
-                    Phone: <strong>${formattedPhone}</strong><br>
-                    ${data.expiry ? `Valid Until: <strong>${new Date(data.expiry).toLocaleString()}</strong>` : ''}
+                <div style="font-size: 0.9rem; color: #166534; line-height: 1.6;">
+                    ${formattedPhone}<br>
+                    ${data.expiry ? `Valid until ${new Date(data.expiry).toLocaleDateString()}` : ''}
                 </div>
             </div>
             
-            <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin-top: 15px; border: 2px solid #f59e0b;">
-                <div style="font-size: 1.1rem; color: #92400e; margin-bottom: 10px;">
-                    <strong>📶 Next Step: Refresh Your WiFi</strong>
+            <div style="background: #fef3c7; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+                <div style="font-size: 0.95rem; color: #92400e; font-weight: 600; margin-bottom: 6px;">
+                    📶 Refresh WiFi Now
                 </div>
-                <div style="font-size: 0.95rem; color: #78350f; line-height: 1.8; text-align: left; margin-left: 20px;">
-                    1. Turn OFF your WiFi<br>
-                    2. Wait 2-3 seconds<br>
-                    3. Turn WiFi back ON<br>
-                    4. Start browsing!
+                <div style="font-size: 0.85rem; color: #78350f;">
+                    Turn WiFi OFF → Wait 3 sec → Turn ON
                 </div>
             </div>
             
-            <div style="background: #f0f9ff; padding: 15px; border-radius: 8px; margin-top: 15px;">
-                <div style="font-size: 0.9rem; color: #0369a1; line-height: 1.6;">
-                    💡 <strong>Tip:</strong> After refreshing WiFi, try visiting any website.<br>
-                    Your internet should work immediately!
-                </div>
-            </div>
-            
-            <button onclick="window.location.href='http://google.com'" style="margin-top: 20px; padding: 14px 28px; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1.1rem; font-weight: 600; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+            <button onclick="window.location.href='http://google.com'" style="width: 100%; padding: 14px; background: #22c55e; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1.1rem; font-weight: 700; box-shadow: 0 4px 12px rgba(34,197,94,0.3);">
                 Start Browsing 🚀
             </button>
-            
-            <div style="margin-top: 20px; padding: 10px; font-size: 0.85rem; color: #666; opacity: 0.8;">
-                Thank you for your purchase! Enjoy your internet.
-            </div>
         </div>
     `;
 }
@@ -658,42 +642,30 @@ function showPaymentPendingMessage(phoneNumber, plan) {
     
     successMessage.innerHTML = `
         <div style="text-align: center;">
-            <div style="font-size: 3rem; margin-bottom: 1rem;">📱</div>
-            <h2 style="font-size: 1.5rem; margin-bottom: 1rem; color: #333;">M-Pesa Payment Request Sent!</h2>
+            <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">📱</div>
+            <h2 style="font-size: 1.3rem; margin-bottom: 1rem; color: #1e293b;">Check Your Phone</h2>
             
-            <div style="background: #e3f2fd; padding: 20px; border-radius: 12px; margin: 20px 0; text-align: left;">
-                <div style="font-size: 1.1rem; margin-bottom: 15px;"><strong>📋 Payment Details:</strong></div>
-                <div style="margin-left: 10px; line-height: 1.8;">
-                    • Plan: <strong>${plan.duration}</strong><br>
-                    • Amount: <strong>${plan.price}</strong><br>
-                    • Phone: <strong>${formattedPhone}</strong>
+            <div style="background: #e0f2fe; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                <div style="font-size: 1rem; color: #0369a1; margin-bottom: 8px;">
+                    <strong>${plan.duration} • ${plan.price}</strong>
+                </div>
+                <div style="font-size: 0.9rem; color: #0c4a6e;">
+                    ${formattedPhone}
                 </div>
             </div>
             
-            <div style="background: #fff3e0; padding: 20px; border-radius: 12px; margin-top: 15px; text-align: left;">
-                <div style="font-size: 1.1rem; margin-bottom: 15px;"><strong>⚡ Complete Your Payment:</strong></div>
-                <div style="margin-left: 10px; line-height: 2;">
-                    <div style="margin-bottom: 10px;">
-                        <strong>1.</strong> Check your phone for M-Pesa prompt
-                    </div>
-                    <div style="margin-bottom: 10px;">
-                        <strong>2.</strong> Enter your M-Pesa PIN to confirm
-                    </div>
-                    <div style="margin-bottom: 10px;">
-                        <strong>3.</strong> We'll connect you automatically
-                    </div>
-                    <div style="margin-top: 15px; padding-top: 15px; border-top: 2px solid #ffc107;">
-                        <div class="spinner" style="display: inline-block; width: 20px; height: 20px; border: 3px solid #ddd; border-top-color: #667eea; border-radius: 50%; animation: spin 1s linear infinite; vertical-align: middle;"></div>
-                        <span style="margin-left: 10px; color: #666; font-size: 0.95rem;">
-                            <strong>Waiting for payment...</strong><br>
-                            <span style="font-size: 0.85rem; opacity: 0.8;">Please don't close this page</span>
-                        </span>
-                    </div>
+            <div style="background: #fff7ed; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                <div style="font-size: 0.95rem; color: #92400e; line-height: 1.8;">
+                    <strong>1.</strong> Enter M-Pesa PIN on your phone<br>
+                    <strong>2.</strong> We'll connect you automatically<br>
+                    <strong>3.</strong> Don't close this page
                 </div>
-            </div>
-            
-            <div style="margin-top: 20px; padding: 12px; background: #f0f0f0; border-radius: 8px; font-size: 0.85rem; color: #666;">
-                💡 <strong>Tip:</strong> If you don't see the prompt, dial *334# on Safaricom
+                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #fed7aa;">
+                    <div class="spinner" style="display: inline-block; width: 18px; height: 18px; border: 3px solid #ddd; border-top-color: #f59e0b; border-radius: 50%; animation: spin 1s linear infinite; vertical-align: middle;"></div>
+                    <span style="margin-left: 8px; color: #92400e; font-size: 0.9rem; font-weight: 600;">
+                        Waiting for payment...
+                    </span>
+                </div>
             </div>
         </div>
     `;
