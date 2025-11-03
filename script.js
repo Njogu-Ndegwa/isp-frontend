@@ -11,8 +11,8 @@ const PAYMENT_STATUS_ENDPOINT = `${API_BASE_URL}/hotspot/payment-status`; // New
 const ROUTER_ID = 2; // TODO: Update this with your actual router ID from backend
 
 // Payment polling configuration
-const PAYMENT_POLL_INTERVAL = 2000; // Poll every 2 seconds
-const PAYMENT_POLL_MAX_ATTEMPTS = 30; // Max 60 seconds (30 * 2s)
+const PAYMENT_POLL_INTERVAL = 3000; // Poll every 3 seconds
+const PAYMENT_POLL_MAX_ATTEMPTS = 20; // Max 60 seconds (20 * 3s)
 
 // TEMPORARY: Use CORS proxy for development/testing ONLY if backend CORS is not configured
 // Remove this in production once backend adds proper CORS headers!
@@ -493,38 +493,35 @@ async function pollPaymentStatusAndLogin(customerId, phoneNumber, plan) {
                 const data = await response.json();
                 console.log('📊 Status:', data);
                 
-                // Check if user has internet access
-                if (data.has_internet_access === true) {
-                    // User is fully connected - this is the only "success" state
+                // Check if payment is successful (status is "active")
+                if (data.status === 'active') {
+                    // Payment confirmed and user is active
                     clearInterval(pollInterval);
                     console.log('✅ Payment confirmed!');
-                    console.log('🎉 User has internet access! Connection established!');
-                    console.log('📡 Response:', data.message || 'Internet access granted');
+                    console.log('🎉 Customer status is active! Plan activated!');
+                    console.log('📡 Plan:', data.plan_name);
+                    console.log('⏰ Expiry:', data.expiry);
                     
                     // Show final success message
                     showAuthenticatedMessage(phoneNumber, plan, data);
                     
                     resolve(data);
-                } else if (data.payment_complete === true) {
-                    // Payment was made, but not yet connected
-                    console.log('💳 Payment received, setting up your connection...');
-                    console.log('⏳ Waiting for internet access to be granted...');
-                    console.log('💡 Tip: Try opening a new tab to any website');
-                    
-                    // Update UI to show processing/connecting state
-                    showProcessingPaymentMessage(phoneNumber, plan);
+                } else if (data.status === 'pending') {
+                    // Payment is still pending
+                    console.log(`⏳ Payment status: pending. Retrying in ${PAYMENT_POLL_INTERVAL/1000}s...`);
+                    console.log(`🔄 Attempt ${attempts}/${PAYMENT_POLL_MAX_ATTEMPTS}`);
                     
                     if (attempts >= PAYMENT_POLL_MAX_ATTEMPTS) {
                         clearInterval(pollInterval);
-                        console.warn('⏱️ Timeout - payment received but internet access delayed');
-                        reject(new Error('Payment received but connection taking longer than expected. Please try opening google.com in a new tab or contact support.'));
+                        console.warn('⏱️ Polling timeout - max attempts reached');
+                        reject(new Error('Payment verification timeout. Please check your M-Pesa messages and try again, or contact support if payment was deducted.'));
                     }
                 } else if (attempts >= PAYMENT_POLL_MAX_ATTEMPTS) {
                     clearInterval(pollInterval);
                     console.warn('⏱️ Polling timeout - max attempts reached');
-                    reject(new Error('Payment verification timeout. Please check M-Pesa and refresh the page.'));
+                    reject(new Error('Payment verification timeout. Please refresh the page or contact support.'));
                 } else {
-                    console.log(`⏳ Payment not yet complete. Retrying in ${PAYMENT_POLL_INTERVAL/1000}s...`);
+                    console.log(`⏳ Waiting for payment confirmation. Retrying in ${PAYMENT_POLL_INTERVAL/1000}s...`);
                 }
                 
             } catch (error) {
@@ -588,24 +585,35 @@ function showAuthenticatedMessage(phoneNumber, plan, data) {
         <div style="text-align: center;">
             <div style="font-size: 4rem; margin-bottom: 1rem;">🎉</div>
             <h2 style="font-size: 1.8rem; margin-bottom: 1rem; color: #22c55e;">Payment Confirmed!</h2>
-            <h3 style="font-size: 1.3rem; margin-bottom: 1.5rem; color: #22c55e;">You're Connected!</h3>
+            <h3 style="font-size: 1.3rem; margin-bottom: 1.5rem; color: #22c55e;">Your Plan is Active!</h3>
             
             <div style="background: #dcfce7; padding: 20px; border-radius: 12px; margin: 20px 0; border: 2px solid #22c55e;">
                 <div style="font-size: 1.2rem; margin-bottom: 10px;">
-                    <strong>✅ Internet Access Activated</strong>
+                    <strong>✅ ${data.plan_name || plan.duration}</strong>
                 </div>
                 <div style="font-size: 0.95rem; color: #166534; margin-top: 10px; line-height: 1.8;">
-                    Plan: <strong>${plan.duration}</strong><br>
-                    Status: <strong>Connected & Active</strong><br>
-                    Phone: <strong>${formattedPhone}</strong>
+                    Status: <strong>Active</strong><br>
+                    Phone: <strong>${formattedPhone}</strong><br>
+                    ${data.expiry ? `Valid Until: <strong>${new Date(data.expiry).toLocaleString()}</strong>` : ''}
+                </div>
+            </div>
+            
+            <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin-top: 15px; border: 2px solid #f59e0b;">
+                <div style="font-size: 1.1rem; color: #92400e; margin-bottom: 10px;">
+                    <strong>📶 Next Step: Refresh Your WiFi</strong>
+                </div>
+                <div style="font-size: 0.95rem; color: #78350f; line-height: 1.8; text-align: left; margin-left: 20px;">
+                    1. Turn OFF your WiFi<br>
+                    2. Wait 2-3 seconds<br>
+                    3. Turn WiFi back ON<br>
+                    4. Start browsing!
                 </div>
             </div>
             
             <div style="background: #f0f9ff; padding: 15px; border-radius: 8px; margin-top: 15px;">
-                <div style="font-size: 0.95rem; color: #0369a1; line-height: 1.6;">
-                    🌐 <strong>You can now browse the internet!</strong><br>
-                    Your connection is active and ready to use.<br>
-                    Close this page and enjoy browsing.
+                <div style="font-size: 0.9rem; color: #0369a1; line-height: 1.6;">
+                    💡 <strong>Tip:</strong> After refreshing WiFi, try visiting any website.<br>
+                    Your internet should work immediately!
                 </div>
             </div>
             
