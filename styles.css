@@ -8,22 +8,27 @@
 }
 
 :root {
-    /* Color Palette - High Contrast & Vibrant */
-    --primary-color: #2563eb;
-    --primary-hover: #1d4ed8;
+    /* Color Palette - Dark Theme (Cool & Professional) */
+    --primary-color: #3b82f6;
+    --primary-hover: #2563eb;
     --success-color: #22c55e;
     --success-hover: #16a34a;
     --error-color: #ef4444;
     --accent-color: #f59e0b;
-    --text-primary: #1f2937;
-    --text-secondary: #6b7280;
-    --text-light: #9ca3af;
+    --accent-purple: #a855f7;
+    --accent-cyan: #06b6d4;
+    --text-primary: #ffffff;
+    --text-secondary: #cbd5e1;
+    --text-light: #94a3b8;
     --background: #0f172a;
     --background-light: #1e293b;
+    --background-card: #1e293b;
     --white: #ffffff;
     --border: #334155;
     --border-bright: #3b82f6;
     --shadow: rgba(0, 0, 0, 0.3);
+    --shadow-md: rgba(0, 0, 0, 0.4);
+    --shadow-lg: rgba(0, 0, 0, 0.5);
     --overlay-bg: rgba(30, 41, 59, 0.95);
     
     /* Spacing */
@@ -50,11 +55,13 @@
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     background-color: var(--background);
-    color: var(--white);
+    color: var(--text-primary);
     line-height: 1.6;
     font-size: var(--font-md);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+    min-height: 100vh;
 }
 
 /* ========================================
@@ -69,28 +76,76 @@ body {
 }
 
 /* ========================================
-   Header
+   Header - Classy & Impressive
    ======================================== */
 .header {
-    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    background: linear-gradient(135deg, #22c55e 0%, #10b981 50%, #059669 100%);
     color: var(--white);
-    padding: var(--spacing-sm) var(--spacing-md);
+    padding: 2rem var(--spacing-md);
     text-align: center;
-    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+    box-shadow: 0 8px 32px rgba(34, 197, 94, 0.4), 0 4px 16px rgba(0, 0, 0, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Animated gradient mesh */
+.header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 30% 50%, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 70% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+    animation: mesh-move 8s ease-in-out infinite;
+}
+
+@keyframes mesh-move {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    50% { transform: translate(10px, 10px) rotate(5deg); }
+}
+
+/* Subtle scan line effect */
+.header::after {
+    content: '';
+    position: absolute;
+    top: -100%;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.1), transparent);
+    animation: scan 4s ease-in-out infinite;
+}
+
+@keyframes scan {
+    0% { top: -100%; }
+    50% { top: 100%; }
+    100% { top: 100%; }
 }
 
 .logo {
-    font-size: var(--font-lg);
-    font-weight: 700;
-    margin-bottom: 0.25rem;
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--white);
+    margin-bottom: 0.5rem;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 2px;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.4),
+                 0 0 20px rgba(255, 255, 255, 0.2);
 }
 
 .tagline {
-    font-size: var(--font-xs);
+    font-size: 0.95rem;
+    color: var(--white);
     opacity: 0.95;
-    font-weight: 400;
+    font-weight: 500;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    letter-spacing: 0.5px;
 }
 
 /* ========================================
@@ -105,8 +160,7 @@ body {
    Instructions Card
    ======================================== */
 .instructions-card {
-    background: var(--overlay-bg);
-    backdrop-filter: blur(10px);
+    background: var(--background-card);
     border: 2px solid var(--border);
     border-radius: var(--radius-md);
     padding: var(--spacing-sm) var(--spacing-md);
@@ -126,7 +180,7 @@ body {
     list-style: decimal;
     padding-left: var(--spacing-md);
     margin-bottom: var(--spacing-xs);
-    color: var(--white);
+    color: var(--text-secondary);
 }
 
 .instructions-list li {
@@ -141,7 +195,7 @@ body {
     background: var(--background-light);
     border-radius: var(--radius-sm);
     font-size: var(--font-xs);
-    color: var(--white);
+    color: var(--text-secondary);
     margin-top: var(--spacing-xs);
 }
 
@@ -149,7 +203,6 @@ body {
     color: var(--success-color);
     text-decoration: none;
     font-weight: 600;
-    font-size: inherit;
 }
 
 .support-contact a:hover {
@@ -165,26 +218,250 @@ body {
 }
 
 /* ========================================
+   Ad Divider - Clear Separation
+   ======================================== */
+.ad-divider {
+    margin: var(--spacing-xl) 0 var(--spacing-lg);
+    text-align: center;
+    position: relative;
+}
+
+.ad-divider::before,
+.ad-divider::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 40%;
+    height: 1px;
+    background: var(--border);
+}
+
+.ad-divider::before {
+    left: 0;
+}
+
+.ad-divider::after {
+    right: 0;
+}
+
+.ad-divider-text {
+    display: inline-block;
+    padding: 0.25rem 1rem;
+    background: var(--background);
+    color: var(--text-light);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+}
+
+/* ========================================
+   Installation Ad (Bottom) - Eye-Catching & Worthy
+   ======================================== */
+.installation-ad {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    border: 3px solid var(--accent-color);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(245, 158, 11, 0.3),
+                0 4px 12px rgba(0, 0, 0, 0.4);
+    transition: all 0.4s ease;
+}
+
+/* Animated gradient background */
+.installation-ad::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(245, 158, 11, 0.1) 0%, transparent 70%);
+    animation: ad-glow 4s ease-in-out infinite;
+}
+
+@keyframes ad-glow {
+    0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.5; }
+    50% { transform: translate(-10%, -10%) scale(1.1); opacity: 0.8; }
+}
+
+.installation-ad:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(245, 158, 11, 0.4),
+                0 6px 16px rgba(0, 0, 0, 0.5);
+    border-color: var(--accent-color);
+}
+
+.ad-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: linear-gradient(135deg, var(--accent-color) 0%, #ea580c 100%);
+    color: var(--white);
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.5rem;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.5);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    z-index: 1;
+    animation: badge-pulse 2s ease-in-out infinite;
+}
+
+@keyframes badge-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.ad-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--white);
+    margin-bottom: 0.75rem;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.ad-description {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin-bottom: 1.25rem;
+    position: relative;
+    z-index: 1;
+    opacity: 0.9;
+}
+
+.ad-plans-compact {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    position: relative;
+    z-index: 1;
+}
+
+.ad-plan-item {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+    border: 2px solid rgba(245, 158, 11, 0.3);
+    border-radius: var(--radius-md);
+    padding: 0.875rem 0.5rem;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.ad-plan-item:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent-color);
+    box-shadow: 0 4px 16px rgba(245, 158, 11, 0.3);
+}
+
+.ad-plan-speed {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.ad-plan-price {
+    display: block;
+    font-size: 1.25rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent-color) 0%, #fbbf24 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 2px 4px rgba(245, 158, 11, 0.3));
+}
+
+.ad-cta-button {
+    display: block;
+    background: linear-gradient(135deg, var(--accent-color) 0%, #ea580c 100%);
+    color: var(--white);
+    border: none;
+    font-size: 1.125rem;
+    font-weight: 700;
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.ad-cta-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5);
+}
+
+.ad-cta-button:active {
+    transform: translateY(0);
+}
+
+/* ========================================
    Plans Grid - Mobile First
    ======================================== */
 .plans-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: var(--spacing-xs);
+    gap: 0.75rem;
     margin-bottom: var(--spacing-lg);
 }
 
-/* Plan Card - Simplified & Compact */
+/* Skeleton Loading Cards */
+.skeleton-card {
+    background: var(--background-card);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    min-height: 180px;
+    position: relative;
+    overflow: hidden;
+}
+
+.skeleton-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+    animation: skeleton-loading 1.5s infinite;
+}
+
+@keyframes skeleton-loading {
+    0% {
+        left: -100%;
+    }
+    100% {
+        left: 100%;
+    }
+}
+
+/* Plan Card - BOLD & CLEAR */
 .plan-card {
-    background: var(--white);
-    border: 3px solid var(--border-bright);
-    border-radius: var(--radius-md);
-    padding: var(--spacing-sm) var(--spacing-md);
+    background: #ffffff;
+    border: 4px solid var(--border-bright);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 8px var(--shadow);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.2),
+                0 4px 12px rgba(0, 0, 0, 0.1);
     text-align: center;
-    min-height: 100px;
+    min-height: 150px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -192,103 +469,120 @@ body {
     overflow: hidden;
 }
 
-/* Subtle pulse animation for popular plans */
-.plan-card.popular::after {
+/* Shimmer effect on hover */
+.plan-card::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border-radius: var(--radius-md);
-    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
-    animation: pulse-border 2s infinite;
-    pointer-events: none;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        45deg,
+        transparent 30%,
+        rgba(59, 130, 246, 0.15) 50%,
+        transparent 70%
+    );
+    transform: translateX(-100%);
+    transition: transform 0.6s;
 }
 
-@keyframes pulse-border {
-    0%, 100% {
-        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
-    }
-    50% {
-        box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
-    }
+.plan-card:hover::before {
+    transform: translateX(100%);
 }
 
 .plan-card:hover,
 .plan-card:focus {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
-    border-color: var(--success-color);
+    transform: translateY(-6px);
+    box-shadow: 0 16px 32px rgba(59, 130, 246, 0.3),
+                0 8px 20px rgba(0, 0, 0, 0.15);
+    border-color: var(--primary-color);
 }
 
 .plan-card:active {
-    transform: translateY(0);
+    transform: translateY(-4px);
 }
 
 .plan-duration {
-    font-size: var(--font-lg);
-    font-weight: 700;
+    font-size: 1.75rem;
+    font-weight: 800;
     color: var(--success-color);
-    margin-bottom: var(--spacing-xs);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    margin-bottom: 0.75rem;
+    text-shadow: 0 2px 6px rgba(34, 197, 94, 0.25);
+    position: relative;
 }
 
 .plan-price {
-    font-size: var(--font-xl);
-    font-weight: 800;
-    color: var(--error-color);
-    margin-bottom: var(--spacing-xs);
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    line-height: 1.2;
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: #ef4444;
+    margin-bottom: 0.75rem;
+    line-height: 1.1;
+    position: relative;
+    text-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
 }
 
 .plan-price .currency-code {
-    font-size: 0.5em;
-    font-weight: 600;
-    vertical-align: top;
-    opacity: 0.8;
+    font-size: 0.4em;
+    font-weight: 700;
+    opacity: 0.85;
     margin-right: 2px;
 }
 
 .plan-speed {
-    font-size: var(--font-md);
-    color: var(--text-primary);
-    font-weight: 500;
-    opacity: 0.8;
+    font-size: 1.125rem;
+    color: #1e293b;
+    font-weight: 700;
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    padding: 0.625rem 1.25rem;
+    border-radius: 2rem;
+    display: inline-block;
+    position: relative;
+    box-shadow: 0 3px 10px rgba(59, 130, 246, 0.25);
+    border: 2px solid rgba(59, 130, 246, 0.3);
 }
 
-/* UX Enhancement: Visual feedback when card is pressed */
-.plan-card:active {
-    transform: scale(0.98);
-    box-shadow: 0 2px 4px var(--shadow);
-}
-
-/* Popular/Featured Plans - Enhanced visibility */
+/* Popular/Featured Plans - EXTRA Bold */
 .plan-card.popular {
     border-color: var(--success-color);
-    border-width: 4px;
+    border-width: 5px;
     background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+    box-shadow: 0 12px 32px rgba(34, 197, 94, 0.35),
+                0 6px 16px rgba(0, 0, 0, 0.15);
+    animation: subtle-pulse 3s ease-in-out infinite;
 }
 
-.plan-card.popular::before {
+@keyframes subtle-pulse {
+    0%, 100% {
+        box-shadow: 0 12px 32px rgba(34, 197, 94, 0.35),
+                    0 6px 16px rgba(0, 0, 0, 0.15);
+    }
+    50% {
+        box-shadow: 0 16px 40px rgba(34, 197, 94, 0.45),
+                    0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+}
+
+.plan-card.popular::after {
     content: '⭐ RECOMMENDED';
     position: absolute;
-    top: 8px;
-    right: -30px;
-    background: var(--success-color);
+    top: 12px;
+    right: -32px;
+    background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
     color: var(--white);
-    padding: 4px 40px;
-    font-size: 0.7rem;
-    font-weight: 700;
+    padding: 6px 45px;
+    font-size: 0.75rem;
+    font-weight: 900;
     transform: rotate(45deg);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    letter-spacing: 0.5px;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.6);
+    letter-spacing: 1px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .plan-card.popular:hover {
     border-color: var(--success-color);
-    box-shadow: 0 8px 20px rgba(34, 197, 94, 0.4);
+    box-shadow: 0 20px 48px rgba(34, 197, 94, 0.45),
+                0 10px 24px rgba(0, 0, 0, 0.2);
 }
 
 /* ========================================
@@ -321,12 +615,12 @@ body {
 }
 
 .selected-plan-info {
-    background: var(--white);
+    background: var(--background-card);
     border: 3px solid var(--border-bright);
     border-radius: var(--radius-md);
     padding: var(--spacing-lg);
     margin-bottom: var(--spacing-lg);
-    box-shadow: 0 4px 8px var(--shadow);
+    box-shadow: 0 8px 16px var(--shadow);
     text-align: center;
 }
 
@@ -340,7 +634,7 @@ body {
 .selected-plan-price {
     font-size: var(--font-xl);
     font-weight: 800;
-    color: var(--error-color);
+    color: var(--white);
     margin-bottom: var(--spacing-xs);
     line-height: 1.2;
 }
@@ -355,7 +649,7 @@ body {
 
 .selected-plan-speed {
     font-size: var(--font-md);
-    color: var(--text-primary);
+    color: var(--text-secondary);
     font-weight: 500;
 }
 
@@ -366,7 +660,7 @@ body {
     border: 2px solid var(--border);
     border-radius: var(--radius-md);
     padding: var(--spacing-lg);
-    box-shadow: 0 4px 12px var(--shadow);
+    box-shadow: 0 8px 16px var(--shadow);
 }
 
 .form-title {
@@ -563,7 +857,12 @@ body {
 @media (min-width: 640px) {
     .plans-grid {
         grid-template-columns: repeat(2, 1fr);
-        gap: var(--spacing-md);
+        gap: 1rem;
+    }
+    
+    .installation-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
     }
     
     .main-content {
@@ -575,48 +874,24 @@ body {
     }
     
     .logo {
-        font-size: var(--font-xl);
-    }
-    
-    .tagline {
-        font-size: var(--font-sm);
-    }
-    
-    .instructions-card {
-        padding: var(--spacing-lg);
-        margin-bottom: var(--spacing-lg);
-    }
-    
-    .instructions-title {
-        font-size: var(--font-lg);
-        margin-bottom: var(--spacing-md);
-    }
-    
-    .instructions-list {
-        padding-left: var(--spacing-lg);
-        margin-bottom: var(--spacing-md);
-    }
-    
-    .instructions-list li {
-        padding: var(--spacing-xs) 0;
-        font-size: var(--font-sm);
-        line-height: 1.6;
-    }
-    
-    .support-contact {
-        padding: var(--spacing-md);
-        font-size: var(--font-sm);
-        margin-top: var(--spacing-md);
+        font-size: 1.75rem;
     }
     
     .section-title {
-        font-size: var(--font-lg);
-        margin-bottom: var(--spacing-md);
+        font-size: 1.75rem;
     }
     
     .plan-card {
-        padding: var(--spacing-md);
-        min-height: 120px;
+        padding: 1.5rem;
+        min-height: 160px;
+    }
+    
+    .promo-banner {
+        padding: 2rem;
+    }
+    
+    .promo-title {
+        font-size: 2rem;
     }
 }
 
@@ -632,12 +907,6 @@ body {
     
     .main-content {
         padding: var(--spacing-xl);
-    }
-    
-    /* Hover effects are more prominent on desktop */
-    .plan-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 20px var(--shadow);
     }
 }
 

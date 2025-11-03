@@ -203,6 +203,7 @@ function formatDuration(value, unit) {
 // RENDER PLANS
 // ========================================
 function renderPlans(plans) {
+    // Clear skeleton loaders
     plansGrid.innerHTML = '';
     
     plans.forEach(plan => {
