@@ -148,7 +148,7 @@ async function loadPlans() {
                 <button onclick="loadPlans()" style="padding: 1rem 2rem; background: var(--primary-color); color: white; border: none; border-radius: 0.5rem; cursor: pointer; font-size: 1rem; margin-bottom: 1rem;">
                     🔄 Try Again
                 </button>
-                <p style="font-size: 0.75rem; opacity: 0.6;">If the problem persists, please contact support: 1-800-HOTSPOT</p>
+                <p style="font-size: 0.75rem; opacity: 0.6;">If the problem persists, please contact support: 0795635364</p>
             </div>
         `;
     }
@@ -166,7 +166,7 @@ function transformPlansData(apiPlans) {
         const price = `KSH ${plan.price}/-`;
         
         // Format speed
-        const speed = plan.speed || 'Unlimited';
+        const speed = formatSpeed(plan.speed);
         
         // Mark popular plan (you can customize this logic)
         const popular = index === 0; // First plan is popular by default
@@ -197,6 +197,46 @@ function formatDuration(value, unit) {
     
     const unitText = unitMap[unit] || unit.toLowerCase();
     return `${value} ${unitText}`;
+}
+
+// ========================================
+// FORMAT SPEED TEXT
+// ========================================
+function formatSpeed(speed) {
+    if (!speed || speed === 'Unlimited' || speed.toLowerCase() === 'unlimited') {
+        return 'Unlimited';
+    }
+    
+    // Handle various formats:
+    // "1M/2M" -> "1Mbps"
+    // "2M/4M" -> "2Mbps"
+    // "512k/1M" -> "512Kbps"
+    // "10M" -> "10Mbps"
+    
+    // Extract download speed (first part before /)
+    const downloadSpeed = speed.split('/')[0].trim();
+    
+    // If already has "Mbps" or "Kbps", return as is
+    if (downloadSpeed.match(/mbps|kbps/i)) {
+        return downloadSpeed;
+    }
+    
+    // Convert "M" to "Mbps" and "k" or "K" to "Kbps"
+    if (downloadSpeed.match(/^\d+(\.\d+)?[mM]$/)) {
+        return downloadSpeed.replace(/[mM]$/, 'Mbps');
+    }
+    
+    if (downloadSpeed.match(/^\d+(\.\d+)?[kK]$/)) {
+        return downloadSpeed.replace(/[kK]$/, 'Kbps');
+    }
+    
+    // If just a number, assume Mbps
+    if (downloadSpeed.match(/^\d+(\.\d+)?$/)) {
+        return `${downloadSpeed}Mbps`;
+    }
+    
+    // Fallback: return original
+    return downloadSpeed;
 }
 
 // ========================================
@@ -691,7 +731,7 @@ function showErrorMessage(message) {
             </div>
             
             <div style="margin-top: 15px; padding: 12px; background: #f0f0f0; border-radius: 8px; font-size: 0.9rem; color: #666;">
-                💡 Need help? Call support: <strong>1-800-HOTSPOT</strong>
+                💡 Need help? Call support: <strong>0795635364</strong>
             </div>
         </div>
     `;
