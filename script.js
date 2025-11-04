@@ -158,7 +158,28 @@ async function loadPlans() {
 // TRANSFORM API PLANS DATA
 // ========================================
 function transformPlansData(apiPlans) {
-    return apiPlans.map((plan, index) => {
+    // First, calculate time-to-price ratio for each plan
+    const plansWithRatio = apiPlans.map((plan) => {
+        // Convert duration to hours for comparison
+        const durationInHours = convertToHours(plan.duration_value, plan.duration_unit);
+        
+        // Calculate ratio: hours per KSH (higher is better value)
+        const timeToPrice = durationInHours / plan.price;
+        
+        return {
+            ...plan,
+            durationInHours: durationInHours,
+            timeToPrice: timeToPrice
+        };
+    });
+    
+    // Find the plan with the best (highest) time-to-price ratio
+    const bestPlan = plansWithRatio.reduce((best, current) => {
+        return current.timeToPrice > best.timeToPrice ? current : best;
+    });
+    
+    // Transform plans with popularity marking
+    const transformedPlans = plansWithRatio.map((plan) => {
         // Parse duration
         const duration = formatDuration(plan.duration_value, plan.duration_unit);
         
@@ -168,8 +189,8 @@ function transformPlansData(apiPlans) {
         // Format speed
         const speed = formatSpeed(plan.speed);
         
-        // Mark popular plan (you can customize this logic)
-        const popular = index === 0; // First plan is popular by default
+        // Mark plan as popular if it has the best time-to-price ratio
+        const popular = plan.id === bestPlan.id;
         
         return {
             id: plan.id,
@@ -181,6 +202,31 @@ function transformPlansData(apiPlans) {
             originalData: plan
         };
     });
+    
+    // Sort plans: popular plan first, then the rest
+    transformedPlans.sort((a, b) => {
+        if (a.popular && !b.popular) return -1; // a comes first
+        if (!a.popular && b.popular) return 1;  // b comes first
+        return 0; // keep original order for non-popular plans
+    });
+    
+    return transformedPlans;
+}
+
+// ========================================
+// CONVERT DURATION TO HOURS
+// ========================================
+function convertToHours(value, unit) {
+    const conversionMap = {
+        'MINUTES': 1 / 60,      // 1 minute = 1/60 hours
+        'HOURS': 1,             // 1 hour = 1 hour
+        'DAYS': 24,             // 1 day = 24 hours
+        'WEEKS': 24 * 7,        // 1 week = 168 hours
+        'MONTHS': 24 * 30       // 1 month ≈ 720 hours (30 days)
+    };
+    
+    const multiplier = conversionMap[unit.toUpperCase()] || 1;
+    return value * multiplier;
 }
 
 // ========================================
