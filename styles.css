@@ -125,16 +125,17 @@ body {
 }
 
 .logo {
-    font-size: 2rem;
-    font-weight: 800;
+    font-size: 2.25rem;
+    font-weight: 400;
+    font-family: 'Pacifico', cursive;
     color: var(--white);
     margin-bottom: 0.5rem;
-    text-transform: uppercase;
-    letter-spacing: 2px;
+    text-transform: none;
+    letter-spacing: 1px;
     position: relative;
     z-index: 1;
-    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.4),
-                 0 0 20px rgba(255, 255, 255, 0.2);
+    text-shadow: 0 3px 10px rgba(0, 0, 0, 0.4),
+                 0 0 24px rgba(255, 255, 255, 0.3);
 }
 
 .tagline {
