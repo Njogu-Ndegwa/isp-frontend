@@ -6,142 +6,257 @@
     <title>Bitwave Soko Wifi - Get Connected</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles003.css">
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
+    <div class="app">
+        <!-- Floating Header -->
         <header class="header">
-            <h1 class="logo">🌐 Bitwave Soko Wifi</h1>
-            <p class="tagline">Connect in Seconds • Stay Connected Longer</p>
+            <div class="header-inner">
+                <div class="brand">
+                    <span class="brand-icon">📡</span>
+                    <div class="brand-text">
+                        <h1 class="logo">Bitwave Soko</h1>
+                        <span class="tagline">Market WiFi</span>
+                    </div>
+                </div>
+                <a href="tel:0795635364" class="help-btn">
+                    <span class="help-icon">📞</span>
+                    <span class="help-text">Help</span>
+                </a>
+            </div>
         </header>
 
         <!-- Main Content -->
-        <main class="main-content">
+        <main class="main" id="mainContent">
+            
             <!-- Plans Section -->
             <section class="plans-section" id="plansSection">
-                <!-- Instructions Card -->
-                <div class="instructions-card">
-                    <h2 class="instructions-title">🚀 How To Get Connected</h2>
-                    <ol class="instructions-list">
-                        <li>Select your preferred plan below</li>
-                        <li>Enter your mobile number</li>
-                        <li>Click "Continue to Payment"</li>
-                        <li>Enter M-Pesa PIN when prompted (wait 30 seconds for confirmation)</li>
-                    </ol>
-                    <div class="support-contact">
-                        <strong>Need Help?</strong><br>
-                        📞 Call Support: <a href="tel:0795635364">0795635364</a><br>
-                        <span style="font-size: 0.875rem; opacity: 0.8;">Available 24/7</span>
-                    </div>
-                </div>
-
-                <!-- Hotspot Plans Title - MAIN FOCUS -->
-                <h2 class="section-title">⚡ Select Your WiFi Plan</h2>
                 
-                <!-- Plans Grid with Skeleton -->
-                <div class="plans-grid" id="plansGrid">
-                    <!-- Skeleton loaders will show while loading -->
-                    <div class="skeleton-card"></div>
-                    <div class="skeleton-card"></div>
-                    <div class="skeleton-card"></div>
-                </div>
-
-                <!-- Divider - Clear Separation -->
-                <div class="ad-divider">
-                    <span class="ad-divider-text">Advertisement</span>
-                </div>
-
-                <!-- Installation Service Ad (Bottom) -->
-                <div class="installation-ad">
-                    <div class="ad-badge">SPONSORED</div>
-                    <h3 class="ad-title">🏠 Need Home Internet Installation?</h3>
-                    <p class="ad-description">Professional fiber installation at your home or office</p>
-                    
-                    <div class="ad-plans-compact">
-                        <div class="ad-plan-item">
-                            <span class="ad-plan-speed">10 Mbps</span>
-                            <span class="ad-plan-price">KSH 2,000</span>
-                        </div>
-                        <div class="ad-plan-item">
-                            <span class="ad-plan-speed">20 Mbps</span>
-                            <span class="ad-plan-price">KSH 3,000</span>
-                        </div>
-                        <div class="ad-plan-item">
-                            <span class="ad-plan-speed">40 Mbps</span>
-                            <span class="ad-plan-price">KSH 5,000</span>
-                        </div>
+                <!-- Featured Marketplace Ads - Horizontal Scroll -->
+                <div class="marketplace-showcase">
+                    <div class="showcase-header">
+                        <h3 class="showcase-title">🛒 Soko Deals Today</h3>
+                        <span class="showcase-badge">AD</span>
                     </div>
-                    
-                    <a href="tel:0795635364" class="ad-cta-button">
-                        📞 Call 0795635364
-                    </a>
+                    <div class="showcase-scroll" id="showcaseScroll">
+                        <!-- Placeholder products - These would be populated dynamically -->
+                        <div class="product-card">
+                            <div class="product-image">
+                                <img src="https://images.unsplash.com/photo-1560343090-f0409e92791a?w=200&h=200&fit=crop" alt="Fresh Tomatoes" loading="lazy">
+                                <span class="product-badge hot">🔥 Hot</span>
+                            </div>
+                            <div class="product-info">
+                                <h4 class="product-name">Fresh Tomatoes</h4>
+                                <p class="product-seller">Mama Njeri - Stall 42</p>
+                                <p class="product-price">KSH 80<span>/kg</span></p>
+                            </div>
+                        </div>
+                        
+                        <div class="product-card">
+                            <div class="product-image">
+                                <img src="https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=200&h=200&fit=crop" alt="Phone Accessories" loading="lazy">
+                                <span class="product-badge new">✨ New</span>
+                            </div>
+                            <div class="product-info">
+                                <h4 class="product-name">Phone Cases</h4>
+                                <p class="product-seller">Tech Corner - B12</p>
+                                <p class="product-price">KSH 150<span>+</span></p>
+                            </div>
+                        </div>
+                        
+                        <div class="product-card">
+                            <div class="product-image">
+                                <img src="https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=200&h=200&fit=crop" alt="Sukuma Wiki" loading="lazy">
+                            </div>
+                            <div class="product-info">
+                                <h4 class="product-name">Sukuma Wiki</h4>
+                                <p class="product-seller">Shamba Fresh - A7</p>
+                                <p class="product-price">KSH 30<span>/bunch</span></p>
+                            </div>
+                        </div>
+                        
+                        <div class="product-card">
+                            <div class="product-image">
+                                <img src="https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?w=200&h=200&fit=crop" alt="Watches" loading="lazy">
+                                <span class="product-badge sale">💰 Sale</span>
+                            </div>
+                            <div class="product-info">
+                                <h4 class="product-name">Fashion Watches</h4>
+                                <p class="product-seller">Style Hub - C3</p>
+                                <p class="product-price">KSH 500<span>+</span></p>
+                            </div>
+                        </div>
+                        
+                        <div class="product-card">
+                            <div class="product-image">
+                                <img src="https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?w=200&h=200&fit=crop" alt="Bananas" loading="lazy">
+                            </div>
+                            <div class="product-info">
+                                <h4 class="product-name">Ripe Bananas</h4>
+                                <p class="product-seller">Fruits Paradise - D5</p>
+                                <p class="product-price">KSH 100<span>/dozen</span></p>
+                            </div>
+                        </div>
+
+                        <a href="tel:0795635364" class="product-card ad-cta-card">
+                            <div class="ad-cta-content">
+                                <div class="ad-cta-icon">+</div>
+                                <span class="ad-cta-text">Your Ad Here</span>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="scroll-hint">
+                        <span>← Swipe for more deals →</span>
+                    </div>
                 </div>
+
+                <!-- Quick Instructions -->
+                <div class="quick-steps">
+                    <div class="step">
+                        <span class="step-num">1</span>
+                        <span class="step-text">Pick Plan</span>
+                    </div>
+                    <div class="step-arrow">→</div>
+                    <div class="step">
+                        <span class="step-num">2</span>
+                        <span class="step-text">Enter Phone</span>
+                    </div>
+                    <div class="step-arrow">→</div>
+                    <div class="step">
+                        <span class="step-num">3</span>
+                        <span class="step-text">Pay & Connect</span>
+                    </div>
+                </div>
+
+                <!-- Plans Grid -->
+                <h2 class="section-title">Choose Your Plan</h2>
+                
+                <div class="plans-grid" id="plansGrid">
+                    <!-- Skeleton loaders while loading -->
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                </div>
+
+                <!-- Floating Ad Banner - Inline with experience -->
+                <div class="inline-promo">
+                    <div class="promo-content">
+                        <div class="promo-icon">🏠</div>
+                        <div class="promo-text">
+                            <strong>Need Home WiFi?</strong>
+                            <span>Professional installation from KSH 2,000/month</span>
+                        </div>
+                        <a href="tel:0795635364" class="promo-action">Call Now</a>
+                    </div>
+                </div>
+
             </section>
 
             <!-- Payment Section (Hidden Initially) -->
             <section class="payment-section hidden" id="paymentSection">
-                <button class="back-button" id="backButton">← Change Plan</button>
+                <button class="back-button" id="backButton">
+                    <span class="back-arrow">←</span>
+                    <span>Back to Plans</span>
+                </button>
                 
-                <div class="selected-plan-info" id="selectedPlanInfo">
+                <div class="selected-plan-card" id="selectedPlanInfo">
                     <!-- Selected plan details will appear here -->
                 </div>
 
                 <form class="payment-form" id="paymentForm">
-                    <h2 class="form-title">📱 Complete Your Purchase</h2>
+                    <div class="form-header">
+                        <span class="form-icon">📱</span>
+                        <h2>Enter Your Number</h2>
+                        <p>You'll receive an M-Pesa prompt</p>
+                    </div>
                     
                     <div class="form-group">
-                        <label for="phoneNumber" class="form-label">Mobile Number</label>
-                        <input 
-                            type="tel" 
-                            id="phoneNumber" 
-                            name="phoneNumber" 
-                            class="form-input" 
-                            placeholder="07XXXXXXXX or 01XXXXXXXX"
-                            required
-                            autocomplete="tel"
-                            maxlength="10"
-                            pattern="0[17][0-9]{8}"
-                        >
+                        <div class="input-wrapper">
+                            <span class="input-prefix">+254</span>
+                            <input 
+                                type="tel" 
+                                id="phoneNumber" 
+                                name="phoneNumber" 
+                                class="form-input" 
+                                placeholder="7XX XXX XXX"
+                                required
+                                autocomplete="tel"
+                                maxlength="10"
+                                pattern="0[17][0-9]{8}"
+                            >
+                        </div>
                         <p class="input-hint">Enter 10 digits starting with 07 or 01</p>
                     </div>
 
                     <button type="submit" class="submit-button" id="submitButton">
-                        <span class="button-text">Continue to Payment</span>
-                        <span class="button-loader hidden">Processing...</span>
+                        <span class="button-text">Pay with M-Pesa</span>
+                        <span class="button-loader hidden">
+                            <span class="loader-spinner"></span>
+                            Processing...
+                        </span>
                     </button>
+
+                    <div class="security-note">
+                        <span>🔒</span> Secure payment via Safaricom M-Pesa
+                    </div>
                 </form>
+
+                <!-- Mini Ad during payment -->
+                <div class="payment-ad">
+                    <div class="payment-ad-header">While you wait...</div>
+                    <div class="mini-products" id="miniProducts">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
             </section>
 
-            <!-- Success Message (Hidden Initially) -->
+            <!-- Success Section (Hidden Initially) -->
             <section class="success-section hidden" id="successSection">
                 <div class="success-card">
-                    <div class="success-icon">✓</div>
-                    <h2 class="success-title">You're All Set!</h2>
+                    <div class="success-animation">
+                        <div class="checkmark-circle">
+                            <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                                <circle class="checkmark-bg" cx="26" cy="26" r="25" fill="none"/>
+                                <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <h2 class="success-title">You're Connected! 🎉</h2>
                     <p class="success-message" id="successMessage"></p>
-                    <button class="primary-button" id="newPurchaseButton">Purchase Another Plan</button>
+                    <button class="primary-button" id="newPurchaseButton">Buy More Time</button>
                 </div>
             </section>
 
-            <!-- Error Message (Hidden Initially) -->
+            <!-- Error Section (Hidden Initially) -->
             <section class="error-section hidden" id="errorSection">
                 <div class="error-card">
-                    <div class="error-icon">✕</div>
-                    <h2 class="error-title">Oops! Something Went Wrong</h2>
+                    <div class="error-icon">❌</div>
+                    <h2 class="error-title">Payment Failed</h2>
                     <p class="error-message" id="errorMessage"></p>
                     <button class="primary-button" id="retryButton">Try Again</button>
+                    <a href="tel:0795635364" class="help-link">Need help? Call 0795635364</a>
                 </div>
             </section>
+
         </main>
 
-        <!-- Footer -->
-        <footer class="footer">
-            <p>Questions? We're here to help • Contact: 0795635364</p>
-        </footer>
+        <!-- Sticky Footer Ad - Only shows when scrolled -->
+        <div class="sticky-footer-ad" id="stickyAd">
+            <div class="sticky-ad-content">
+                <img src="https://images.unsplash.com/photo-1560343090-f0409e92791a?w=60&h=60&fit=crop" alt="Featured" class="sticky-ad-img">
+                <div class="sticky-ad-text">
+                    <strong>Today's Special!</strong>
+                    <span>Fresh produce at Stall 42</span>
+                </div>
+                <button class="sticky-ad-close" onclick="document.getElementById('stickyAd').classList.add('hidden')">×</button>
+            </div>
+        </div>
     </div>
 
     <script src="script.js"></script>
+    <script src="script003.js"></script>
 </body>
 </html>
-
