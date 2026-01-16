@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Captive Portal Test</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 { color: #E85D04; margin-bottom: 16px; }
+        .status { padding: 12px; border-radius: 8px; margin: 8px 0; }
+        .ok { background: #d1fae5; color: #065f46; }
+        .fail { background: #fee2e2; color: #991b1b; }
+        .pending { background: #fef3c7; color: #92400e; }
+        img { max-width: 100px; border-radius: 8px; margin: 8px 0; }
+        code { background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>📡 Captive Portal Test</h1>
+        <p>This page tests what's working in your walled garden.</p>
+    </div>
+
+    <div class="card">
+        <h3>1️⃣ HTML Loaded</h3>
+        <div class="status ok">✅ HTML is working!</div>
+    </div>
+
+    <div class="card">
+        <h3>2️⃣ Inline CSS</h3>
+        <div class="status ok">✅ Inline styles working!</div>
+    </div>
+
+    <div class="card">
+        <h3>3️⃣ Local Image Test</h3>
+        <div id="localImageStatus" class="status pending">⏳ Testing...</div>
+        <img id="localImg" src="images/tomatoes.jpg" alt="Local image test" 
+             onload="document.getElementById('localImageStatus').className='status ok'; document.getElementById('localImageStatus').innerHTML='✅ Local images working!'"
+             onerror="document.getElementById('localImageStatus').className='status fail'; document.getElementById('localImageStatus').innerHTML='❌ Local images FAILED - check file path'">
+    </div>
+
+    <div class="card">
+        <h3>4️⃣ External CSS Test</h3>
+        <div id="cssStatus" class="status pending">⏳ Testing...</div>
+        <link rel="stylesheet" href="styles003.css" onload="document.getElementById('cssStatus').className='status ok'; document.getElementById('cssStatus').innerHTML='✅ External CSS loaded!'" onerror="document.getElementById('cssStatus').className='status fail'; document.getElementById('cssStatus').innerHTML='❌ CSS file FAILED to load'">
+    </div>
+
+    <div class="card">
+        <h3>5️⃣ API Connection Test</h3>
+        <div id="apiStatus" class="status pending">⏳ Testing API...</div>
+        <div id="apiDetails" style="font-size: 12px; margin-top: 8px;"></div>
+    </div>
+
+    <div class="card">
+        <h3>6️⃣ Google Fonts Test</h3>
+        <div id="fontStatus" class="status pending">⏳ Testing...</div>
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700&display=swap" rel="stylesheet" 
+              onload="document.getElementById('fontStatus').className='status ok'; document.getElementById('fontStatus').innerHTML='✅ Google Fonts loaded!'"
+              onerror="document.getElementById('fontStatus').className='status fail'; document.getElementById('fontStatus').innerHTML='❌ Google Fonts blocked (OK - fallback works)'">
+    </div>
+
+    <div class="card">
+        <h3>📱 Device Info</h3>
+        <div id="deviceInfo" style="font-size: 12px;"></div>
+    </div>
+
+    <div class="card" style="background: #E85D04; color: white;">
+        <h3>🆘 Need Help?</h3>
+        <p style="margin-top: 8px;">Call: <a href="tel:0795635364" style="color: white; font-weight: bold;">0795635364</a></p>
+    </div>
+
+    <script>
+        // Device info
+        document.getElementById('deviceInfo').innerHTML = `
+            <p><strong>URL:</strong> <code>${window.location.href}</code></p>
+            <p><strong>User Agent:</strong> <code>${navigator.userAgent.substring(0, 50)}...</code></p>
+            <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
+        `;
+
+        // Test API
+        fetch('https://isp.bitwavetechnologies.com/api/plans?user_id=1')
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error('Status: ' + response.status);
+            })
+            .then(data => {
+                document.getElementById('apiStatus').className = 'status ok';
+                document.getElementById('apiStatus').innerHTML = '✅ API connected! Found ' + data.length + ' plans';
+                document.getElementById('apiDetails').innerHTML = '<code>Plans: ' + data.map(p => p.name || p.duration_value + ' ' + p.duration_unit).join(', ') + '</code>';
+            })
+            .catch(error => {
+                document.getElementById('apiStatus').className = 'status fail';
+                document.getElementById('apiStatus').innerHTML = '❌ API FAILED: ' + error.message;
+                document.getElementById('apiDetails').innerHTML = '<p>Check if <code>isp.bitwavetechnologies.com</code> is in walled garden</p>';
+            });
+    </script>
+</body>
+</html>
+

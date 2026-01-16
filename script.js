@@ -24,6 +24,112 @@ function getProxiedUrl(url) {
 }
 
 // ========================================
+// HARDCODED PLANS - For instant loading (zero latency)
+// Update these manually when plans change in the backend
+// ========================================
+const HARDCODED_PLANS = [
+    {
+        "id": 1,
+        "name": "1 Hour Plan",
+        "speed": "1M/2M",
+        "price": 50,
+        "duration_value": 1,
+        "duration_unit": "HOURS",
+        "connection_type": "hotspot",
+        "router_profile": null,
+        "user_id": 1
+    },
+    {
+        "id": 2,
+        "name": "5 Minutes Test Plan",
+        "speed": "1M/2M",
+        "price": 10,
+        "duration_value": 5,
+        "duration_unit": "MINUTES",
+        "connection_type": "hotspot",
+        "router_profile": null,
+        "user_id": 1
+    },
+    {
+        "id": 3,
+        "name": "10 Minutes Test Plan",
+        "speed": "5M/5M",
+        "price": 20,
+        "duration_value": 10,
+        "duration_unit": "MINUTES",
+        "connection_type": "hotspot",
+        "router_profile": null,
+        "user_id": 1
+    },
+    {
+        "id": 4,
+        "name": "20 Minutes Test Plan",
+        "speed": "5M/5M",
+        "price": 30,
+        "duration_value": 20,
+        "duration_unit": "MINUTES",
+        "connection_type": "hotspot",
+        "router_profile": null,
+        "user_id": 1
+    },
+    {
+        "id": 5,
+        "name": "24 Hours plan",
+        "speed": "2M/2M",
+        "price": 100,
+        "duration_value": 24,
+        "duration_unit": "HOURS",
+        "connection_type": "hotspot",
+        "router_profile": "",
+        "user_id": 1
+    },
+    {
+        "id": 6,
+        "name": "1 Ksh Plan",
+        "speed": "5M/2M",
+        "price": 1,
+        "duration_value": 7,
+        "duration_unit": "MINUTES",
+        "connection_type": "hotspot",
+        "router_profile": "default",
+        "user_id": 1
+    },
+    {
+        "id": 7,
+        "name": "2hrs",
+        "speed": "5M/2M",
+        "price": 2,
+        "duration_value": 24,
+        "duration_unit": "HOURS",
+        "connection_type": "hotspot",
+        "router_profile": "default",
+        "user_id": 1
+    },
+    {
+        "id": 8,
+        "name": "8 minute plan",
+        "speed": "7M/2M",
+        "price": 1,
+        "duration_value": 8,
+        "duration_unit": "MINUTES",
+        "connection_type": "hotspot",
+        "router_profile": "default",
+        "user_id": 1
+    },
+    {
+        "id": 9,
+        "name": "Max Bandwith Plan",
+        "speed": "15M/2M",
+        "price": 1,
+        "duration_value": 1,
+        "duration_unit": "HOURS",
+        "connection_type": "hotspot",
+        "router_profile": "default",
+        "user_id": 1
+    }
+];
+
+// ========================================
 // EXTRACT MIKROTIK URL PARAMETERS
 // ========================================
 function getUrlParams() {
@@ -81,11 +187,35 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ========================================
-// LOAD PLANS FROM API
+// LOAD PLANS - Uses hardcoded plans for instant loading
 // ========================================
-async function loadPlans() {
+function loadPlans() {
+    console.log('⚡ Loading hardcoded plans (instant)...');
+    
+    // Use hardcoded plans immediately - no network latency!
+    const plans = transformPlansData(HARDCODED_PLANS);
+    allPlans = plans; // Store for later use
+    
+    renderPlans(plans);
+    console.log('✅ Plans rendered instantly:', plans.length, 'plans');
+}
+
+// ========================================
+// FORCE REFRESH PLANS FROM API (Optional - call manually)
+// Use this when you need to sync with backend changes
+// Call from console: forceRefreshPlans()
+// ========================================
+async function forceRefreshPlans() {
     try {
-        console.log('📡 Fetching plans from API...');
+        console.log('📡 Force refreshing plans from API...');
+        
+        // Show loading state
+        plansGrid.innerHTML = `
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+        `;
         
         // Add timeout to fetch request (30 seconds)
         const controller = new AbortController();
@@ -97,7 +227,7 @@ async function loadPlans() {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
             },
-            mode: 'cors', // Enable CORS
+            mode: 'cors',
             signal: controller.signal
         });
         
@@ -108,49 +238,30 @@ async function loadPlans() {
         }
         
         const apiPlans = await response.json();
-        console.log('✅ Plans loaded:', apiPlans);
+        console.log('✅ Plans refreshed from API:', apiPlans);
         
-        // Check if we got valid data
         if (!Array.isArray(apiPlans) || apiPlans.length === 0) {
-            throw new Error('No plans available');
+            throw new Error('No plans available from API');
         }
         
-        // Transform API data to UI format
+        // Transform and render
         const plans = transformPlansData(apiPlans);
-        allPlans = plans; // Store for later use
-        
+        allPlans = plans;
         renderPlans(plans);
+        
+        // Log the JSON for updating HARDCODED_PLANS
+        console.log('📋 Copy this to update HARDCODED_PLANS:');
+        console.log(JSON.stringify(apiPlans, null, 4));
+        
+        return apiPlans;
     } catch (error) {
-        console.error('❌ Error loading plans:', error);
+        console.error('❌ Error refreshing plans:', error);
         
-        // Provide more specific error messages
-        let errorMessage = 'Unable to load available plans';
-        let detailMessage = '';
+        // Fall back to hardcoded plans
+        console.log('🔄 Falling back to hardcoded plans...');
+        loadPlans();
         
-        if (error.name === 'AbortError') {
-            errorMessage = 'Request Timeout';
-            detailMessage = 'The server took too long to respond. Please check your connection.';
-        } else if (error.message.includes('CORS')) {
-            errorMessage = 'Connection Error';
-            detailMessage = 'Unable to connect to the API server. Please contact support.';
-        } else if (error.message.includes('fetch')) {
-            errorMessage = 'Network Error';
-            detailMessage = 'Unable to reach the server. Please check your internet connection.';
-        } else {
-            detailMessage = error.message;
-        }
-        
-        plansGrid.innerHTML = `
-            <div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: var(--error-color);">
-                <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
-                <p style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem;">${errorMessage}</p>
-                <p style="font-size: 0.875rem; opacity: 0.8; margin-bottom: 1.5rem;">${detailMessage}</p>
-                <button onclick="loadPlans()" style="padding: 1rem 2rem; background: var(--primary-color); color: white; border: none; border-radius: 0.5rem; cursor: pointer; font-size: 1rem; margin-bottom: 1rem;">
-                    🔄 Try Again
-                </button>
-                <p style="font-size: 0.75rem; opacity: 0.6;">If the problem persists, please contact support: 0795635364</p>
-            </div>
-        `;
+        throw error;
     }
 }
 
@@ -851,10 +962,13 @@ phoneNumberInput.addEventListener('blur', function() {
 // CONSOLE LOGS FOR DEBUGGING
 // ========================================
 console.log('🌐 WiFi Portal Initialized');
+console.log('⚡ Plans: Using HARDCODED data (instant load)');
 console.log('🔗 API Endpoints:');
-console.log('  - Plans:', PLANS_ENDPOINT);
 console.log('  - Payment:', PAYMENT_ENDPOINT);
 console.log('💡 Ready to connect!');
+console.log('');
+console.log('🔧 To update plans from backend, run in console:');
+console.log('   forceRefreshPlans().then(plans => console.log(plans))');
 
 // Validate MikroTik parameters on load
 if (!mikrotikParams.mac) {
