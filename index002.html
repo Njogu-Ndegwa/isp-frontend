@@ -1,0 +1,2006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitwave Soko Wifi - Get Connected</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ========================================
+           Root Variables & Reset
+           ======================================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Warm, Market-Inspired Palette */
+            --primary: #2d5016;
+            --primary-light: #4a7c23;
+            --primary-dark: #1e3610;
+            --accent: #e85d04;
+            --accent-light: #f48c06;
+            --accent-glow: rgba(232, 93, 4, 0.3);
+            
+            --surface: #fefdf8;
+            --surface-warm: #faf6eb;
+            --surface-card: #ffffff;
+            --surface-elevated: #fffefa;
+            
+            --text-primary: #1a1a18;
+            --text-secondary: #4a4a45;
+            --text-muted: #7a7a72;
+            --text-inverse: #fefdf8;
+            
+            --border: #e8e4d9;
+            --border-strong: #d4cfc0;
+            
+            --success: #2d5016;
+            --error: #c41e3a;
+            
+            --shadow-sm: 0 1px 3px rgba(26, 26, 24, 0.08);
+            --shadow-md: 0 4px 12px rgba(26, 26, 24, 0.1);
+            --shadow-lg: 0 8px 30px rgba(26, 26, 24, 0.12);
+            --shadow-glow: 0 4px 20px var(--accent-glow);
+            
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+        }
+
+        body {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--surface);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ========================================
+           Background Pattern
+           ======================================== */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(45, 80, 22, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(232, 93, 4, 0.03) 0%, transparent 50%),
+                linear-gradient(180deg, var(--surface) 0%, var(--surface-warm) 100%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* ========================================
+           Header
+           ======================================== */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 50%, var(--primary) 100%);
+            padding: 1.25rem 1rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.5;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-inverse);
+            margin-bottom: 0.25rem;
+            letter-spacing: -0.02em;
+        }
+
+        .logo-icon {
+            display: inline-block;
+            margin-right: 0.5rem;
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { filter: drop-shadow(0 0 8px rgba(255,255,255,0.4)); }
+            50% { filter: drop-shadow(0 0 16px rgba(255,255,255,0.6)); }
+        }
+
+        .tagline {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 400;
+            letter-spacing: 0.02em;
+        }
+
+        /* ========================================
+           Market Ads Carousel (Top)
+           ======================================== */
+        .market-carousel {
+            background: linear-gradient(90deg, var(--surface-warm) 0%, var(--surface) 50%, var(--surface-warm) 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 0.75rem 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .carousel-label {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--accent);
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 0.35rem 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            z-index: 2;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            box-shadow: var(--shadow-md);
+        }
+
+        .carousel-track {
+            display: flex;
+            animation: scroll-carousel 25s linear infinite;
+            gap: 1.5rem;
+            padding-left: 60px;
+        }
+
+        .carousel-track:hover {
+            animation-play-state: paused;
+        }
+
+        @keyframes scroll-carousel {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        .market-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: var(--surface-card);
+            padding: 0.5rem 1rem 0.5rem 0.5rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            flex-shrink: 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 200px;
+        }
+
+        .market-item:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--accent);
+        }
+
+        .market-item-img {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-sm);
+            object-fit: cover;
+            background: linear-gradient(135deg, #f0ebe0 0%, #e8e3d8 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .market-item-info {
+            flex: 1;
+        }
+
+        .market-item-name {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.2;
+            margin-bottom: 0.125rem;
+        }
+
+        .market-item-price {
+            font-size: 0.75rem;
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .market-item-seller {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+        }
+
+        /* ========================================
+           Main Layout
+           ======================================== */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        /* ========================================
+           Instructions Banner (Compact)
+           ======================================== */
+        .instructions-banner {
+            background: var(--surface-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.25rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .instructions-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .instructions-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .instructions-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .instructions-steps {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .step-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--surface-warm);
+            padding: 0.5rem 0.875rem;
+            border-radius: 2rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .step-number {
+            width: 20px;
+            height: 20px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+
+        .support-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+            padding: 0.5rem 0.875rem;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 2rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .support-link:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-glow);
+        }
+
+        /* ========================================
+           Section Title
+           ======================================== */
+        .section-header {
+            text-align: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .section-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        /* ========================================
+           Plans Grid
+           ======================================== */
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.875rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Skeleton Loaders */
+        .skeleton-card {
+            background: var(--surface-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            min-height: 140px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .skeleton-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(45, 80, 22, 0.05), transparent);
+            animation: skeleton-shimmer 1.5s infinite;
+        }
+
+        @keyframes skeleton-shimmer {
+            100% { left: 100%; }
+        }
+
+        /* Plan Card */
+        .plan-card {
+            background: var(--surface-card);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem 1rem;
+            cursor: pointer;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .plan-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .plan-card:hover, .plan-card:focus {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .plan-card:hover::before {
+            opacity: 1;
+        }
+
+        .plan-card.popular {
+            border-color: var(--accent);
+            background: linear-gradient(180deg, #fffbf5 0%, #ffffff 100%);
+        }
+
+        .plan-card.popular::before {
+            background: linear-gradient(90deg, var(--accent) 0%, var(--accent-light) 100%);
+            opacity: 1;
+        }
+
+        .plan-card.popular::after {
+            content: '★ BEST VALUE';
+            position: absolute;
+            top: 12px;
+            right: -24px;
+            background: var(--accent);
+            color: white;
+            font-size: 0.55rem;
+            font-weight: 800;
+            padding: 0.25rem 2rem;
+            transform: rotate(45deg);
+            letter-spacing: 0.05em;
+        }
+
+        .plan-duration {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.375rem;
+        }
+
+        .plan-price {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--accent);
+            margin-bottom: 0.375rem;
+            line-height: 1;
+        }
+
+        .plan-price .currency {
+            font-size: 0.55em;
+            font-weight: 600;
+            opacity: 0.8;
+        }
+
+        .plan-speed {
+            display: inline-block;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            background: var(--surface-warm);
+            padding: 0.35rem 0.75rem;
+            border-radius: 2rem;
+            border: 1px solid var(--border);
+        }
+
+        /* ========================================
+           Featured Market Products Panel
+           ======================================== */
+        .featured-market {
+            background: linear-gradient(135deg, var(--surface-warm) 0%, var(--surface) 100%);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .featured-market::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 60%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(232, 93, 4, 0.05) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .featured-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .featured-title-group {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .featured-badge {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 0.35rem 0.75rem;
+            border-radius: var(--radius-sm);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .featured-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .featured-cta {
+            font-size: 0.75rem;
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            transition: gap 0.3s ease;
+        }
+
+        .featured-cta:hover {
+            gap: 0.5rem;
+        }
+
+        .featured-products {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.875rem;
+        }
+
+        .product-card {
+            background: var(--surface-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--accent);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 100px;
+            background: linear-gradient(135deg, #f5f0e5 0%, #ebe6db 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            position: relative;
+        }
+
+        .product-tag {
+            position: absolute;
+            top: 0.5rem;
+            left: 0.5rem;
+            background: var(--success);
+            color: white;
+            font-size: 0.6rem;
+            font-weight: 700;
+            padding: 0.2rem 0.5rem;
+            border-radius: var(--radius-sm);
+            text-transform: uppercase;
+        }
+
+        .product-info {
+            padding: 0.75rem;
+        }
+
+        .product-name {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+            line-height: 1.3;
+        }
+
+        .product-price {
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        .product-seller {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        /* ========================================
+           Installation Service Ad
+           ======================================== */
+        .ad-divider {
+            margin: 2rem 0 1.5rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .ad-divider::before,
+        .ad-divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 35%;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .ad-divider::before { left: 0; }
+        .ad-divider::after { right: 0; }
+
+        .ad-divider-text {
+            display: inline-block;
+            padding: 0.25rem 1rem;
+            background: var(--surface);
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            border: 1px solid var(--border);
+            border-radius: 2rem;
+        }
+
+        .installation-ad {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, var(--primary-light) 100%);
+            border-radius: var(--radius-xl);
+            padding: 1.75rem;
+            position: relative;
+            overflow: hidden;
+            color: white;
+            box-shadow: 0 8px 32px rgba(45, 80, 22, 0.3);
+        }
+
+        .installation-ad::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -30%;
+            width: 80%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .installation-ad::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent) 0%, var(--accent-light) 100%);
+        }
+
+        .ad-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: var(--accent);
+            color: white;
+            font-size: 0.6rem;
+            font-weight: 800;
+            padding: 0.3rem 0.6rem;
+            border-radius: var(--radius-sm);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .ad-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .ad-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            position: relative;
+        }
+
+        .ad-description {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 1.25rem;
+            position: relative;
+        }
+
+        .ad-plans-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+            position: relative;
+        }
+
+        .ad-plan-item {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--radius-md);
+            padding: 0.875rem 0.5rem;
+            text-align: center;
+            backdrop-filter: blur(8px);
+            transition: all 0.3s ease;
+        }
+
+        .ad-plan-item:hover {
+            background: rgba(255, 255, 255, 0.18);
+            transform: translateY(-2px);
+        }
+
+        .ad-plan-speed {
+            display: block;
+            font-size: 0.8rem;
+            opacity: 0.85;
+            margin-bottom: 0.375rem;
+        }
+
+        .ad-plan-price {
+            display: block;
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--accent-light);
+        }
+
+        .ad-cta-button {
+            display: block;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            color: white;
+            text-decoration: none;
+            text-align: center;
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all 0.3s ease;
+            position: relative;
+            box-shadow: 0 4px 16px rgba(232, 93, 4, 0.4);
+        }
+
+        .ad-cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(232, 93, 4, 0.5);
+        }
+
+        /* ========================================
+           Payment Section
+           ======================================== */
+        .payment-section {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 1rem;
+            min-height: calc(100vh - 80px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0.5rem 0;
+            margin-bottom: 1rem;
+            transition: transform 0.2s ease;
+        }
+
+        .back-button:hover {
+            transform: translateX(-4px);
+        }
+
+        .selected-plan-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            margin-bottom: 1.25rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .selected-plan-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 50%);
+        }
+
+        .selected-plan-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            opacity: 0.9;
+            margin-bottom: 0.25rem;
+        }
+
+        .selected-plan-price {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.25rem;
+        }
+
+        .selected-plan-price .currency {
+            font-size: 0.5em;
+            font-weight: 600;
+            opacity: 0.8;
+        }
+
+        .selected-plan-speed {
+            font-size: 0.9rem;
+            opacity: 0.85;
+        }
+
+        .payment-form {
+            background: var(--surface-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-md);
+        }
+
+        .form-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 1.25rem;
+            color: var(--text-primary);
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.1rem;
+            font-family: inherit;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            background: var(--surface);
+            color: var(--text-primary);
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            transition: all 0.3s ease;
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+            font-weight: 400;
+            letter-spacing: normal;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(45, 80, 22, 0.1);
+        }
+
+        .input-hint {
+            margin-top: 0.375rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .submit-button {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .submit-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(45, 80, 22, 0.3);
+        }
+
+        .submit-button:disabled {
+            background: var(--text-muted);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ========================================
+           Success & Error Sections
+           ======================================== */
+        .success-section, .error-section {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 1rem;
+            min-height: calc(100vh - 80px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .result-card {
+            background: var(--surface-card);
+            border-radius: var(--radius-xl);
+            padding: 2rem;
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .result-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 1.25rem;
+        }
+
+        .success-icon {
+            background: linear-gradient(135deg, var(--success) 0%, var(--primary-light) 100%);
+            color: white;
+        }
+
+        .error-icon {
+            background: linear-gradient(135deg, var(--error) 0%, #e05555 100%);
+            color: white;
+        }
+
+        .result-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+
+        .success-title { color: var(--success); }
+        .error-title { color: var(--error); }
+
+        .result-message {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            line-height: 1.7;
+        }
+
+        .primary-button {
+            display: inline-block;
+            padding: 0.875rem 2rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 0.95rem;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .primary-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(45, 80, 22, 0.3);
+        }
+
+        /* ========================================
+           Footer
+           ======================================== */
+        .footer {
+            text-align: center;
+            padding: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border);
+            margin-top: auto;
+        }
+
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        /* ========================================
+           Utilities
+           ======================================== */
+        .hidden {
+            display: none !important;
+        }
+
+        /* ========================================
+           Responsive Design
+           ======================================== */
+        @media (min-width: 640px) {
+            .plans-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 1rem;
+            }
+
+            .featured-products {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .plan-card {
+                padding: 1.5rem 1.25rem;
+            }
+
+            .plan-duration {
+                font-size: 1.25rem;
+            }
+
+            .plan-price {
+                font-size: 1.75rem;
+            }
+
+            .section-title {
+                font-size: 1.75rem;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .main-layout {
+                display: grid;
+                grid-template-columns: 1fr 320px;
+                gap: 2rem;
+                align-items: start;
+            }
+
+            .plans-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .sidebar-market {
+                display: block;
+            }
+
+            .featured-market {
+                display: none;
+            }
+
+            .market-carousel {
+                display: none;
+            }
+
+            .plan-duration {
+                font-size: 1.35rem;
+            }
+
+            .plan-price {
+                font-size: 2rem;
+            }
+        }
+
+        /* Sidebar for desktop */
+        .sidebar-market {
+            display: none;
+            position: sticky;
+            top: 1rem;
+        }
+
+        .sidebar-market .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .sidebar-market .sidebar-badge {
+            background: var(--accent);
+            color: white;
+            font-size: 0.6rem;
+            font-weight: 700;
+            padding: 0.3rem 0.6rem;
+            border-radius: var(--radius-sm);
+            text-transform: uppercase;
+        }
+
+        .sidebar-market .sidebar-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .sidebar-products {
+            display: flex;
+            flex-direction: column;
+            gap: 0.875rem;
+        }
+
+        .sidebar-product {
+            display: flex;
+            gap: 0.75rem;
+            background: var(--surface-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-product:hover {
+            border-color: var(--accent);
+            box-shadow: var(--shadow-md);
+        }
+
+        .sidebar-product-img {
+            width: 64px;
+            height: 64px;
+            border-radius: var(--radius-sm);
+            background: var(--surface-warm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            flex-shrink: 0;
+        }
+
+        .sidebar-product-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .sidebar-product-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+            line-height: 1.3;
+        }
+
+        .sidebar-product-price {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        .sidebar-product-seller {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 0.125rem;
+        }
+
+        /* Sidebar Installation Ad */
+        .sidebar-install-ad {
+            margin-top: 1.25rem;
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            color: white;
+        }
+
+        .sidebar-install-header {
+            padding: 0.75rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-install-badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .sidebar-install-content {
+            padding: 0.875rem;
+        }
+
+        .sidebar-install-text {
+            font-size: 0.8rem;
+            opacity: 0.9;
+            margin-bottom: 0.75rem;
+        }
+
+        .sidebar-install-prices {
+            display: flex;
+            flex-direction: column;
+            gap: 0.375rem;
+            font-size: 0.75rem;
+            margin-bottom: 0.875rem;
+        }
+
+        .sidebar-install-prices span {
+            opacity: 0.85;
+        }
+
+        .sidebar-install-prices strong {
+            color: var(--accent-light);
+        }
+
+        .sidebar-install-cta {
+            display: block;
+            background: var(--accent);
+            color: white;
+            text-decoration: none;
+            text-align: center;
+            padding: 0.625rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-install-cta:hover {
+            background: var(--accent-light);
+        }
+
+        /* Loading spinner */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .button-loader::after {
+            content: "";
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            margin-left: 0.5rem;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        /* Accessibility */
+        .plan-card:focus-visible,
+        .form-input:focus-visible,
+        .submit-button:focus-visible,
+        .primary-button:focus-visible,
+        .back-button:focus-visible {
+            outline: 3px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ddd;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <h1 class="logo">
+                <span class="logo-icon">📶</span>Bitwave Soko WiFi
+            </h1>
+            <p class="tagline">Connect in Seconds • Discover Local Deals</p>
+        </div>
+    </header>
+
+    <!-- Scrolling Market Carousel -->
+    <div class="market-carousel">
+        <span class="carousel-label">🛒 Soko</span>
+        <div class="carousel-track" id="carouselTrack">
+            <!-- Populated by JS -->
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-container">
+        <!-- Plans Section -->
+        <section class="plans-section" id="plansSection">
+            <!-- Instructions Banner -->
+            <div class="instructions-banner">
+                <div class="instructions-header">
+                    <div class="instructions-icon">🚀</div>
+                    <h2 class="instructions-title">Get Connected in 4 Easy Steps</h2>
+                </div>
+                <div class="instructions-steps">
+                    <div class="step-pill"><span class="step-number">1</span> Choose a plan</div>
+                    <div class="step-pill"><span class="step-number">2</span> Enter phone</div>
+                    <div class="step-pill"><span class="step-number">3</span> Pay via M-Pesa</div>
+                    <div class="step-pill"><span class="step-number">4</span> Browse!</div>
+                </div>
+                <a href="tel:0795635364" class="support-link">📞 Need Help? 0795635364</a>
+            </div>
+
+            <!-- Main Layout: Plans + Sidebar Ads -->
+            <div class="main-layout">
+                <div class="plans-content">
+                    <!-- Section Header -->
+                    <div class="section-header">
+                        <h2 class="section-title">Choose Your Plan</h2>
+                        <p class="section-subtitle">Tap any plan to get started</p>
+                    </div>
+
+                    <!-- Plans Grid -->
+                    <div class="plans-grid" id="plansGrid">
+                        <div class="skeleton-card"></div>
+                        <div class="skeleton-card"></div>
+                        <div class="skeleton-card"></div>
+                    </div>
+
+                    <!-- Featured Market Products (Mobile/Tablet) -->
+                    <div class="featured-market">
+                        <div class="featured-header">
+                            <div class="featured-title-group">
+                                <span class="featured-badge">🛒 Soko</span>
+                                <h3 class="featured-title">Market Deals</h3>
+                            </div>
+                            <a href="#" class="featured-cta">See all →</a>
+                        </div>
+                        <div class="featured-products" id="featuredProducts">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Ad Divider -->
+                    <div class="ad-divider">
+                        <span class="ad-divider-text">Sponsored</span>
+                    </div>
+
+                    <!-- Home Internet Installation Ad -->
+                    <div class="installation-ad">
+                        <div class="ad-badge">SPECIAL OFFER</div>
+                        <div class="ad-icon">🏠</div>
+                        <h3 class="ad-title">Need Home Internet Installation?</h3>
+                        <p class="ad-description">Professional fiber installation at your home or office. Fast, reliable, unlimited!</p>
+                        
+                        <div class="ad-plans-grid">
+                            <div class="ad-plan-item">
+                                <span class="ad-plan-speed">10 Mbps</span>
+                                <span class="ad-plan-price">KSH 2,000</span>
+                            </div>
+                            <div class="ad-plan-item">
+                                <span class="ad-plan-speed">20 Mbps</span>
+                                <span class="ad-plan-price">KSH 3,000</span>
+                            </div>
+                            <div class="ad-plan-item">
+                                <span class="ad-plan-speed">40 Mbps</span>
+                                <span class="ad-plan-price">KSH 5,000</span>
+                            </div>
+                        </div>
+                        
+                        <a href="tel:0795635364" class="ad-cta-button">
+                            📞 Call 0795635364 to Order
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Sidebar Market Ads (Desktop) -->
+                <aside class="sidebar-market">
+                    <div class="sidebar-header">
+                        <span class="sidebar-badge">🛒 Soko</span>
+                        <h3 class="sidebar-title">Market Deals</h3>
+                    </div>
+                    <div class="sidebar-products" id="sidebarProducts">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <!-- Sidebar Installation Ad -->
+                    <div class="sidebar-install-ad">
+                        <div class="sidebar-install-header">
+                            <span class="sidebar-install-badge">🏠 Home Internet</span>
+                        </div>
+                        <div class="sidebar-install-content">
+                            <p class="sidebar-install-text">Professional fiber installation</p>
+                            <div class="sidebar-install-prices">
+                                <span>10Mbps: <strong>KSH 2K</strong></span>
+                                <span>20Mbps: <strong>KSH 3K</strong></span>
+                                <span>40Mbps: <strong>KSH 5K</strong></span>
+                            </div>
+                            <a href="tel:0795635364" class="sidebar-install-cta">📞 Call to Order</a>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+        <!-- Payment Section (Hidden Initially) -->
+        <section class="payment-section hidden" id="paymentSection">
+            <button class="back-button" id="backButton">← Change Plan</button>
+            
+            <div class="selected-plan-card" id="selectedPlanInfo">
+                <!-- Selected plan details appear here -->
+            </div>
+
+            <form class="payment-form" id="paymentForm">
+                <h2 class="form-title">📱 Complete Your Purchase</h2>
+                
+                <div class="form-group">
+                    <label for="phoneNumber" class="form-label">M-Pesa Phone Number</label>
+                    <input 
+                        type="tel" 
+                        id="phoneNumber" 
+                        name="phoneNumber" 
+                        class="form-input" 
+                        placeholder="07XXXXXXXX"
+                        required
+                        autocomplete="tel"
+                        maxlength="10"
+                        pattern="0[17][0-9]{8}"
+                    >
+                    <p class="input-hint">Enter 10 digits starting with 07 or 01</p>
+                </div>
+
+                <button type="submit" class="submit-button" id="submitButton">
+                    <span class="button-text">Continue to Payment</span>
+                    <span class="button-loader hidden">Processing...</span>
+                </button>
+            </form>
+        </section>
+
+        <!-- Success Section (Hidden Initially) -->
+        <section class="success-section hidden" id="successSection">
+            <div class="result-card">
+                <div class="result-icon success-icon">✓</div>
+                <h2 class="result-title success-title">You're All Set!</h2>
+                <p class="result-message" id="successMessage"></p>
+                <button class="primary-button" id="newPurchaseButton">Purchase Another Plan</button>
+            </div>
+        </section>
+
+        <!-- Error Section (Hidden Initially) -->
+        <section class="error-section hidden" id="errorSection">
+            <div class="result-card">
+                <div class="result-icon error-icon">✕</div>
+                <h2 class="result-title error-title">Something Went Wrong</h2>
+                <p class="result-message" id="errorMessage"></p>
+                <button class="primary-button" id="retryButton">Try Again</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>Questions? <a href="tel:0795635364">Call 0795635364</a> • We're here 24/7</p>
+    </footer>
+
+    <script>
+        // ========================================
+        // MARKET PRODUCTS DATA (Sample)
+        // In production, fetch from your API
+        // ========================================
+        const marketProducts = [
+            { id: 1, name: "Fresh Tomatoes (1kg)", price: "KSH 80", seller: "Mama Njeri", emoji: "🍅", tag: "Fresh" },
+            { id: 2, name: "Avocados (3 pcs)", price: "KSH 100", seller: "Farm Direct", emoji: "🥑", tag: "Organic" },
+            { id: 3, name: "Sukuma Wiki Bundle", price: "KSH 30", seller: "Green Gardens", emoji: "🥬", tag: null },
+            { id: 4, name: "Fresh Milk (500ml)", price: "KSH 60", seller: "Happy Cow Dairy", emoji: "🥛", tag: null },
+            { id: 5, name: "Eggs (Tray - 30)", price: "KSH 450", seller: "Poultry King", emoji: "🥚", tag: "Deal" },
+            { id: 6, name: "Mangoes (6 pcs)", price: "KSH 200", seller: "Fruit Paradise", emoji: "🥭", tag: "Sweet" },
+            { id: 7, name: "Onions (1kg)", price: "KSH 120", seller: "Veggie Mart", emoji: "🧅", tag: null },
+            { id: 8, name: "Potatoes (2kg)", price: "KSH 150", seller: "Farm Fresh", emoji: "🥔", tag: null },
+            { id: 9, name: "Bananas (Bunch)", price: "KSH 100", seller: "Tropical Fruits", emoji: "🍌", tag: null },
+            { id: 10, name: "Chapati (5 pcs)", price: "KSH 50", seller: "Mama's Kitchen", emoji: "🫓", tag: "Hot" },
+            { id: 11, name: "Githeri (1kg)", price: "KSH 120", seller: "Traditional Foods", emoji: "🫘", tag: null },
+            { id: 12, name: "Fresh Fish (Tilapia)", price: "KSH 350", seller: "Lake Catch", emoji: "🐟", tag: "Fresh" },
+        ];
+
+        // ========================================
+        // POPULATE MARKET ADS
+        // ========================================
+        function populateMarketAds() {
+            // Carousel (duplicated for infinite scroll)
+            const carouselTrack = document.getElementById('carouselTrack');
+            const carouselHTML = [...marketProducts, ...marketProducts].map(product => `
+                <div class="market-item" onclick="handleProductClick(${product.id})">
+                    <div class="market-item-img">${product.emoji}</div>
+                    <div class="market-item-info">
+                        <div class="market-item-name">${product.name}</div>
+                        <div class="market-item-price">${product.price}</div>
+                        <div class="market-item-seller">by ${product.seller}</div>
+                    </div>
+                </div>
+            `).join('');
+            carouselTrack.innerHTML = carouselHTML;
+
+            // Featured products (mobile/tablet)
+            const featuredProducts = document.getElementById('featuredProducts');
+            const featuredHTML = marketProducts.slice(0, 4).map(product => `
+                <div class="product-card" onclick="handleProductClick(${product.id})">
+                    <div class="product-image">
+                        ${product.emoji}
+                        ${product.tag ? `<span class="product-tag">${product.tag}</span>` : ''}
+                    </div>
+                    <div class="product-info">
+                        <div class="product-name">${product.name}</div>
+                        <div class="product-price">${product.price}</div>
+                        <div class="product-seller">by ${product.seller}</div>
+                    </div>
+                </div>
+            `).join('');
+            featuredProducts.innerHTML = featuredHTML;
+
+            // Sidebar products (desktop)
+            const sidebarProducts = document.getElementById('sidebarProducts');
+            const sidebarHTML = marketProducts.slice(0, 6).map(product => `
+                <div class="sidebar-product" onclick="handleProductClick(${product.id})">
+                    <div class="sidebar-product-img">${product.emoji}</div>
+                    <div class="sidebar-product-info">
+                        <div class="sidebar-product-name">${product.name}</div>
+                        <div class="sidebar-product-price">${product.price}</div>
+                        <div class="sidebar-product-seller">by ${product.seller}</div>
+                    </div>
+                </div>
+            `).join('');
+            sidebarProducts.innerHTML = sidebarHTML;
+        }
+
+        function handleProductClick(productId) {
+            // In production, this could open a modal, link to product page, etc.
+            const product = marketProducts.find(p => p.id === productId);
+            if (product) {
+                alert(`🛒 ${product.name}\n💰 ${product.price}\n👤 Seller: ${product.seller}\n\nContact seller for purchase!`);
+            }
+        }
+
+        // ========================================
+        // API CONFIGURATION
+        // ========================================
+        const API_BASE_URL = 'https://isp.bitwavetechnologies.com/api';
+        const PLANS_ENDPOINT = `${API_BASE_URL}/plans?user_id=1`;
+        const PAYMENT_ENDPOINT = `${API_BASE_URL}/hotspot/register-and-pay`;
+        const PAYMENT_STATUS_ENDPOINT = `${API_BASE_URL}/hotspot/payment-status`;
+        const ROUTER_ID = 2;
+        const PAYMENT_POLL_INTERVAL = 3000;
+        const PAYMENT_POLL_MAX_ATTEMPTS = 20;
+        const USE_CORS_PROXY = false;
+        const CORS_PROXY = 'https://corsproxy.io/?';
+
+        function getProxiedUrl(url) {
+            return USE_CORS_PROXY ? CORS_PROXY + encodeURIComponent(url) : url;
+        }
+
+        // ========================================
+        // MIKROTIK URL PARAMETERS
+        // ========================================
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                mac: params.get('mac') || '',
+                ip: params.get('ip') || '',
+                dst: params.get('dst') || '',
+                gw: params.get('gw') || '',
+                router: params.get('router') || ''
+            };
+        }
+        const mikrotikParams = getUrlParams();
+
+        // ========================================
+        // STATE & DOM
+        // ========================================
+        let selectedPlan = null;
+        let allPlans = [];
+
+        const plansSection = document.getElementById('plansSection');
+        const paymentSection = document.getElementById('paymentSection');
+        const successSection = document.getElementById('successSection');
+        const errorSection = document.getElementById('errorSection');
+        const plansGrid = document.getElementById('plansGrid');
+        const selectedPlanInfo = document.getElementById('selectedPlanInfo');
+        const paymentForm = document.getElementById('paymentForm');
+        const phoneNumberInput = document.getElementById('phoneNumber');
+        const submitButton = document.getElementById('submitButton');
+        const buttonText = submitButton.querySelector('.button-text');
+        const buttonLoader = submitButton.querySelector('.button-loader');
+        const backButton = document.getElementById('backButton');
+        const newPurchaseButton = document.getElementById('newPurchaseButton');
+        const retryButton = document.getElementById('retryButton');
+        const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
+
+        // ========================================
+        // INITIALIZATION
+        // ========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            populateMarketAds();
+            loadPlans();
+            setupEventListeners();
+        });
+
+        // ========================================
+        // LOAD PLANS FROM API
+        // ========================================
+        async function loadPlans() {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 30000);
+                
+                const response = await fetch(getProxiedUrl(PLANS_ENDPOINT), {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                    mode: 'cors',
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                
+                const apiPlans = await response.json();
+                if (!Array.isArray(apiPlans) || apiPlans.length === 0) throw new Error('No plans available');
+                
+                const plans = transformPlansData(apiPlans);
+                allPlans = plans;
+                renderPlans(plans);
+            } catch (error) {
+                console.error('Error loading plans:', error);
+                plansGrid.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: var(--error);">
+                        <div style="font-size: 2.5rem; margin-bottom: 1rem;">⚠️</div>
+                        <p style="font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem;">Unable to load plans</p>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">${error.message}</p>
+                        <button onclick="loadPlans()" style="padding: 0.75rem 1.5rem; background: var(--primary); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: 0.95rem; font-weight: 600;">
+                            🔄 Try Again
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // ========================================
+        // TRANSFORM PLANS DATA
+        // ========================================
+        function transformPlansData(apiPlans) {
+            const plansWithRatio = apiPlans.map(plan => {
+                const durationInHours = convertToHours(plan.duration_value, plan.duration_unit);
+                return { ...plan, durationInHours, timeToPrice: durationInHours / plan.price };
+            });
+            
+            const bestPlan = plansWithRatio.reduce((best, current) => 
+                current.timeToPrice > best.timeToPrice ? current : best
+            );
+            
+            const transformed = plansWithRatio.map(plan => ({
+                id: plan.id,
+                duration: formatDuration(plan.duration_value, plan.duration_unit),
+                price: `KSH ${plan.price}/-`,
+                speed: formatSpeed(plan.speed),
+                popular: plan.id === bestPlan.id,
+                originalData: plan
+            }));
+            
+            transformed.sort((a, b) => (b.popular ? 1 : 0) - (a.popular ? 1 : 0));
+            return transformed;
+        }
+
+        function convertToHours(value, unit) {
+            const map = { 'MINUTES': 1/60, 'HOURS': 1, 'DAYS': 24, 'WEEKS': 168, 'MONTHS': 720 };
+            return value * (map[unit.toUpperCase()] || 1);
+        }
+
+        function formatDuration(value, unit) {
+            const map = { 'HOURS': value === 1 ? 'Hour' : 'Hours', 'DAYS': value === 1 ? 'Day' : 'Days', 
+                          'WEEKS': value === 1 ? 'Week' : 'Weeks', 'MONTHS': value === 1 ? 'Month' : 'Months' };
+            return `${value} ${map[unit] || unit.toLowerCase()}`;
+        }
+
+        function formatSpeed(speed) {
+            if (!speed || speed.toLowerCase() === 'unlimited') return 'Unlimited';
+            const download = speed.split('/')[0].trim();
+            if (download.match(/mbps|kbps/i)) return download;
+            if (download.match(/^\d+(\.\d+)?[mM]$/)) return download.replace(/[mM]$/, 'Mbps');
+            if (download.match(/^\d+(\.\d+)?[kK]$/)) return download.replace(/[kK]$/, 'Kbps');
+            if (download.match(/^\d+(\.\d+)?$/)) return `${download}Mbps`;
+            return download;
+        }
+
+        // ========================================
+        // RENDER PLANS
+        // ========================================
+        function renderPlans(plans) {
+            plansGrid.innerHTML = '';
+            plans.forEach(plan => plansGrid.appendChild(createPlanCard(plan)));
+        }
+
+        function createPlanCard(plan) {
+            const card = document.createElement('div');
+            card.className = `plan-card${plan.popular ? ' popular' : ''}`;
+            card.setAttribute('role', 'button');
+            card.setAttribute('tabindex', '0');
+            card.setAttribute('aria-label', `Select ${plan.duration} plan for ${plan.price}`);
+            
+            const priceMatch = plan.price.match(/^(KSH)\s*(.+)$/);
+            const formattedPrice = priceMatch ? `<span class="currency">${priceMatch[1]}</span> ${priceMatch[2]}` : plan.price;
+            
+            card.innerHTML = `
+                <div class="plan-duration">${plan.duration}</div>
+                <div class="plan-price">${formattedPrice}</div>
+                <div class="plan-speed">${plan.speed}</div>
+            `;
+            
+            card.addEventListener('click', () => selectPlan(plan));
+            card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectPlan(plan); }});
+            return card;
+        }
+
+        // ========================================
+        // SELECT PLAN
+        // ========================================
+        function selectPlan(plan) {
+            selectedPlan = plan;
+            const priceMatch = plan.price.match(/^(KSH)\s*(.+)$/);
+            const formattedPrice = priceMatch ? `<span class="currency">${priceMatch[1]}</span> ${priceMatch[2]}` : plan.price;
+            
+            selectedPlanInfo.innerHTML = `
+                <div class="selected-plan-name">${plan.duration}</div>
+                <div class="selected-plan-price">${formattedPrice}</div>
+                <div class="selected-plan-speed">${plan.speed}</div>
+            `;
+            
+            showSection(paymentSection);
+            hideSection(plansSection);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            setTimeout(() => phoneNumberInput.focus(), 300);
+        }
+
+        // ========================================
+        // EVENT LISTENERS
+        // ========================================
+        function setupEventListeners() {
+            backButton.addEventListener('click', () => {
+                showSection(plansSection);
+                hideSection(paymentSection);
+                resetForm();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+            
+            paymentForm.addEventListener('submit', handlePayment);
+            
+            phoneNumberInput.addEventListener('input', e => {
+                let value = e.target.value.replace(/[^\d]/g, '');
+                if (value.length > 10) value = value.substring(0, 10);
+                e.target.value = value;
+            });
+            
+            newPurchaseButton.addEventListener('click', () => {
+                showSection(plansSection);
+                hideSection(successSection);
+                resetForm();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+            
+            retryButton.addEventListener('click', () => {
+                showSection(paymentSection);
+                hideSection(errorSection);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+
+            phoneNumberInput.addEventListener('blur', function() {
+                if (this.value && !validatePhoneNumber(this.value)) {
+                    this.style.borderColor = 'var(--error)';
+                    this.style.boxShadow = '0 0 0 4px rgba(196, 30, 58, 0.1)';
+                } else if (this.value && validatePhoneNumber(this.value)) {
+                    this.style.borderColor = 'var(--success)';
+                    this.style.boxShadow = '0 0 0 4px rgba(45, 80, 22, 0.1)';
+                } else {
+                    this.style.borderColor = '';
+                    this.style.boxShadow = '';
+                }
+            });
+        }
+
+        // ========================================
+        // HANDLE PAYMENT
+        // ========================================
+        async function handlePayment(e) {
+            e.preventDefault();
+            const phoneNumber = phoneNumberInput.value.trim();
+            
+            if (!phoneNumber) { alert('Please provide your mobile number'); phoneNumberInput.focus(); return; }
+            if (!validatePhoneNumber(phoneNumber)) { alert('Please enter a valid phone number (10 digits starting with 07 or 01)'); phoneNumberInput.focus(); return; }
+            if (!selectedPlan) { alert('Please select a plan first'); return; }
+            
+            setLoadingState(true);
+            
+            try {
+                const paymentResponse = await processPayment(phoneNumber, selectedPlan);
+                showPaymentPendingMessage(phoneNumber, selectedPlan);
+                hideSection(paymentSection);
+                showSection(successSection);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+                const customerId = paymentResponse.customer_id || paymentResponse.id;
+                if (customerId) {
+                    await pollPaymentStatusAndLogin(customerId, phoneNumber, selectedPlan);
+                } else {
+                    throw new Error('Payment initiated but no customer ID returned.');
+                }
+            } catch (error) {
+                showErrorMessageContent(error.message);
+                hideSection(paymentSection);
+                hideSection(successSection);
+                showSection(errorSection);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } finally {
+                setLoadingState(false);
+            }
+        }
+
+        async function processPayment(phoneNumber, plan) {
+            const formattedPhone = formatPhoneForMpesa(phoneNumber);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 60000);
+            
+            const requestBody = {
+                phone: formattedPhone,
+                plan_id: plan.id,
+                mac_address: mikrotikParams.mac,
+                router_id: ROUTER_ID,
+                payment_method: "mobile_money"
+            };
+            
+            const response = await fetch(getProxiedUrl(PAYMENT_ENDPOINT), {
+                method: 'POST',
+                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                mode: 'cors',
+                body: JSON.stringify(requestBody),
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+            
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || data.error || 'Payment failed');
+            return data;
+        }
+
+        async function pollPaymentStatusAndLogin(customerId, phoneNumber, plan) {
+            let attempts = 0;
+            return new Promise((resolve, reject) => {
+                const interval = setInterval(async () => {
+                    attempts++;
+                    try {
+                        const response = await fetch(getProxiedUrl(`${PAYMENT_STATUS_ENDPOINT}/${customerId}`), {
+                            method: 'GET',
+                            headers: { 'Accept': 'application/json' },
+                            mode: 'cors'
+                        });
+                        if (!response.ok) throw new Error(`Status check failed: ${response.status}`);
+                        const data = await response.json();
+                        
+                        if (data.status === 'active') {
+                            clearInterval(interval);
+                            showAuthenticatedMessage(phoneNumber, plan, data);
+                            resolve(data);
+                        } else if (attempts >= PAYMENT_POLL_MAX_ATTEMPTS) {
+                            clearInterval(interval);
+                            reject(new Error('Payment verification timeout. Please contact support.'));
+                        }
+                    } catch (error) {
+                        if (attempts >= PAYMENT_POLL_MAX_ATTEMPTS) {
+                            clearInterval(interval);
+                            reject(error);
+                        }
+                    }
+                }, PAYMENT_POLL_INTERVAL);
+            });
+        }
+
+        // ========================================
+        // UI HELPERS
+        // ========================================
+        function showSection(section) { section.classList.remove('hidden'); }
+        function hideSection(section) { section.classList.add('hidden'); }
+
+        function setLoadingState(isLoading) {
+            submitButton.disabled = isLoading;
+            buttonText.classList.toggle('hidden', isLoading);
+            buttonLoader.classList.toggle('hidden', !isLoading);
+        }
+
+        function showPaymentPendingMessage(phoneNumber, plan) {
+            const formatted = formatPhoneForMpesa(phoneNumber);
+            successMessage.innerHTML = `
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">📱</div>
+                    <h3 style="font-size: 1.2rem; margin-bottom: 1rem; color: var(--text-primary);">Check Your Phone</h3>
+                    <div style="background: var(--surface-warm); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1rem;">
+                        <strong>${plan.duration}</strong> • ${plan.price}<br>
+                        <span style="color: var(--text-muted); font-size: 0.9rem;">${formatted}</span>
+                    </div>
+                    <div style="background: #fff7ed; padding: 1rem; border-radius: var(--radius-md); font-size: 0.9rem; color: #92400e; line-height: 1.8;">
+                        <strong>1.</strong> Enter M-Pesa PIN on your phone<br>
+                        <strong>2.</strong> We'll connect you automatically<br>
+                        <strong>3.</strong> Don't close this page
+                    </div>
+                    <div style="margin-top: 1rem;">
+                        <span class="spinner"></span>
+                        <span style="margin-left: 0.5rem; color: var(--text-muted); font-size: 0.85rem;">Waiting for payment...</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showAuthenticatedMessage(phoneNumber, plan, data) {
+            const formatted = formatPhoneForMpesa(phoneNumber);
+            successMessage.innerHTML = `
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">✅</div>
+                    <h3 style="font-size: 1.2rem; margin-bottom: 1rem; color: var(--success);">You're Connected!</h3>
+                    <div style="background: #f0fdf4; padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1rem; border: 1px solid #bbf7d0;">
+                        <strong style="color: var(--success);">${data.plan_name || plan.duration}</strong><br>
+                        <span style="color: var(--text-muted); font-size: 0.9rem;">${formatted}</span>
+                        ${data.expiry ? `<br><span style="font-size: 0.85rem; color: var(--text-muted);">Valid until ${new Date(data.expiry).toLocaleDateString()}</span>` : ''}
+                    </div>
+                    <div style="background: #fef3c7; padding: 0.875rem; border-radius: var(--radius-md); margin-bottom: 1rem;">
+                        <strong style="color: #92400e;">📶 Refresh WiFi</strong><br>
+                        <span style="font-size: 0.85rem; color: #78350f;">Turn WiFi OFF → Wait 3 sec → Turn ON</span>
+                    </div>
+                    <button onclick="window.location.href='http://google.com'" style="width: 100%; padding: 1rem; background: var(--success); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; font-size: 1rem; font-weight: 700;">
+                        Start Browsing 🚀
+                    </button>
+                </div>
+            `;
+        }
+
+        function showErrorMessageContent(message) {
+            errorMessage.innerHTML = `
+                <div style="text-align: center;">
+                    <div style="font-size: 1rem; color: var(--error); margin-bottom: 1rem;">${message}</div>
+                    <div style="background: #fee2e2; padding: 1rem; border-radius: var(--radius-md); text-align: left; font-size: 0.85rem;">
+                        <strong style="color: #991b1b;">Common Issues:</strong>
+                        <ul style="margin: 0.5rem 0 0 1.25rem; color: #7f1d1d; line-height: 1.8;">
+                            <li>Insufficient M-Pesa balance</li>
+                            <li>Wrong PIN entered</li>
+                            <li>Transaction cancelled</li>
+                        </ul>
+                    </div>
+                    <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-muted);">
+                        💡 Need help? Call <strong>0795635364</strong>
+                    </div>
+                </div>
+            `;
+        }
+
+        function resetForm() { paymentForm.reset(); selectedPlan = null; }
+
+        function validatePhoneNumber(phone) {
+            return /^0[17][0-9]{8}$/.test(phone);
+        }
+
+        function formatPhoneForMpesa(phone) {
+            let cleaned = phone.replace(/[\s\-\(\)]/g, '');
+            if (cleaned.startsWith('0')) cleaned = '254' + cleaned.substring(1);
+            if (cleaned.startsWith('+254')) cleaned = cleaned.substring(1);
+            return cleaned;
+        }
+
+        console.log('🌐 Bitwave Soko WiFi Initialized');
+    </script>
+</body>
+</html>
+

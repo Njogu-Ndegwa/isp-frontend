@@ -1,0 +1,1903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitwave Soko Wifi - Get Connected</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <style>
+        /* ========================================
+           CSS Reset & Variables
+           ======================================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Warm, Earthy Palette - Market Feel */
+            --cream: #FDF8F3;
+            --cream-dark: #F5EDE4;
+            --terracotta: #C75D3A;
+            --terracotta-light: #E8A087;
+            --terracotta-dark: #9A4528;
+            --olive: #4A5D4C;
+            --olive-light: #6B8A6E;
+            --charcoal: #2D2A26;
+            --charcoal-light: #4A4641;
+            --gold: #D4A84B;
+            --gold-light: #E8C97D;
+            --success: #3D8B40;
+            --white: #ffffff;
+            
+            /* Spacing */
+            --space-xs: 0.5rem;
+            --space-sm: 0.75rem;
+            --space-md: 1rem;
+            --space-lg: 1.5rem;
+            --space-xl: 2rem;
+            --space-2xl: 3rem;
+            
+            /* Typography */
+            --font-display: 'Crimson Pro', Georgia, serif;
+            --font-body: 'Outfit', system-ui, sans-serif;
+            
+            /* Borders */
+            --radius-sm: 6px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --radius-full: 50px;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--cream);
+            color: var(--charcoal);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ========================================
+           Ambient Background Pattern
+           ======================================== */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(199, 93, 58, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(74, 93, 76, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(212, 168, 75, 0.04) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ========================================
+           Header - Elegant & Minimal
+           ======================================== */
+        .header {
+            background: linear-gradient(135deg, var(--terracotta) 0%, var(--terracotta-dark) 100%);
+            padding: var(--space-lg) var(--space-md);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(255,255,255,0.03) 10px,
+                rgba(255,255,255,0.03) 20px
+            );
+            animation: headerShift 20s linear infinite;
+        }
+
+        @keyframes headerShift {
+            from { transform: translate(0, 0); }
+            to { transform: translate(28px, 28px); }
+        }
+
+        .logo {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--white);
+            position: relative;
+            z-index: 1;
+            letter-spacing: 0.5px;
+        }
+
+        .logo-icon {
+            display: inline-block;
+            margin-right: 8px;
+            font-style: normal;
+        }
+
+        .tagline {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.9);
+            margin-top: var(--space-xs);
+            font-weight: 400;
+            position: relative;
+            z-index: 1;
+            letter-spacing: 0.3px;
+        }
+
+        /* ========================================
+           Main Layout Container
+           ======================================== */
+        .main-container {
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: var(--space-md);
+        }
+
+        /* ========================================
+           Marketplace Banner (Rotating Ads)
+           ======================================== */
+        .marketplace-banner {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: var(--space-md);
+            margin-bottom: var(--space-lg);
+            box-shadow: 0 4px 20px rgba(45, 42, 38, 0.08);
+            border: 1px solid rgba(212, 168, 75, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .marketplace-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--space-md);
+            padding-bottom: var(--space-sm);
+            border-bottom: 1px solid var(--cream-dark);
+        }
+
+        .marketplace-label {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--olive);
+            font-weight: 600;
+        }
+
+        .marketplace-label::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--gold);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        .marketplace-nav {
+            display: flex;
+            gap: var(--space-xs);
+        }
+
+        .nav-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--cream-dark);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-dot.active {
+            background: var(--terracotta);
+            width: 24px;
+            border-radius: 4px;
+        }
+
+        /* Ad Carousel */
+        .ad-carousel {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ad-track {
+            display: flex;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .ad-slide {
+            min-width: 100%;
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: var(--space-md);
+            align-items: center;
+        }
+
+        .ad-image-container {
+            width: 120px;
+            height: 120px;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            background: var(--cream-dark);
+            position: relative;
+        }
+
+        .ad-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+
+        .ad-slide:hover .ad-image {
+            transform: scale(1.05);
+        }
+
+        .ad-placeholder-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2.5rem;
+            opacity: 0.5;
+        }
+
+        .ad-content {
+            padding-right: var(--space-sm);
+        }
+
+        .ad-vendor {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--terracotta);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .ad-title {
+            font-family: var(--font-display);
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--charcoal);
+            margin-bottom: 6px;
+            line-height: 1.3;
+        }
+
+        .ad-description {
+            font-size: 0.85rem;
+            color: var(--charcoal-light);
+            margin-bottom: var(--space-sm);
+            line-height: 1.5;
+        }
+
+        .ad-price {
+            font-weight: 700;
+            color: var(--olive);
+            font-size: 1.1rem;
+        }
+
+        .ad-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--gold);
+            color: var(--charcoal);
+            padding: 8px 16px;
+            border-radius: var(--radius-full);
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            margin-top: var(--space-sm);
+        }
+
+        .ad-cta:hover {
+            background: var(--gold-light);
+            transform: translateY(-2px);
+        }
+
+        /* ========================================
+           Section Titles
+           ======================================== */
+        .section-header {
+            text-align: center;
+            margin-bottom: var(--space-lg);
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: var(--charcoal);
+            margin-bottom: var(--space-xs);
+        }
+
+        .section-subtitle {
+            font-size: 0.9rem;
+            color: var(--charcoal-light);
+        }
+
+        /* ========================================
+           Instructions Card - Compact
+           ======================================== */
+        .quick-guide {
+            background: linear-gradient(135deg, var(--olive) 0%, var(--olive-light) 100%);
+            border-radius: var(--radius-md);
+            padding: var(--space-md);
+            margin-bottom: var(--space-lg);
+            color: var(--white);
+        }
+
+        .quick-guide-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: var(--space-sm);
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+
+        .quick-steps {
+            display: flex;
+            gap: var(--space-sm);
+            flex-wrap: wrap;
+        }
+
+        .quick-step {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            background: rgba(255,255,255,0.15);
+            padding: 6px 12px;
+            border-radius: var(--radius-full);
+        }
+
+        .step-num {
+            width: 18px;
+            height: 18px;
+            background: var(--white);
+            color: var(--olive);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+
+        /* ========================================
+           Plans Grid
+           ======================================== */
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-md);
+            margin-bottom: var(--space-xl);
+        }
+
+        /* Skeleton Loading */
+        .skeleton-card {
+            background: var(--white);
+            border-radius: var(--radius-md);
+            padding: var(--space-lg);
+            min-height: 150px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .skeleton-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(199, 93, 58, 0.08), transparent);
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            100% { left: 100%; }
+        }
+
+        /* Plan Cards */
+        .plan-card {
+            background: var(--white);
+            border: 2px solid transparent;
+            border-radius: var(--radius-md);
+            padding: var(--space-lg) var(--space-md);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            position: relative;
+            box-shadow: 0 2px 12px rgba(45, 42, 38, 0.06);
+        }
+
+        .plan-card:hover {
+            border-color: var(--terracotta-light);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(199, 93, 58, 0.15);
+        }
+
+        .plan-card:active {
+            transform: translateY(-2px);
+        }
+
+        .plan-card.popular {
+            border-color: var(--gold);
+            background: linear-gradient(180deg, #FFFBF5 0%, var(--white) 100%);
+        }
+
+        .plan-card.popular::before {
+            content: 'Best Value';
+            position: absolute;
+            top: -1px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--gold);
+            color: var(--charcoal);
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 4px 12px;
+            border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+        }
+
+        .plan-duration {
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--olive);
+            margin-bottom: var(--space-xs);
+        }
+
+        .plan-price {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--terracotta);
+            margin-bottom: var(--space-xs);
+            line-height: 1;
+        }
+
+        .plan-price .currency {
+            font-size: 0.5em;
+            font-weight: 600;
+            vertical-align: top;
+            margin-right: 2px;
+        }
+
+        .plan-speed {
+            display: inline-block;
+            font-size: 0.75rem;
+            color: var(--charcoal-light);
+            background: var(--cream);
+            padding: 6px 14px;
+            border-radius: var(--radius-full);
+            font-weight: 500;
+        }
+
+        /* ========================================
+           Featured Products Strip
+           ======================================== */
+        .products-strip {
+            background: var(--charcoal);
+            margin: 0 calc(-1 * var(--space-md));
+            padding: var(--space-lg) var(--space-md);
+            margin-bottom: var(--space-xl);
+        }
+
+        .products-strip-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--space-md);
+        }
+
+        .products-strip-title {
+            color: var(--white);
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+
+        .products-strip-title::before {
+            content: '✨';
+        }
+
+        .see-all-link {
+            color: var(--gold);
+            font-size: 0.8rem;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .products-scroll {
+            display: flex;
+            gap: var(--space-md);
+            overflow-x: auto;
+            padding-bottom: var(--space-sm);
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .products-scroll::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .products-scroll::-webkit-scrollbar-track {
+            background: var(--charcoal-light);
+            border-radius: 2px;
+        }
+
+        .products-scroll::-webkit-scrollbar-thumb {
+            background: var(--gold);
+            border-radius: 2px;
+        }
+
+        .product-card {
+            flex: 0 0 140px;
+            scroll-snap-align: start;
+            background: var(--charcoal-light);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .product-card:hover {
+            transform: scale(1.03);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 100px;
+            background: var(--cream-dark);
+            position: relative;
+        }
+
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .product-emoji {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2rem;
+        }
+
+        .product-info {
+            padding: var(--space-sm);
+        }
+
+        .product-name {
+            font-size: 0.8rem;
+            color: var(--white);
+            font-weight: 500;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .product-price {
+            font-size: 0.85rem;
+            color: var(--gold);
+            font-weight: 700;
+        }
+
+        /* ========================================
+           Support Section
+           ======================================== */
+        .support-card {
+            background: var(--white);
+            border-radius: var(--radius-md);
+            padding: var(--space-md);
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            box-shadow: 0 2px 12px rgba(45, 42, 38, 0.06);
+            margin-bottom: var(--space-xl);
+        }
+
+        .support-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--success) 0%, #4CAF50 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+
+        .support-content {
+            flex: 1;
+        }
+
+        .support-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 2px;
+        }
+
+        .support-text {
+            font-size: 0.8rem;
+            color: var(--charcoal-light);
+        }
+
+        .support-number {
+            background: var(--success);
+            color: var(--white);
+            padding: 10px 18px;
+            border-radius: var(--radius-full);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+        }
+
+        .support-number:hover {
+            background: #2E7D32;
+            transform: scale(1.02);
+        }
+
+        /* ========================================
+           Payment Section
+           ======================================== */
+        .payment-section {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: var(--space-xl) var(--space-md);
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: none;
+            border: none;
+            color: var(--terracotta);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            padding: var(--space-xs);
+            margin-bottom: var(--space-md);
+            transition: transform 0.2s ease;
+        }
+
+        .back-button:hover {
+            transform: translateX(-4px);
+        }
+
+        .selected-plan-card {
+            background: linear-gradient(135deg, var(--olive) 0%, var(--olive-light) 100%);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            text-align: center;
+            color: var(--white);
+            margin-bottom: var(--space-lg);
+        }
+
+        .selected-plan-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.8;
+            margin-bottom: var(--space-xs);
+        }
+
+        .selected-plan-name {
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .selected-plan-price {
+            font-size: 2rem;
+            font-weight: 800;
+        }
+
+        .selected-plan-speed {
+            font-size: 0.9rem;
+            opacity: 0.85;
+            margin-top: 4px;
+        }
+
+        .payment-form {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            box-shadow: 0 4px 20px rgba(45, 42, 38, 0.08);
+        }
+
+        .form-title {
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            text-align: center;
+            margin-bottom: var(--space-lg);
+            color: var(--charcoal);
+        }
+
+        .form-group {
+            margin-bottom: var(--space-md);
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: var(--space-xs);
+            color: var(--charcoal);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 1.1rem;
+            font-family: var(--font-body);
+            border: 2px solid var(--cream-dark);
+            border-radius: var(--radius-md);
+            transition: all 0.3s ease;
+            background: var(--cream);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--terracotta);
+            background: var(--white);
+        }
+
+        .form-input::placeholder {
+            color: #A0998F;
+        }
+
+        .input-hint {
+            font-size: 0.75rem;
+            color: var(--charcoal-light);
+            margin-top: 6px;
+        }
+
+        .submit-button {
+            width: 100%;
+            padding: 16px;
+            background: var(--terracotta);
+            color: var(--white);
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 700;
+            font-family: var(--font-body);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .submit-button:hover {
+            background: var(--terracotta-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(199, 93, 58, 0.3);
+        }
+
+        .submit-button:active {
+            transform: translateY(0);
+        }
+
+        .submit-button:disabled {
+            background: #B5B0A8;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .button-loader {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .button-loader::after {
+            content: '';
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: var(--white);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ========================================
+           Success & Error Sections
+           ======================================== */
+        .result-section {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: var(--space-2xl) var(--space-md);
+            text-align: center;
+        }
+
+        .result-card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            box-shadow: 0 4px 20px rgba(45, 42, 38, 0.08);
+        }
+
+        .result-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            margin: 0 auto var(--space-lg);
+        }
+
+        .result-icon.success {
+            background: #E8F5E9;
+            color: var(--success);
+        }
+
+        .result-icon.error {
+            background: #FFEBEE;
+            color: #D32F2F;
+        }
+
+        .result-title {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            margin-bottom: var(--space-sm);
+        }
+
+        .result-title.success { color: var(--success); }
+        .result-title.error { color: #D32F2F; }
+
+        .result-message {
+            color: var(--charcoal-light);
+            margin-bottom: var(--space-lg);
+            line-height: 1.7;
+        }
+
+        .primary-button {
+            display: inline-block;
+            padding: 14px 32px;
+            background: var(--terracotta);
+            color: var(--white);
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .primary-button:hover {
+            background: var(--terracotta-dark);
+            transform: translateY(-2px);
+        }
+
+        /* ========================================
+           Footer
+           ======================================== */
+        .footer {
+            background: var(--charcoal);
+            color: rgba(255,255,255,0.7);
+            text-align: center;
+            padding: var(--space-lg);
+            font-size: 0.85rem;
+        }
+
+        .footer a {
+            color: var(--gold);
+            text-decoration: none;
+        }
+
+        /* ========================================
+           Utility Classes
+           ======================================== */
+        .hidden {
+            display: none !important;
+        }
+
+        /* ========================================
+           Responsive Design
+           ======================================== */
+        @media (min-width: 640px) {
+            .plans-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .ad-slide {
+                grid-template-columns: 150px 1fr;
+            }
+            
+            .ad-image-container {
+                width: 150px;
+                height: 150px;
+            }
+            
+            .ad-title {
+                font-size: 1.4rem;
+            }
+            
+            .quick-steps {
+                justify-content: center;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .main-container {
+                padding: var(--space-xl);
+            }
+            
+            .plans-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: var(--space-lg);
+            }
+            
+            .plan-card {
+                padding: var(--space-xl) var(--space-lg);
+            }
+            
+            .plan-duration {
+                font-size: 1.5rem;
+            }
+            
+            .plan-price {
+                font-size: 2.2rem;
+            }
+            
+            .marketplace-banner {
+                padding: var(--space-lg);
+            }
+            
+            .ad-slide {
+                grid-template-columns: 180px 1fr;
+            }
+            
+            .ad-image-container {
+                width: 180px;
+                height: 180px;
+            }
+            
+            .products-strip {
+                margin: 0 calc(-1 * var(--space-xl));
+                padding: var(--space-xl);
+            }
+        }
+
+        /* ========================================
+           Accessibility
+           ======================================== */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        .plan-card:focus-visible,
+        .submit-button:focus-visible,
+        .primary-button:focus-visible {
+            outline: 3px solid var(--terracotta);
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1 class="logo"><span class="logo-icon">📶</span>Bitwave Soko Wifi</h1>
+        <p class="tagline">Fast Internet • Marketplace Deals • One Stop</p>
+    </header>
+
+    <main class="main-container">
+        <!-- Plans Section -->
+        <section class="plans-section" id="plansSection">
+            
+            <!-- Marketplace Banner - Rotating Ads -->
+            <div class="marketplace-banner">
+                <div class="marketplace-header">
+                    <span class="marketplace-label">From Our Soko</span>
+                    <div class="marketplace-nav">
+                        <button class="nav-dot active" data-slide="0"></button>
+                        <button class="nav-dot" data-slide="1"></button>
+                        <button class="nav-dot" data-slide="2"></button>
+                    </div>
+                </div>
+                
+                <div class="ad-carousel">
+                    <div class="ad-track" id="adTrack">
+                        <!-- Ad Slide 1 -->
+                        <div class="ad-slide">
+                            <div class="ad-image-container">
+                                <span class="ad-placeholder-icon">🍅</span>
+                                <!-- Replace with actual image: <img src="product.jpg" alt="Fresh Tomatoes" class="ad-image"> -->
+                            </div>
+                            <div class="ad-content">
+                                <span class="ad-vendor">Mama Njeri's Stall</span>
+                                <h3 class="ad-title">Fresh Farm Tomatoes</h3>
+                                <p class="ad-description">Organic tomatoes straight from Kiambu farms. Perfect for your kitchen.</p>
+                                <span class="ad-price">KSH 80/kg</span>
+                                <a href="tel:0712345678" class="ad-cta">📞 Order Now</a>
+                            </div>
+                        </div>
+                        
+                        <!-- Ad Slide 2 -->
+                        <div class="ad-slide">
+                            <div class="ad-image-container">
+                                <span class="ad-placeholder-icon">👗</span>
+                            </div>
+                            <div class="ad-content">
+                                <span class="ad-vendor">Fashion Corner</span>
+                                <h3 class="ad-title">Ankara Dresses - New Arrivals</h3>
+                                <p class="ad-description">Beautiful African prints. Custom tailoring available. Visit stall 45.</p>
+                                <span class="ad-price">From KSH 1,500</span>
+                                <a href="tel:0723456789" class="ad-cta">📞 Inquire</a>
+                            </div>
+                        </div>
+                        
+                        <!-- Ad Slide 3 -->
+                        <div class="ad-slide">
+                            <div class="ad-image-container">
+                                <span class="ad-placeholder-icon">📱</span>
+                            </div>
+                            <div class="ad-content">
+                                <span class="ad-vendor">TechHub Kenya</span>
+                                <h3 class="ad-title">Phone Repair & Accessories</h3>
+                                <p class="ad-description">Screen repairs, chargers, cases. Quick service, quality parts.</p>
+                                <span class="ad-price">Repairs from KSH 500</span>
+                                <a href="tel:0734567890" class="ad-cta">📞 Get Quote</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Guide -->
+            <div class="quick-guide">
+                <div class="quick-guide-title">
+                    <span>⚡</span> Quick Connect
+                </div>
+                <div class="quick-steps">
+                    <div class="quick-step"><span class="step-num">1</span> Pick a plan</div>
+                    <div class="quick-step"><span class="step-num">2</span> Enter phone</div>
+                    <div class="quick-step"><span class="step-num">3</span> Pay via M-Pesa</div>
+                    <div class="quick-step"><span class="step-num">4</span> Browse!</div>
+                </div>
+            </div>
+
+            <!-- Section Header -->
+            <div class="section-header">
+                <h2 class="section-title">Choose Your Plan</h2>
+                <p class="section-subtitle">Tap to select and get connected instantly</p>
+            </div>
+
+            <!-- Plans Grid -->
+            <div class="plans-grid" id="plansGrid">
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+            </div>
+
+            <!-- Featured Products Strip -->
+            <div class="products-strip">
+                <div class="products-strip-header">
+                    <span class="products-strip-title">Featured at the Market</span>
+                    <a href="#" class="see-all-link">View All →</a>
+                </div>
+                <div class="products-scroll">
+                    <div class="product-card">
+                        <div class="product-image"><span class="product-emoji">🥑</span></div>
+                        <div class="product-info">
+                            <div class="product-name">Fresh Avocados</div>
+                            <div class="product-price">KSH 30 each</div>
+                        </div>
+                    </div>
+                    <div class="product-card">
+                        <div class="product-image"><span class="product-emoji">🧺</span></div>
+                        <div class="product-info">
+                            <div class="product-name">Kiondo Baskets</div>
+                            <div class="product-price">KSH 800</div>
+                        </div>
+                    </div>
+                    <div class="product-card">
+                        <div class="product-image"><span class="product-emoji">🍯</span></div>
+                        <div class="product-info">
+                            <div class="product-name">Pure Honey</div>
+                            <div class="product-price">KSH 600/kg</div>
+                        </div>
+                    </div>
+                    <div class="product-card">
+                        <div class="product-image"><span class="product-emoji">👟</span></div>
+                        <div class="product-info">
+                            <div class="product-name">Canvas Shoes</div>
+                            <div class="product-price">KSH 1,200</div>
+                        </div>
+                    </div>
+                    <div class="product-card">
+                        <div class="product-image"><span class="product-emoji">🧴</span></div>
+                        <div class="product-info">
+                            <div class="product-name">Natural Oils</div>
+                            <div class="product-price">KSH 350</div>
+                        </div>
+                    </div>
+                    <div class="product-card">
+                        <div class="product-image"><span class="product-emoji">🥬</span></div>
+                        <div class="product-info">
+                            <div class="product-name">Fresh Sukuma</div>
+                            <div class="product-price">KSH 20/bunch</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Support Card -->
+            <div class="support-card">
+                <div class="support-icon">📞</div>
+                <div class="support-content">
+                    <div class="support-title">Need Help?</div>
+                    <div class="support-text">We're here 24/7 to assist you</div>
+                </div>
+                <a href="tel:0795635364" class="support-number">0795635364</a>
+            </div>
+        </section>
+
+        <!-- Payment Section (Hidden Initially) -->
+        <section class="payment-section hidden" id="paymentSection">
+            <button class="back-button" id="backButton">← Change Plan</button>
+            
+            <div class="selected-plan-card" id="selectedPlanInfo">
+                <!-- Selected plan details will appear here -->
+            </div>
+
+            <form class="payment-form" id="paymentForm">
+                <h2 class="form-title">📱 Complete Purchase</h2>
+                
+                <div class="form-group">
+                    <label for="phoneNumber" class="form-label">M-Pesa Number</label>
+                    <input 
+                        type="tel" 
+                        id="phoneNumber" 
+                        name="phoneNumber" 
+                        class="form-input" 
+                        placeholder="07XXXXXXXX"
+                        required
+                        autocomplete="tel"
+                        maxlength="10"
+                        pattern="0[17][0-9]{8}"
+                    >
+                    <p class="input-hint">Enter 10 digits starting with 07 or 01</p>
+                </div>
+
+                <button type="submit" class="submit-button" id="submitButton">
+                    <span class="button-text">Pay with M-Pesa</span>
+                    <span class="button-loader hidden">Processing...</span>
+                </button>
+            </form>
+        </section>
+
+        <!-- Success Section (Hidden Initially) -->
+        <section class="result-section hidden" id="successSection">
+            <div class="result-card">
+                <div class="result-icon success">✓</div>
+                <h2 class="result-title success">Connected!</h2>
+                <div class="result-message" id="successMessage"></div>
+                <button class="primary-button" id="newPurchaseButton">Buy Another Plan</button>
+            </div>
+        </section>
+
+        <!-- Error Section (Hidden Initially) -->
+        <section class="result-section hidden" id="errorSection">
+            <div class="result-card">
+                <div class="result-icon error">✕</div>
+                <h2 class="result-title error">Oops!</h2>
+                <div class="result-message" id="errorMessage"></div>
+                <button class="primary-button" id="retryButton">Try Again</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>Questions? Call <a href="tel:0795635364">0795635364</a> • Bitwave Technologies</p>
+    </footer>
+
+    <script>
+        // ========================================
+        // AD CAROUSEL FUNCTIONALITY
+        // ========================================
+        const adTrack = document.getElementById('adTrack');
+        const navDots = document.querySelectorAll('.nav-dot');
+        let currentSlide = 0;
+        let autoSlideInterval;
+
+        function goToSlide(index) {
+            currentSlide = index;
+            adTrack.style.transform = `translateX(-${index * 100}%)`;
+            
+            navDots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === index);
+            });
+        }
+
+        function nextSlide() {
+            const totalSlides = document.querySelectorAll('.ad-slide').length;
+            currentSlide = (currentSlide + 1) % totalSlides;
+            goToSlide(currentSlide);
+        }
+
+        // Navigation dots click
+        navDots.forEach((dot, index) => {
+            dot.addEventListener('click', () => {
+                goToSlide(index);
+                resetAutoSlide();
+            });
+        });
+
+        // Auto-advance carousel
+        function startAutoSlide() {
+            autoSlideInterval = setInterval(nextSlide, 5000);
+        }
+
+        function resetAutoSlide() {
+            clearInterval(autoSlideInterval);
+            startAutoSlide();
+        }
+
+        startAutoSlide();
+
+        // ========================================
+        // API CONFIGURATION (from original script.js)
+        // ========================================
+        const API_BASE_URL = 'https://isp.bitwavetechnologies.com/api';
+        const PLANS_ENDPOINT = `${API_BASE_URL}/plans?user_id=1`;
+        const PAYMENT_ENDPOINT = `${API_BASE_URL}/hotspot/register-and-pay`;
+        const PAYMENT_STATUS_ENDPOINT = `${API_BASE_URL}/hotspot/payment-status`;
+
+        const ROUTER_ID = 2;
+        const PAYMENT_POLL_INTERVAL = 3000;
+        const PAYMENT_POLL_MAX_ATTEMPTS = 20;
+
+        const USE_CORS_PROXY = false;
+        const CORS_PROXY = 'https://corsproxy.io/?';
+
+        function getProxiedUrl(url) {
+            return USE_CORS_PROXY ? CORS_PROXY + encodeURIComponent(url) : url;
+        }
+
+        // MikroTik URL Parameters
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                mac: params.get('mac') || '',
+                ip: params.get('ip') || '',
+                dst: params.get('dst') || '',
+                gw: params.get('gw') || '',
+                router: params.get('router') || ''
+            };
+        }
+
+        const mikrotikParams = getUrlParams();
+        console.log('🔧 MikroTik Parameters:', mikrotikParams);
+
+        // ========================================
+        // STATE MANAGEMENT
+        // ========================================
+        let selectedPlan = null;
+        let allPlans = [];
+
+        // ========================================
+        // DOM ELEMENTS
+        // ========================================
+        const plansSection = document.getElementById('plansSection');
+        const paymentSection = document.getElementById('paymentSection');
+        const successSection = document.getElementById('successSection');
+        const errorSection = document.getElementById('errorSection');
+
+        const plansGrid = document.getElementById('plansGrid');
+        const selectedPlanInfo = document.getElementById('selectedPlanInfo');
+        const paymentForm = document.getElementById('paymentForm');
+        const phoneNumberInput = document.getElementById('phoneNumber');
+        const submitButton = document.getElementById('submitButton');
+        const buttonText = submitButton.querySelector('.button-text');
+        const buttonLoader = submitButton.querySelector('.button-loader');
+
+        const backButton = document.getElementById('backButton');
+        const newPurchaseButton = document.getElementById('newPurchaseButton');
+        const retryButton = document.getElementById('retryButton');
+
+        const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
+
+        // ========================================
+        // INITIALIZATION
+        // ========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPlans();
+            setupEventListeners();
+        });
+
+        // ========================================
+        // LOAD PLANS FROM API
+        // ========================================
+        async function loadPlans() {
+            try {
+                console.log('📡 Fetching plans from API...');
+                
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 30000);
+                
+                const response = await fetch(getProxiedUrl(PLANS_ENDPOINT), {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    mode: 'cors',
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status} ${response.statusText}`);
+                }
+                
+                const apiPlans = await response.json();
+                console.log('✅ Plans loaded:', apiPlans);
+                
+                if (!Array.isArray(apiPlans) || apiPlans.length === 0) {
+                    throw new Error('No plans available');
+                }
+                
+                const plans = transformPlansData(apiPlans);
+                allPlans = plans;
+                
+                renderPlans(plans);
+            } catch (error) {
+                console.error('❌ Error loading plans:', error);
+                
+                let errorTitle = 'Unable to load plans';
+                let errorDetail = error.message;
+                
+                if (error.name === 'AbortError') {
+                    errorTitle = 'Request Timeout';
+                    errorDetail = 'Server took too long to respond.';
+                }
+                
+                plansGrid.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: #D32F2F;">
+                        <div style="font-size: 2.5rem; margin-bottom: 1rem;">⚠️</div>
+                        <p style="font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem;">${errorTitle}</p>
+                        <p style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 1rem;">${errorDetail}</p>
+                        <button onclick="loadPlans()" style="padding: 12px 24px; background: var(--terracotta); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                            🔄 Try Again
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // ========================================
+        // TRANSFORM API PLANS DATA
+        // ========================================
+        function transformPlansData(apiPlans) {
+            const plansWithRatio = apiPlans.map((plan) => {
+                const durationInHours = convertToHours(plan.duration_value, plan.duration_unit);
+                const timeToPrice = durationInHours / plan.price;
+                
+                return {
+                    ...plan,
+                    durationInHours: durationInHours,
+                    timeToPrice: timeToPrice
+                };
+            });
+            
+            const bestPlan = plansWithRatio.reduce((best, current) => {
+                return current.timeToPrice > best.timeToPrice ? current : best;
+            });
+            
+            const transformedPlans = plansWithRatio.map((plan) => {
+                const duration = formatDuration(plan.duration_value, plan.duration_unit);
+                const price = `KSH ${plan.price}/-`;
+                const speed = formatSpeed(plan.speed);
+                const popular = plan.id === bestPlan.id;
+                
+                return {
+                    id: plan.id,
+                    duration: duration,
+                    price: price,
+                    speed: speed,
+                    popular: popular,
+                    originalData: plan
+                };
+            });
+            
+            transformedPlans.sort((a, b) => {
+                if (a.popular && !b.popular) return -1;
+                if (!a.popular && b.popular) return 1;
+                return 0;
+            });
+            
+            return transformedPlans;
+        }
+
+        function convertToHours(value, unit) {
+            const conversionMap = {
+                'MINUTES': 1 / 60,
+                'HOURS': 1,
+                'DAYS': 24,
+                'WEEKS': 24 * 7,
+                'MONTHS': 24 * 30
+            };
+            
+            const multiplier = conversionMap[unit.toUpperCase()] || 1;
+            return value * multiplier;
+        }
+
+        function formatDuration(value, unit) {
+            const unitMap = {
+                'HOURS': value === 1 ? 'Hour' : 'Hours',
+                'DAYS': value === 1 ? 'Day' : 'Days',
+                'WEEKS': value === 1 ? 'Week' : 'Weeks',
+                'MONTHS': value === 1 ? 'Month' : 'Months'
+            };
+            
+            const unitText = unitMap[unit] || unit.toLowerCase();
+            return `${value} ${unitText}`;
+        }
+
+        function formatSpeed(speed) {
+            if (!speed || speed === 'Unlimited' || speed.toLowerCase() === 'unlimited') {
+                return 'Unlimited';
+            }
+            
+            const downloadSpeed = speed.split('/')[0].trim();
+            
+            if (downloadSpeed.match(/mbps|kbps/i)) {
+                return downloadSpeed;
+            }
+            
+            if (downloadSpeed.match(/^\d+(\.\d+)?[mM]$/)) {
+                return downloadSpeed.replace(/[mM]$/, ' Mbps');
+            }
+            
+            if (downloadSpeed.match(/^\d+(\.\d+)?[kK]$/)) {
+                return downloadSpeed.replace(/[kK]$/, ' Kbps');
+            }
+            
+            if (downloadSpeed.match(/^\d+(\.\d+)?$/)) {
+                return `${downloadSpeed} Mbps`;
+            }
+            
+            return downloadSpeed;
+        }
+
+        // ========================================
+        // RENDER PLANS
+        // ========================================
+        function renderPlans(plans) {
+            plansGrid.innerHTML = '';
+            
+            plans.forEach(plan => {
+                const planCard = createPlanCard(plan);
+                plansGrid.appendChild(planCard);
+            });
+        }
+
+        function createPlanCard(plan) {
+            const card = document.createElement('div');
+            card.className = `plan-card${plan.popular ? ' popular' : ''}`;
+            card.setAttribute('role', 'button');
+            card.setAttribute('tabindex', '0');
+            card.setAttribute('aria-label', `Select ${plan.duration} plan for ${plan.price}, ${plan.speed}`);
+            
+            const formattedPrice = formatPrice(plan.price);
+            
+            card.innerHTML = `
+                <div class="plan-duration">${plan.duration}</div>
+                <div class="plan-price">${formattedPrice}</div>
+                <div class="plan-speed">${plan.speed}</div>
+            `;
+            
+            card.addEventListener('click', () => selectPlan(plan));
+            
+            card.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    selectPlan(plan);
+                }
+            });
+            
+            return card;
+        }
+
+        function formatPrice(price) {
+            const match = price.match(/^(KSH)\s*(.+)$/);
+            if (match) {
+                return `<span class="currency">${match[1]}</span>${match[2]}`;
+            }
+            return price;
+        }
+
+        // ========================================
+        // SELECT PLAN
+        // ========================================
+        function selectPlan(plan) {
+            selectedPlan = plan;
+            
+            selectedPlanInfo.innerHTML = `
+                <div class="selected-plan-label">Selected Plan</div>
+                <div class="selected-plan-name">${plan.duration}</div>
+                <div class="selected-plan-price">${plan.price}</div>
+                <div class="selected-plan-speed">${plan.speed}</div>
+            `;
+            
+            showSection(paymentSection);
+            hideSection(plansSection);
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            setTimeout(() => {
+                phoneNumberInput.focus();
+            }, 300);
+        }
+
+        // ========================================
+        // EVENT LISTENERS
+        // ========================================
+        function setupEventListeners() {
+            backButton.addEventListener('click', () => {
+                showSection(plansSection);
+                hideSection(paymentSection);
+                resetForm();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+            
+            paymentForm.addEventListener('submit', handlePayment);
+            
+            phoneNumberInput.addEventListener('input', (e) => {
+                let value = e.target.value.replace(/[^\d]/g, '');
+                if (value.length > 10) {
+                    value = value.substring(0, 10);
+                }
+                e.target.value = value;
+            });
+            
+            newPurchaseButton.addEventListener('click', () => {
+                showSection(plansSection);
+                hideSection(successSection);
+                resetForm();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+            
+            retryButton.addEventListener('click', () => {
+                showSection(paymentSection);
+                hideSection(errorSection);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+
+        // ========================================
+        // HANDLE PAYMENT
+        // ========================================
+        async function handlePayment(e) {
+            e.preventDefault();
+            
+            const phoneNumber = phoneNumberInput.value.trim();
+            
+            if (!phoneNumber) {
+                alert('Please provide your mobile number to continue');
+                phoneNumberInput.focus();
+                return;
+            }
+            
+            if (!validatePhoneNumber(phoneNumber)) {
+                alert('Please enter a valid phone number (10 digits starting with 07 or 01)');
+                phoneNumberInput.focus();
+                return;
+            }
+            
+            if (!selectedPlan) {
+                alert('Please select a plan first');
+                return;
+            }
+            
+            setLoadingState(true);
+            
+            try {
+                const paymentResponse = await processPayment(phoneNumber, selectedPlan);
+                console.log('✅ Payment initiated:', paymentResponse);
+                
+                showPaymentPendingMessage(phoneNumber, selectedPlan);
+                hideSection(paymentSection);
+                showSection(successSection);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+                const customerId = paymentResponse.customer_id || paymentResponse.id;
+                
+                if (customerId) {
+                    await pollPaymentStatusAndLogin(customerId, phoneNumber, selectedPlan);
+                } else {
+                    throw new Error('Payment initiated but no customer ID returned. Please contact support.');
+                }
+                
+            } catch (error) {
+                showErrorMessage(error.message);
+                hideSection(paymentSection);
+                hideSection(successSection);
+                showSection(errorSection);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } finally {
+                setLoadingState(false);
+            }
+        }
+
+        async function processPayment(phoneNumber, plan) {
+            console.log('💳 Processing payment...');
+            
+            const formattedPhone = formatPhoneForMpesa(phoneNumber);
+            console.log('📞 Phone (formatted):', formattedPhone);
+            
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 60000);
+                
+                const requestBody = {
+                    phone: formattedPhone,
+                    plan_id: plan.id,
+                    mac_address: mikrotikParams.mac,
+                    router_id: ROUTER_ID,
+                    payment_method: "mobile_money"
+                };
+                
+                console.log('📤 Sending payment request:', requestBody);
+                
+                const response = await fetch(getProxiedUrl(PAYMENT_ENDPOINT), {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    mode: 'cors',
+                    body: JSON.stringify(requestBody),
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                const responseData = await response.json();
+                console.log('📨 API Response:', responseData);
+                
+                if (!response.ok) {
+                    throw new Error(responseData.message || responseData.error || 'Payment failed. Please try again.');
+                }
+                
+                return responseData;
+                
+            } catch (error) {
+                console.error('❌ Payment error:', error);
+                
+                if (error.name === 'AbortError') {
+                    throw new Error('Payment request timed out. Please try again.');
+                }
+                
+                throw error;
+            }
+        }
+
+        async function pollPaymentStatusAndLogin(customerId, phoneNumber, plan) {
+            console.log('🔄 Checking payment status...');
+            
+            let attempts = 0;
+            
+            return new Promise((resolve, reject) => {
+                const pollInterval = setInterval(async () => {
+                    attempts++;
+                    console.log(`🔍 Polling attempt ${attempts}/${PAYMENT_POLL_MAX_ATTEMPTS}...`);
+                    
+                    try {
+                        const statusUrl = `${PAYMENT_STATUS_ENDPOINT}/${customerId}`;
+                        const response = await fetch(getProxiedUrl(statusUrl), {
+                            method: 'GET',
+                            headers: { 'Accept': 'application/json' },
+                            mode: 'cors'
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error(`Status check failed: ${response.status}`);
+                        }
+                        
+                        const data = await response.json();
+                        console.log('📊 Status:', data);
+                        
+                        if (data.status === 'active') {
+                            clearInterval(pollInterval);
+                            console.log('✅ Payment confirmed!');
+                            showAuthenticatedMessage(phoneNumber, plan, data);
+                            resolve(data);
+                        } else if (data.status === 'pending') {
+                            if (attempts >= PAYMENT_POLL_MAX_ATTEMPTS) {
+                                clearInterval(pollInterval);
+                                reject(new Error('Payment verification timeout. Please check your M-Pesa messages.'));
+                            }
+                        } else if (attempts >= PAYMENT_POLL_MAX_ATTEMPTS) {
+                            clearInterval(pollInterval);
+                            reject(new Error('Payment verification timeout. Please refresh the page.'));
+                        }
+                        
+                    } catch (error) {
+                        console.error('❌ Error polling status:', error);
+                        
+                        if (attempts >= PAYMENT_POLL_MAX_ATTEMPTS) {
+                            clearInterval(pollInterval);
+                            reject(error);
+                        }
+                    }
+                }, PAYMENT_POLL_INTERVAL);
+            });
+        }
+
+        // ========================================
+        // UI HELPER FUNCTIONS
+        // ========================================
+        function showSection(section) {
+            section.classList.remove('hidden');
+        }
+
+        function hideSection(section) {
+            section.classList.add('hidden');
+        }
+
+        function setLoadingState(isLoading) {
+            if (isLoading) {
+                submitButton.disabled = true;
+                buttonText.classList.add('hidden');
+                buttonLoader.classList.remove('hidden');
+            } else {
+                submitButton.disabled = false;
+                buttonText.classList.remove('hidden');
+                buttonLoader.classList.add('hidden');
+            }
+        }
+
+        function showPaymentPendingMessage(phoneNumber, plan) {
+            const formattedPhone = formatPhoneForMpesa(phoneNumber);
+            
+            successMessage.innerHTML = `
+                <div style="margin-bottom: 1rem;">
+                    <strong style="color: var(--charcoal);">${plan.duration} • ${plan.price}</strong>
+                </div>
+                <div style="background: #FFF8E1; padding: 16px; border-radius: 10px; margin-bottom: 1rem;">
+                    <p style="margin-bottom: 8px; font-weight: 600; color: #F57C00;">📱 Check your phone</p>
+                    <p style="font-size: 0.9rem; color: #5D4037;">Enter your M-Pesa PIN when prompted</p>
+                    <div style="margin-top: 12px;">
+                        <span style="display: inline-block; width: 16px; height: 16px; border: 2px solid #ddd; border-top-color: #F57C00; border-radius: 50%; animation: spin 1s linear infinite; vertical-align: middle;"></span>
+                        <span style="margin-left: 8px; color: #F57C00; font-size: 0.85rem;">Waiting for payment...</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showAuthenticatedMessage(phoneNumber, plan, data) {
+            successMessage.innerHTML = `
+                <div style="background: #E8F5E9; padding: 16px; border-radius: 10px; margin-bottom: 1rem;">
+                    <p style="font-weight: 700; color: #2E7D32; margin-bottom: 6px;">${data.plan_name || plan.duration}</p>
+                    <p style="font-size: 0.9rem; color: #1B5E20;">${data.expiry ? `Valid until ${new Date(data.expiry).toLocaleDateString()}` : 'Active'}</p>
+                </div>
+                <div style="background: #FFF8E1; padding: 12px; border-radius: 8px; margin-bottom: 1rem;">
+                    <p style="font-size: 0.85rem; color: #5D4037;">
+                        <strong>📶 Turn WiFi OFF then ON</strong> to connect
+                    </p>
+                </div>
+                <button onclick="window.location.href='http://google.com'" style="width: 100%; padding: 14px; background: var(--success); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 700;">
+                    Start Browsing 🚀
+                </button>
+            `;
+        }
+
+        function showErrorMsg(message) {
+            errorMessage.innerHTML = `
+                <p style="margin-bottom: 1rem;">${message}</p>
+                <div style="background: #FFEBEE; padding: 12px; border-radius: 8px; text-align: left; font-size: 0.85rem; color: #C62828;">
+                    <strong>Common issues:</strong>
+                    <ul style="margin: 8px 0 0 16px;">
+                        <li>Insufficient M-Pesa balance</li>
+                        <li>Wrong PIN entered</li>
+                        <li>Transaction cancelled</li>
+                    </ul>
+                </div>
+                <p style="margin-top: 1rem; font-size: 0.85rem; color: var(--charcoal-light);">
+                    Need help? Call <a href="tel:0795635364" style="color: var(--terracotta);">0795635364</a>
+                </p>
+            `;
+        }
+
+        // Use this version in the catch block
+        function showErrorMessage(message) {
+            showErrorMsg(message);
+        }
+
+        function resetForm() {
+            paymentForm.reset();
+            selectedPlan = null;
+        }
+
+        function validatePhoneNumber(phoneNumber) {
+            const phoneRegex = /^0[17][0-9]{8}$/;
+            return phoneRegex.test(phoneNumber);
+        }
+
+        function formatPhoneForMpesa(phoneNumber) {
+            let cleaned = phoneNumber.replace(/[\s\-\(\)]/g, '');
+            
+            if (cleaned.startsWith('0')) {
+                cleaned = '254' + cleaned.substring(1);
+            }
+            
+            if (cleaned.startsWith('+254')) {
+                cleaned = cleaned.substring(1);
+            }
+            
+            return cleaned;
+        }
+
+        // Real-time validation feedback
+        phoneNumberInput.addEventListener('blur', function() {
+            if (this.value && !validatePhoneNumber(this.value)) {
+                this.style.borderColor = '#D32F2F';
+            } else if (this.value && validatePhoneNumber(this.value)) {
+                this.style.borderColor = 'var(--success)';
+            } else {
+                this.style.borderColor = '';
+            }
+        });
+
+        console.log('🌐 Bitwave Soko Wifi Portal Initialized');
+        console.log('📡 API:', PLANS_ENDPOINT);
+    </script>
+</body>
+</html>
+
