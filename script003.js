@@ -14,7 +14,7 @@ const marketplaceAds = [
         seller: "Mama Njeri - Stall 42",
         price: "KSH 80",
         unit: "/kg",
-        image: "https://images.unsplash.com/photo-1560343090-f0409e92791a?w=200&h=200&fit=crop",
+        image: "images/tomatoes.jpg",
         badge: { type: "hot", text: "🔥 Hot" }
     },
     {
@@ -23,7 +23,7 @@ const marketplaceAds = [
         seller: "Tech Corner - B12",
         price: "KSH 150",
         unit: "+",
-        image: "https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=200&h=200&fit=crop",
+        image: "images/phone-cases.jpg",
         badge: { type: "new", text: "✨ New" }
     },
     {
@@ -32,7 +32,7 @@ const marketplaceAds = [
         seller: "Shamba Fresh - A7",
         price: "KSH 30",
         unit: "/bunch",
-        image: "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=200&h=200&fit=crop",
+        image: "images/sukuma-wiki.jpg",
         badge: null
     },
     {
@@ -41,7 +41,7 @@ const marketplaceAds = [
         seller: "Style Hub - C3",
         price: "KSH 500",
         unit: "+",
-        image: "https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?w=200&h=200&fit=crop",
+        image: "images/watches.jpg",
         badge: { type: "sale", text: "💰 Sale" }
     },
     {
@@ -50,7 +50,7 @@ const marketplaceAds = [
         seller: "Fruits Paradise - D5",
         price: "KSH 100",
         unit: "/dozen",
-        image: "https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?w=200&h=200&fit=crop",
+        image: "images/bananas.jpg",
         badge: null
     },
     {
@@ -59,7 +59,7 @@ const marketplaceAds = [
         seller: "Farm Direct - E8",
         price: "KSH 450",
         unit: "/tray",
-        image: "https://images.unsplash.com/photo-1491524062933-cb0289571e5d?w=200&h=200&fit=crop",
+        image: "images/tomatoes.jpg",
         badge: { type: "hot", text: "🔥 Hot" }
     },
     {
@@ -68,7 +68,7 @@ const marketplaceAds = [
         seller: "Posho Mill - F2",
         price: "KSH 180",
         unit: "/2kg",
-        image: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=200&h=200&fit=crop",
+        image: "images/bananas.jpg",
         badge: null
     }
 ];
@@ -305,17 +305,17 @@ function renderMarketplaceAds(ads) {
 // ========================================
 const stickyAdContent = [
     {
-        image: "https://images.unsplash.com/photo-1560343090-f0409e92791a?w=60&h=60&fit=crop",
+        image: "images/tomatoes-thumb.jpg",
         title: "Today's Special!",
         text: "Fresh produce at Stall 42"
     },
     {
-        image: "https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=60&h=60&fit=crop",
+        image: "images/phone-cases.jpg",
         title: "Tech Deals!",
         text: "Phone accessories at B12"
     },
     {
-        image: "https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?w=60&h=60&fit=crop",
+        image: "images/watches.jpg",
         title: "Fashion Sale!",
         text: "Watches from KSH 500 at C3"
     }
