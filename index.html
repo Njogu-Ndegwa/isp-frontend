@@ -179,42 +179,65 @@
 
             <!-- Processing Section (Hidden Initially) - Shown during payment -->
             <section class="processing-section hidden" id="processingSection">
-                <div class="processing-card">
-                    <!-- Processing Icon -->
+                <!-- Processing Hero -->
+                <div class="processing-hero">
                     <div class="processing-icon-wrap">
-                        <div class="processing-spinner"></div>
+                        <div class="processing-icon-bg"></div>
+                        <div class="processing-spinner-ring"></div>
                         <span class="processing-icon">📱</span>
                     </div>
-                    
                     <h1 class="processing-headline" id="processingTitle">Check Your Phone</h1>
                     <p class="processing-subtext" id="processingSubtext">Enter your M-Pesa PIN to complete payment</p>
-                    
-                    <!-- Status Card -->
-                    <div class="processing-status-card" id="processingStatusCard">
-                        <div class="processing-step active" id="step1">
-                            <span class="step-icon">✓</span>
-                            <span class="step-text">Payment request sent</span>
+                </div>
+
+                <!-- Progress Card -->
+                <div class="progress-card">
+                    <div class="progress-status">
+                        <span class="progress-dot"></span>
+                        <span class="progress-text">Processing</span>
+                    </div>
+                    <div class="progress-steps" id="processingStatusCard">
+                        <div class="progress-step completed" id="step1">
+                            <div class="step-indicator">
+                                <span class="step-check">✓</span>
+                            </div>
+                            <span class="step-label">Payment request sent</span>
                         </div>
-                        <div class="processing-step" id="step2">
-                            <span class="step-icon">⏳</span>
-                            <span class="step-text">Waiting for PIN entry</span>
+                        <div class="progress-step active" id="step2">
+                            <div class="step-indicator">
+                                <span class="step-spinner"></span>
+                            </div>
+                            <span class="step-label">Waiting for PIN entry</span>
                         </div>
-                        <div class="processing-step" id="step3">
-                            <span class="step-icon">○</span>
-                            <span class="step-text">Activating your plan</span>
+                        <div class="progress-step" id="step3">
+                            <div class="step-indicator">
+                                <span class="step-number">3</span>
+                            </div>
+                            <span class="step-label">Activating your plan</span>
                         </div>
                     </div>
-                    
-                    <!-- Plan Info -->
-                    <div class="processing-plan-info" id="processingPlanInfo">
-                        <!-- Populated by JS -->
+                </div>
+
+                <!-- Plan Details Card -->
+                <div class="processing-details-card" id="processingPlanInfo">
+                    <!-- Populated by JS -->
+                </div>
+
+                <!-- Processing Tip -->
+                <div class="processing-tip-box">
+                    <span class="tip-emoji">💡</span>
+                    <div class="tip-text">
+                        <strong>Didn't get a prompt?</strong>
+                        <p>Wait 30 seconds, then check your M-Pesa messages or try again.</p>
                     </div>
-                    
-                    <!-- Help Tip -->
-                    <div class="processing-tip">
-                        <span class="tip-icon">💡</span>
-                        <p>Didn't receive the prompt? Wait 30 seconds and check your M-Pesa messages.</p>
-                    </div>
+                </div>
+
+                <!-- Support Link -->
+                <div class="processing-support">
+                    <a href="tel:0795635364" class="support-link-alt">
+                        <span>📞</span>
+                        <span>Need help? Call Support</span>
+                    </a>
                 </div>
             </section>
 
@@ -284,12 +307,56 @@
 
             <!-- Error Section (Hidden Initially) -->
             <section class="error-section hidden" id="errorSection">
-                <div class="error-card">
-                    <div class="error-icon">❌</div>
-                    <h2 class="error-title">Payment Failed</h2>
-                    <p class="error-message" id="errorMessage"></p>
-                    <button class="primary-button" id="retryButton">Try Again</button>
-                    <a href="tel:0795635364" class="help-link">Need help? Call 0795635364</a>
+                <!-- Error Hero -->
+                <div class="error-hero">
+                    <div class="error-icon-wrap">
+                        <div class="error-icon-bg"></div>
+                        <span class="error-icon-emoji">😔</span>
+                    </div>
+                    <h1 class="error-headline">Payment Failed</h1>
+                    <p class="error-subtext">Don't worry, let's try again</p>
+                </div>
+
+                <!-- Error Details Card -->
+                <div class="error-details-card">
+                    <div class="error-reason-header">
+                        <span class="reason-icon">⚠️</span>
+                        <span class="reason-title">What happened?</span>
+                    </div>
+                    <p class="error-reason-text" id="errorMessage">
+                        The payment could not be completed.
+                    </p>
+                </div>
+
+                <!-- Common Issues Card -->
+                <div class="error-help-card">
+                    <div class="help-header">
+                        <span class="help-icon">🔧</span>
+                        <span class="help-title">Common fixes</span>
+                    </div>
+                    <ul class="help-list">
+                        <li>Check your M-Pesa balance</li>
+                        <li>Make sure you entered the correct PIN</li>
+                        <li>Wait 30 seconds and try again</li>
+                        <li>Check your network connection</li>
+                    </ul>
+                </div>
+
+                <!-- Error Actions -->
+                <div class="error-actions">
+                    <button class="error-btn error-btn-primary" id="retryButton">
+                        <span>🔄</span>
+                        <span>Try Again</span>
+                    </button>
+                    <a href="tel:0795635364" class="error-btn error-btn-secondary">
+                        <span>📞</span>
+                        <span>Call Support</span>
+                    </a>
+                </div>
+
+                <!-- Support Note -->
+                <div class="error-support-note">
+                    <p>If payment was deducted but you're seeing this error, please call support immediately.</p>
                 </div>
             </section>
 

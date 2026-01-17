@@ -696,18 +696,24 @@ document.addEventListener('DOMContentLoaded', () => {
     setupModalListeners();
     
     // Fetch ads (will use hardcoded as fallback)
-    fetchAds().then(() => {
+    fetchAds().finally(() => {
         // Initialize sticky ad after ads are loaded
         initStickyAd();
-        
-        // Check for test mode
-        if (window.location.search.includes('test=success')) {
-            setTimeout(() => window.testSuccessPage(), 500);
-        }
     });
     
     // Retry any pending clicks
     retryPendingClicks();
+    
+    // Check for test mode (run independently)
+    const urlParams = new URLSearchParams(window.location.search);
+    const testMode = urlParams.get('test');
+    if (testMode === 'success') {
+        setTimeout(() => window.testSuccessPage(), 800);
+    } else if (testMode === 'processing') {
+        setTimeout(() => window.testProcessingPage(), 800);
+    } else if (testMode === 'error') {
+        setTimeout(() => window.testErrorPage(), 800);
+    }
 });
 
 // ========================================
@@ -741,10 +747,7 @@ console.log('💡 Debug commands: refreshAds(), getAdsData(), getAdsAnalytics(),
 
 // Test function to preview the success page
 window.testSuccessPage = function() {
-    // Hide other sections
-    document.getElementById('plansSection')?.classList.add('hidden');
-    document.getElementById('paymentSection')?.classList.add('hidden');
-    document.getElementById('errorSection')?.classList.add('hidden');
+    hideAllSections();
     
     // Show success section
     const successSection = document.getElementById('successSection');
@@ -780,4 +783,64 @@ window.testSuccessPage = function() {
     
     console.log('✅ Success page shown with test data');
 };
+
+// Test function to preview the processing page
+window.testProcessingPage = function() {
+    hideAllSections();
+    
+    // Show processing section
+    const processingSection = document.getElementById('processingSection');
+    if (processingSection) {
+        processingSection.classList.remove('hidden');
+    }
+    
+    // Populate with mock data
+    const processingPlanInfo = document.getElementById('processingPlanInfo');
+    if (processingPlanInfo) {
+        processingPlanInfo.innerHTML = `
+            <div class="processing-plan-row">
+                <span class="processing-plan-label">Plan</span>
+                <span class="processing-plan-value">24 Hours</span>
+            </div>
+            <div class="processing-plan-row">
+                <span class="processing-plan-label">Amount</span>
+                <span class="processing-plan-value">KSH 100/-</span>
+            </div>
+            <div class="processing-plan-row">
+                <span class="processing-plan-label">Phone</span>
+                <span class="processing-plan-value">254712345678</span>
+            </div>
+        `;
+    }
+    
+    console.log('📱 Processing page shown with test data');
+};
+
+// Test function to preview the error page
+window.testErrorPage = function() {
+    hideAllSections();
+    
+    // Show error section
+    const errorSection = document.getElementById('errorSection');
+    if (errorSection) {
+        errorSection.classList.remove('hidden');
+    }
+    
+    // Populate with mock error message
+    const errorMessage = document.getElementById('errorMessage');
+    if (errorMessage) {
+        errorMessage.textContent = 'Transaction was cancelled. No amount was deducted from your account.';
+    }
+    
+    console.log('❌ Error page shown with test data');
+};
+
+// Helper to hide all sections
+function hideAllSections() {
+    document.getElementById('plansSection')?.classList.add('hidden');
+    document.getElementById('paymentSection')?.classList.add('hidden');
+    document.getElementById('processingSection')?.classList.add('hidden');
+    document.getElementById('successSection')?.classList.add('hidden');
+    document.getElementById('errorSection')?.classList.add('hidden');
+}
 

@@ -866,7 +866,7 @@ function showPaymentPendingMessage(phoneNumber, plan) {
         processingSubtext.textContent = 'Enter your M-Pesa PIN to complete payment';
     }
     
-    // Update plan info
+    // Update plan info card
     if (processingPlanInfo) {
         processingPlanInfo.innerHTML = `
             <div class="processing-plan-row">
@@ -884,7 +884,7 @@ function showPaymentPendingMessage(phoneNumber, plan) {
         `;
     }
     
-    // Update steps - Step 1 active, Step 2 pending
+    // Update steps - Step 1 completed, Step 2 active
     updateProcessingSteps(1);
 }
 
@@ -895,20 +895,23 @@ function updateProcessingSteps(currentStep) {
     steps.forEach((step, index) => {
         if (!step) return;
         
-        step.classList.remove('active', 'pending');
-        const icon = step.querySelector('.step-icon');
+        // Remove all state classes
+        step.classList.remove('completed', 'active');
+        
+        const indicator = step.querySelector('.step-indicator');
+        if (!indicator) return;
         
         if (index < currentStep) {
             // Completed step
-            step.classList.add('active');
-            if (icon) icon.textContent = '✓';
+            step.classList.add('completed');
+            indicator.innerHTML = '<span class="step-check">✓</span>';
         } else if (index === currentStep) {
-            // Current step
-            step.classList.add('pending');
-            if (icon) icon.textContent = '⏳';
+            // Active step (in progress)
+            step.classList.add('active');
+            indicator.innerHTML = '<span class="step-spinner"></span>';
         } else {
-            // Future step
-            if (icon) icon.textContent = '○';
+            // Future step (pending)
+            indicator.innerHTML = `<span class="step-number">${index + 1}</span>`;
         }
     });
 }
@@ -916,27 +919,10 @@ function updateProcessingSteps(currentStep) {
 // showSuccessMessage removed - now using showWaitingForConnectionMessage and showAuthenticatedMessage instead
 
 function showErrorMessage(message) {
-    errorMessage.innerHTML = `
-        <div style="text-align: center;">
-            <div style="font-size: 1.2rem; color: #ef4444; margin-bottom: 15px;">
-                ${message}
-            </div>
-            
-            <div style="background: #fee2e2; padding: 15px; border-radius: 8px; margin-top: 15px; text-align: left;">
-                <strong style="color: #991b1b;">Common Issues:</strong>
-                <ul style="margin: 10px 0 0 20px; color: #7f1d1d; line-height: 1.8;">
-                    <li>Insufficient M-Pesa balance</li>
-                    <li>Wrong PIN entered</li>
-                    <li>Transaction cancelled</li>
-                    <li>Network timeout</li>
-                </ul>
-            </div>
-            
-            <div style="margin-top: 15px; padding: 12px; background: #f0f0f0; border-radius: 8px; font-size: 0.9rem; color: #666;">
-                💡 Need help? Call support: <strong>0795635364</strong>
-            </div>
-        </div>
-    `;
+    // Update the error message text
+    if (errorMessage) {
+        errorMessage.textContent = message || 'The payment could not be completed. Please try again.';
+    }
 }
 
 function resetForm() {
