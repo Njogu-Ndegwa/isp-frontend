@@ -399,6 +399,25 @@ function openAdDetails(ad) {
 }
 
 // ========================================
+// OPEN AD DETAILS BY ID - Helper for onclick handlers
+// ========================================
+function openAdDetailsById(adId) {
+    const ads = adsData.length > 0 ? adsData : HARDCODED_ADS;
+    const ad = ads.find(a => a.id === adId);
+    
+    if (ad) {
+        openAdDetails(ad);
+        recordClick(ad.id, 'view_details');
+    } else {
+        console.warn('⚠️ Ad not found with id:', adId);
+    }
+}
+
+// Make it available globally for onclick handlers
+window.openAdDetailsById = openAdDetailsById;
+window.openAdDetails = openAdDetails;
+
+// ========================================
 // CLOSE AD DETAILS MODAL
 // ========================================
 function closeAdDetails() {
@@ -599,7 +618,8 @@ function populateSuccessAds() {
     const shuffled = [...ads].sort(() => Math.random() - 0.5).slice(0, 6);
     
     container.innerHTML = shuffled.map(ad => `
-        <div class="success-ad-card" onclick="openAdDetails(${ad.id})" role="button" tabindex="0">
+        <div class="success-ad-card" onclick="openAdDetailsById(${ad.id})" role="button" tabindex="0" 
+             aria-label="View details for ${ad.title}">
             <img src="${ad.image_url}" alt="${ad.title}" class="success-ad-img" loading="lazy" 
                  onerror="this.src='images/placeholder.jpg'">
             <div class="success-ad-info">
@@ -609,11 +629,59 @@ function populateSuccessAds() {
         </div>
     `).join('');
     
+    // Add keyboard accessibility
+    container.querySelectorAll('.success-ad-card').forEach(card => {
+        card.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                card.click();
+            }
+        });
+    });
+    
     console.log('🎨 Populated success page with', shuffled.length, 'ads');
 }
 
 // Make it available globally for script.js
 window.populateSuccessAds = populateSuccessAds;
+
+// ========================================
+// POPULATE MINI PRODUCTS (Payment Section Ads)
+// ========================================
+function populateMiniProducts() {
+    const container = document.getElementById('miniProducts');
+    if (!container) return;
+    
+    // Get ads from the loaded data
+    const ads = adsData.length > 0 ? adsData : HARDCODED_ADS;
+    
+    // Shuffle and take up to 4 ads
+    const shuffled = [...ads].sort(() => Math.random() - 0.5).slice(0, 4);
+    
+    container.innerHTML = shuffled.map(ad => `
+        <div class="mini-product" onclick="openAdDetailsById(${ad.id})" role="button" tabindex="0"
+             aria-label="View details for ${ad.title}" style="cursor: pointer;">
+            <img src="${ad.image_url}" alt="${ad.title}" loading="lazy"
+                 onerror="this.src='images/placeholder.jpg'">
+            <span>${ad.price}</span>
+        </div>
+    `).join('');
+    
+    // Add keyboard accessibility
+    container.querySelectorAll('.mini-product').forEach(product => {
+        product.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                product.click();
+            }
+        });
+    });
+    
+    console.log('🎨 Populated mini products with', shuffled.length, 'ads');
+}
+
+// Make it available globally
+window.populateMiniProducts = populateMiniProducts;
 
 // ========================================
 // STICKY FOOTER AD - Dynamic from DB
@@ -644,7 +712,8 @@ function initStickyAd() {
         const ads = adsData.length > 0 ? adsData : HARDCODED_ADS;
         if (ads.length > 0) {
             const currentAd = ads[stickyAdIndex % ads.length];
-            openAdDetails(currentAd.id);
+            openAdDetails(currentAd);
+            recordClick(currentAd.id, 'view_details');
         }
     });
     
@@ -699,6 +768,8 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchAds().finally(() => {
         // Initialize sticky ad after ads are loaded
         initStickyAd();
+        // Populate mini products in payment section
+        populateMiniProducts();
     });
     
     // Retry any pending clicks

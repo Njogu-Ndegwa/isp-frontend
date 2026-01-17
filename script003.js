@@ -79,7 +79,8 @@ const marketplaceAds = [
 document.addEventListener('DOMContentLoaded', () => {
     initializeMarketplace();
     initializeStickyAd();
-    initializeMiniProducts();
+    // Mini products now populated by ads.js with proper ad data
+    // initializeMiniProducts();
     enhanceScrollHint();
 });
 
@@ -192,11 +193,22 @@ function initializeMiniProducts() {
     const selectedProducts = shuffled.slice(0, 4);
     
     container.innerHTML = selectedProducts.map(product => `
-        <div class="mini-product">
+        <div class="mini-product" onclick="openAdDetailsById(${product.id})" role="button" tabindex="0"
+             aria-label="View details for ${product.name}" style="cursor: pointer;">
             <img src="${product.image}" alt="${product.name}" loading="lazy">
             <span>${product.price}</span>
         </div>
     `).join('');
+    
+    // Add keyboard accessibility
+    container.querySelectorAll('.mini-product').forEach(product => {
+        product.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                product.click();
+            }
+        });
+    });
 }
 
 // ========================================
