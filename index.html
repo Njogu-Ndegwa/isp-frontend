@@ -41,63 +41,27 @@
                         <span class="showcase-badge">AD</span>
                     </div>
                     <div class="showcase-scroll" id="showcaseScroll">
-                        <!-- Placeholder products - These would be populated dynamically -->
-                        <div class="product-card">
-                            <div class="product-image">
-                                <img src="images/tomatoes.jpg" alt="Fresh Tomatoes" loading="lazy">
-                                <span class="product-badge hot">🔥 Hot</span>
-                            </div>
+                        <!-- Ads loaded dynamically from backend via ads.js -->
+                        <!-- Skeleton loaders shown while loading -->
+                        <div class="product-card ad-skeleton">
+                            <div class="product-image skeleton-shimmer"></div>
                             <div class="product-info">
-                                <h4 class="product-name">Fresh Tomatoes</h4>
-                                <p class="product-seller">Mama Njeri - Stall 42</p>
-                                <p class="product-price">KSH 80<span>/kg</span></p>
+                                <div class="skeleton-text"></div>
+                                <div class="skeleton-text short"></div>
                             </div>
                         </div>
-                        
-                        <div class="product-card">
-                            <div class="product-image">
-                                <img src="images/phone-cases.jpg" alt="Phone Accessories" loading="lazy">
-                                <span class="product-badge new">✨ New</span>
-                            </div>
+                        <div class="product-card ad-skeleton">
+                            <div class="product-image skeleton-shimmer"></div>
                             <div class="product-info">
-                                <h4 class="product-name">Phone Cases</h4>
-                                <p class="product-seller">Tech Corner - B12</p>
-                                <p class="product-price">KSH 150<span>+</span></p>
+                                <div class="skeleton-text"></div>
+                                <div class="skeleton-text short"></div>
                             </div>
                         </div>
-                        
-                        <div class="product-card">
-                            <div class="product-image">
-                                <img src="images/sukuma-wiki.jpg" alt="Sukuma Wiki" loading="lazy">
-                            </div>
+                        <div class="product-card ad-skeleton">
+                            <div class="product-image skeleton-shimmer"></div>
                             <div class="product-info">
-                                <h4 class="product-name">Sukuma Wiki</h4>
-                                <p class="product-seller">Shamba Fresh - A7</p>
-                                <p class="product-price">KSH 30<span>/bunch</span></p>
-                            </div>
-                        </div>
-                        
-                        <div class="product-card">
-                            <div class="product-image">
-                                <img src="images/watches.jpg" alt="Watches" loading="lazy">
-                                <span class="product-badge sale">💰 Sale</span>
-                            </div>
-                            <div class="product-info">
-                                <h4 class="product-name">Fashion Watches</h4>
-                                <p class="product-seller">Style Hub - C3</p>
-                                <p class="product-price">KSH 500<span>+</span></p>
-                            </div>
-                        </div>
-                        
-                        
-                        <div class="product-card">
-                            <div class="product-image">
-                                <img src="images/bananas.jpg" alt="Bananas" loading="lazy">
-                            </div>
-                            <div class="product-info">
-                                <h4 class="product-name">Ripe Bananas</h4>
-                                <p class="product-seller">Fruits Paradise - D5</p>
-                                <p class="product-price">KSH 100<span>/dozen</span></p>
+                                <div class="skeleton-text"></div>
+                                <div class="skeleton-text short"></div>
                             </div>
                         </div>
 
@@ -255,9 +219,71 @@
                 <button class="sticky-ad-close" onclick="document.getElementById('stickyAd').classList.add('hidden')">×</button>
             </div>
         </div>
+
+        <!-- Ad Details Modal -->
+        <div class="ad-modal-overlay hidden" id="adModalOverlay">
+            <div class="ad-modal" id="adModal">
+                <button class="ad-modal-close" id="adModalClose" aria-label="Close">
+                    <span>×</span>
+                </button>
+                
+                <div class="ad-modal-content">
+                    <!-- Image Section -->
+                    <div class="ad-modal-image" id="adModalImage">
+                        <img src="" alt="" id="adModalImg">
+                        <span class="ad-modal-badge" id="adModalBadge"></span>
+                    </div>
+                    
+                    <!-- Info Section -->
+                    <div class="ad-modal-info">
+                        <span class="ad-modal-tag">SPONSORED</span>
+                        <h2 class="ad-modal-title" id="adModalTitle"></h2>
+                        <p class="ad-modal-description" id="adModalDescription"></p>
+                        
+                        <div class="ad-modal-seller">
+                            <span class="seller-icon">📍</span>
+                            <div class="seller-details">
+                                <span class="seller-name" id="adModalSeller"></span>
+                                <span class="seller-location" id="adModalLocation"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="ad-modal-price-section">
+                            <span class="ad-modal-label">Price</span>
+                            <span class="ad-modal-price" id="adModalPrice"></span>
+                        </div>
+                        
+                        <!-- Contact Section -->
+                        <div class="ad-modal-contact">
+                            <a href="" class="ad-contact-btn ad-contact-call" id="adModalCallBtn">
+                                <span class="contact-icon">📞</span>
+                                <div class="contact-text">
+                                    <span class="contact-label">Call Seller</span>
+                                    <span class="contact-number" id="adModalPhone"></span>
+                                </div>
+                            </a>
+                            
+                            <a href="" class="ad-contact-btn ad-contact-whatsapp" id="adModalWhatsappBtn">
+                                <span class="contact-icon">💬</span>
+                                <div class="contact-text">
+                                    <span class="contact-label">WhatsApp</span>
+                                    <span class="contact-number">Send Message</span>
+                                </div>
+                            </a>
+                        </div>
+                        
+                        <div class="ad-modal-footer">
+                            <span class="ad-views" id="adModalViews">👁️ <span>0</span> views</span>
+                            <span class="ad-id" id="adModalId">Ad #</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="script.js"></script>
     <script src="script003.js"></script>
+    <script src="ads.js"></script>
 </body>
 </html>
