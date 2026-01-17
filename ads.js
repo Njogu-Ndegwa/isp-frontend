@@ -387,13 +387,6 @@ function openAdDetails(ad) {
     callBtn.href = `tel:${formatPhoneForCall(ad.phone_number)}`;
     callBtn.onclick = () => recordClick(ad.id, 'call');
     
-    // WhatsApp link
-    const whatsappBtn = document.getElementById('adModalWhatsappBtn');
-    const whatsappNumber = ad.whatsapp_number || formatPhoneForWhatsApp(ad.phone_number);
-    const whatsappMessage = encodeURIComponent(`Hi! I saw your ad for "${ad.title}" on Bitwave Soko WiFi and I'm interested.`);
-    whatsappBtn.href = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`;
-    whatsappBtn.onclick = () => recordClick(ad.id, 'whatsapp');
-    
     // Show modal
     overlay.classList.remove('hidden');
     document.body.style.overflow = 'hidden';

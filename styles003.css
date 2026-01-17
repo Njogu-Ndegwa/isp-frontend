@@ -1341,7 +1341,7 @@ body::before {
 /* Contact Buttons */
 .ad-modal-contact {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: var(--space-md);
     margin-bottom: var(--space-lg);
 }
@@ -1368,21 +1368,6 @@ body::before {
 }
 
 .ad-contact-call:active {
-    transform: translateY(0);
-}
-
-.ad-contact-whatsapp {
-    background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
-    color: white;
-    box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
-}
-
-.ad-contact-whatsapp:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(37, 211, 102, 0.4);
-}
-
-.ad-contact-whatsapp:active {
     transform: translateY(0);
 }
 
