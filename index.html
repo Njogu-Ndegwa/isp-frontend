@@ -177,6 +177,47 @@
                 </div>
             </section>
 
+            <!-- Processing Section (Hidden Initially) - Shown during payment -->
+            <section class="processing-section hidden" id="processingSection">
+                <div class="processing-card">
+                    <!-- Processing Icon -->
+                    <div class="processing-icon-wrap">
+                        <div class="processing-spinner"></div>
+                        <span class="processing-icon">📱</span>
+                    </div>
+                    
+                    <h1 class="processing-headline" id="processingTitle">Check Your Phone</h1>
+                    <p class="processing-subtext" id="processingSubtext">Enter your M-Pesa PIN to complete payment</p>
+                    
+                    <!-- Status Card -->
+                    <div class="processing-status-card" id="processingStatusCard">
+                        <div class="processing-step active" id="step1">
+                            <span class="step-icon">✓</span>
+                            <span class="step-text">Payment request sent</span>
+                        </div>
+                        <div class="processing-step" id="step2">
+                            <span class="step-icon">⏳</span>
+                            <span class="step-text">Waiting for PIN entry</span>
+                        </div>
+                        <div class="processing-step" id="step3">
+                            <span class="step-icon">○</span>
+                            <span class="step-text">Activating your plan</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Plan Info -->
+                    <div class="processing-plan-info" id="processingPlanInfo">
+                        <!-- Populated by JS -->
+                    </div>
+                    
+                    <!-- Help Tip -->
+                    <div class="processing-tip">
+                        <span class="tip-icon">💡</span>
+                        <p>Didn't receive the prompt? Wait 30 seconds and check your M-Pesa messages.</p>
+                    </div>
+                </div>
+            </section>
+
             <!-- Success Section (Hidden Initially) -->
             <section class="success-section hidden" id="successSection">
                 <!-- Success Hero -->

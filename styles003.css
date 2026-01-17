@@ -884,6 +884,181 @@ body::before {
 }
 
 /* ========================================
+   PROCESSING SECTION - Payment Waiting State
+   ======================================== */
+.processing-section {
+    padding: var(--space-xl) var(--space-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 80vh;
+}
+
+.processing-card {
+    background: var(--surface);
+    border-radius: var(--radius-xl);
+    padding: var(--space-xl);
+    text-align: center;
+    max-width: 380px;
+    width: 100%;
+    box-shadow: var(--shadow-lg);
+}
+
+.processing-icon-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100px;
+    height: 100px;
+    margin-bottom: var(--space-lg);
+}
+
+.processing-spinner {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 4px solid var(--border-light);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.processing-icon {
+    font-size: 2.5rem;
+    z-index: 1;
+}
+
+.processing-headline {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--space-xs);
+}
+
+.processing-subtext {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    margin-bottom: var(--space-lg);
+}
+
+/* Processing Steps */
+.processing-status-card {
+    background: var(--surface-elevated);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+    margin-bottom: var(--space-lg);
+    text-align: left;
+}
+
+.processing-step {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.processing-step:not(:last-child) {
+    border-bottom: 1px solid var(--border-light);
+}
+
+.processing-step .step-icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+}
+
+.processing-step.active {
+    color: var(--success);
+    font-weight: 600;
+}
+
+.processing-step.active .step-icon {
+    background: var(--success-bg);
+    color: var(--success);
+}
+
+.processing-step.pending {
+    color: var(--primary);
+}
+
+.processing-step.pending .step-icon {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--primary);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Processing Plan Info */
+.processing-plan-info {
+    background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+    margin-bottom: var(--space-md);
+    border: 1px solid #93c5fd;
+}
+
+.processing-plan-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.processing-plan-row:not(:last-child) {
+    margin-bottom: var(--space-xs);
+}
+
+.processing-plan-label {
+    color: #1e40af;
+}
+
+.processing-plan-value {
+    font-weight: 700;
+    color: #1e3a8a;
+}
+
+/* Processing Tip */
+.processing-tip {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-sm);
+    background: #fef3c7;
+    border-radius: var(--radius-sm);
+    padding: var(--space-sm) var(--space-md);
+    text-align: left;
+}
+
+.processing-tip .tip-icon {
+    flex-shrink: 0;
+    font-size: 1rem;
+}
+
+.processing-tip p {
+    font-size: 0.8rem;
+    color: #92400e;
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* ========================================
    SUCCESS SECTION - REDESIGNED
    ======================================== */
 .success-section {

@@ -160,6 +160,7 @@ let allPlans = [];
 // ========================================
 const plansSection = document.getElementById('plansSection');
 const paymentSection = document.getElementById('paymentSection');
+const processingSection = document.getElementById('processingSection');
 const successSection = document.getElementById('successSection');
 const errorSection = document.getElementById('errorSection');
 
@@ -175,8 +176,15 @@ const backButton = document.getElementById('backButton');
 const newPurchaseButton = document.getElementById('newPurchaseButton');
 const retryButton = document.getElementById('retryButton');
 
-const successMessage = document.getElementById('successMessage');
 const errorMessage = document.getElementById('errorMessage');
+
+// Processing section elements
+const processingTitle = document.getElementById('processingTitle');
+const processingSubtext = document.getElementById('processingSubtext');
+const processingPlanInfo = document.getElementById('processingPlanInfo');
+const processingStep1 = document.getElementById('step1');
+const processingStep2 = document.getElementById('step2');
+const processingStep3 = document.getElementById('step3');
 
 // ========================================
 // INITIALIZATION
@@ -531,6 +539,7 @@ function setupEventListeners() {
     newPurchaseButton.addEventListener('click', () => {
         showSection(plansSection);
         hideSection(successSection);
+        hideSection(processingSection);
         resetForm();
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
@@ -539,6 +548,7 @@ function setupEventListeners() {
     retryButton.addEventListener('click', () => {
         showSection(paymentSection);
         hideSection(errorSection);
+        hideSection(processingSection);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 }
@@ -584,7 +594,7 @@ async function handlePayment(e) {
         // Update UI to show waiting for payment confirmation
         showPaymentPendingMessage(phoneNumber, selectedPlan);
         hideSection(paymentSection);
-        showSection(successSection);
+        showSection(processingSection);
         window.scrollTo({ top: 0, behavior: 'smooth' });
         
         // Step 2: Poll for payment status and auto-login
@@ -603,6 +613,7 @@ async function handlePayment(e) {
         // Show error
         showErrorMessage(error.message);
         hideSection(paymentSection);
+        hideSection(processingSection);
         hideSection(successSection);
         showSection(errorSection);
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -756,41 +767,19 @@ async function pollPaymentStatusAndLogin(customerId, phoneNumber, plan) {
 }
 
 // ========================================
-// SHOW PROCESSING PAYMENT MESSAGE
+// SHOW PROCESSING PAYMENT MESSAGE (After PIN is entered)
 // ========================================
 function showProcessingPaymentMessage(phoneNumber, plan) {
-    const formattedPhone = formatPhoneForMpesa(phoneNumber);
+    // Update title and subtitle
+    if (processingTitle) {
+        processingTitle.textContent = 'Processing Payment...';
+    }
+    if (processingSubtext) {
+        processingSubtext.textContent = 'Setting up your WiFi connection';
+    }
     
-    successMessage.innerHTML = `
-        <div style="text-align: center;">
-            <div style="font-size: 3rem; margin-bottom: 1rem;">⚡</div>
-            <h2 style="font-size: 1.5rem; margin-bottom: 1rem; color: #2563eb;">Processing Your Payment...</h2>
-            
-            <div style="background: #e0f2fe; padding: 20px; border-radius: 12px; margin: 20px 0; border: 2px solid #2563eb;">
-                <div style="font-size: 1.1rem; margin-bottom: 15px;">
-                    <strong>Setting up your ${plan.duration} plan</strong>
-                </div>
-                <div class="spinner" style="display: inline-block; width: 28px; height: 28px; border: 3px solid #ddd; border-top-color: #2563eb; border-radius: 50%; animation: spin 1s linear infinite; margin: 10px 0;"></div>
-                <div style="font-size: 0.95rem; color: #0369a1; margin-top: 15px; line-height: 1.8;">
-                    📱 Payment received<br>
-                    ⚙️ Adding you to the system<br>
-                    🔌 Establishing connection...
-                </div>
-            </div>
-            
-            <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin-top: 15px; text-align: left;">
-                <div style="font-size: 0.9rem; color: #d97706;">
-                    <strong>💡 Speed up your connection:</strong><br>
-                    Open a new tab and go to <strong>google.com</strong><br>
-                    This helps trigger the final connection step
-                </div>
-            </div>
-            
-            <div style="margin-top: 15px; padding: 10px; font-size: 0.85rem; color: #666;">
-                Please wait, this usually takes 5-15 seconds...
-            </div>
-        </div>
-    `;
+    // Update steps - Step 2 complete, Step 3 pending
+    updateProcessingSteps(2);
 }
 
 // ========================================
@@ -798,6 +787,11 @@ function showProcessingPaymentMessage(phoneNumber, plan) {
 // ========================================
 function showAuthenticatedMessage(phoneNumber, plan, data) {
     const formattedPhone = formatPhoneForMpesa(phoneNumber);
+    
+    // Hide processing, show success
+    hideSection(processingSection);
+    showSection(successSection);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     
     // Populate connection details card
     const connectionDetails = document.getElementById('connectionDetails');
@@ -832,7 +826,9 @@ function showAuthenticatedMessage(phoneNumber, plan, data) {
     }
     
     // Populate success page ads from the global ads data
-    populateSuccessAds();
+    if (typeof populateSuccessAds === 'function') {
+        populateSuccessAds();
+    }
 }
 
 // ========================================
@@ -862,35 +858,59 @@ function showPaymentPendingMessage(phoneNumber, plan) {
     // Format phone number for display
     const formattedPhone = formatPhoneForMpesa(phoneNumber);
     
-    successMessage.innerHTML = `
-        <div style="text-align: center;">
-            <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">📱</div>
-            <h2 style="font-size: 1.3rem; margin-bottom: 1rem; color: #1e293b;">Check Your Phone</h2>
-            
-            <div style="background: #e0f2fe; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
-                <div style="font-size: 1rem; color: #0369a1; margin-bottom: 8px;">
-                    <strong>${plan.duration} • ${plan.price}</strong>
-                </div>
-                <div style="font-size: 0.9rem; color: #0c4a6e;">
-                    ${formattedPhone}
-                </div>
+    // Update processing section UI
+    if (processingTitle) {
+        processingTitle.textContent = 'Check Your Phone';
+    }
+    if (processingSubtext) {
+        processingSubtext.textContent = 'Enter your M-Pesa PIN to complete payment';
+    }
+    
+    // Update plan info
+    if (processingPlanInfo) {
+        processingPlanInfo.innerHTML = `
+            <div class="processing-plan-row">
+                <span class="processing-plan-label">Plan</span>
+                <span class="processing-plan-value">${plan.duration}</span>
             </div>
-            
-            <div style="background: #fff7ed; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
-                <div style="font-size: 0.95rem; color: #92400e; line-height: 1.8;">
-                    <strong>1.</strong> Enter M-Pesa PIN on your phone<br>
-                    <strong>2.</strong> We'll connect you automatically<br>
-                    <strong>3.</strong> Don't close this page
-                </div>
-                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #fed7aa;">
-                    <div class="spinner" style="display: inline-block; width: 18px; height: 18px; border: 3px solid #ddd; border-top-color: #f59e0b; border-radius: 50%; animation: spin 1s linear infinite; vertical-align: middle;"></div>
-                    <span style="margin-left: 8px; color: #92400e; font-size: 0.9rem; font-weight: 600;">
-                        Waiting for payment...
-                    </span>
-                </div>
+            <div class="processing-plan-row">
+                <span class="processing-plan-label">Amount</span>
+                <span class="processing-plan-value">${plan.price}</span>
             </div>
-        </div>
-    `;
+            <div class="processing-plan-row">
+                <span class="processing-plan-label">Phone</span>
+                <span class="processing-plan-value">${formattedPhone}</span>
+            </div>
+        `;
+    }
+    
+    // Update steps - Step 1 active, Step 2 pending
+    updateProcessingSteps(1);
+}
+
+// Update the processing steps visual state
+function updateProcessingSteps(currentStep) {
+    const steps = [processingStep1, processingStep2, processingStep3];
+    
+    steps.forEach((step, index) => {
+        if (!step) return;
+        
+        step.classList.remove('active', 'pending');
+        const icon = step.querySelector('.step-icon');
+        
+        if (index < currentStep) {
+            // Completed step
+            step.classList.add('active');
+            if (icon) icon.textContent = '✓';
+        } else if (index === currentStep) {
+            // Current step
+            step.classList.add('pending');
+            if (icon) icon.textContent = '⏳';
+        } else {
+            // Future step
+            if (icon) icon.textContent = '○';
+        }
+    });
 }
 
 // showSuccessMessage removed - now using showWaitingForConnectionMessage and showAuthenticatedMessage instead
