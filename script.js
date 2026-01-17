@@ -184,7 +184,19 @@ const errorMessage = document.getElementById('errorMessage');
 document.addEventListener('DOMContentLoaded', () => {
     loadPlans();
     setupEventListeners();
+    loadSavedPhoneNumber();
 });
+
+// ========================================
+// LOAD SAVED PHONE NUMBER (for returning users)
+// ========================================
+function loadSavedPhoneNumber() {
+    const savedPhone = localStorage.getItem('bitwave_phone_number');
+    if (savedPhone && phoneNumberInput) {
+        phoneNumberInput.value = savedPhone;
+        console.log('📱 Pre-populated phone number for returning user');
+    }
+}
 
 // ========================================
 // LOAD PLANS - Uses hardcoded plans for instant loading
@@ -502,12 +514,17 @@ function setupEventListeners() {
         // Remove all non-numeric characters
         let value = e.target.value.replace(/[^\d]/g, '');
         
-        // Limit to 10 digits
+        // Limit to 10 digits (allows both 9-digit and 10-digit formats)
         if (value.length > 10) {
             value = value.substring(0, 10);
         }
         
         e.target.value = value;
+        
+        // Save to localStorage for returning users
+        if (value.length >= 9) {
+            localStorage.setItem('bitwave_phone_number', value);
+        }
     });
     
     // New purchase button
@@ -543,10 +560,13 @@ async function handlePayment(e) {
     
     // Validate phone number format
     if (!validatePhoneNumber(phoneNumber)) {
-        alert('Please enter a valid phone number (10 digits starting with 07 or 01)');
+        alert('Please enter a valid phone number (e.g., 0712345678 or 712345678)');
         phoneNumberInput.focus();
         return;
     }
+    
+    // Save valid phone number to localStorage
+    localStorage.setItem('bitwave_phone_number', phoneNumber);
     
     if (!selectedPlan) {
         alert('Please select a plan first');
@@ -911,12 +931,18 @@ function formatCurrency(amount) {
 
 // ========================================
 // PHONE NUMBER VALIDATION (Enhanced)
+// Accepts both formats:
+// - 10 digits starting with 0: 07XXXXXXXX or 01XXXXXXXX
+// - 9 digits without leading 0: 7XXXXXXXX or 1XXXXXXXX
 // ========================================
 function validatePhoneNumber(phoneNumber) {
-    // Kenya/East Africa format: 07XXXXXXXX or 01XXXXXXXX
-    // Accepts exactly 10 digits starting with 07 or 01
-    const phoneRegex = /^0[17][0-9]{8}$/;
-    return phoneRegex.test(phoneNumber);
+    // Kenya format - either:
+    // 1. 10 digits starting with 07 or 01 (e.g., 0712345678, 0112345678)
+    // 2. 9 digits starting with 7 or 1 (e.g., 712345678, 112345678)
+    const tenDigitRegex = /^0[17][0-9]{8}$/;  // 0712345678 or 0112345678
+    const nineDigitRegex = /^[17][0-9]{8}$/;   // 712345678 or 112345678
+    
+    return tenDigitRegex.test(phoneNumber) || nineDigitRegex.test(phoneNumber);
 }
 
 // ========================================
@@ -924,21 +950,30 @@ function validatePhoneNumber(phoneNumber) {
 // ========================================
 function formatPhoneForMpesa(phoneNumber) {
     // Convert Kenyan format to international format
-    // Input: 0795635364 or 0112345678
+    // Input: 0795635364 or 795635364 or 0112345678 or 112345678
     // Output: 254795635364 or 254112345678
     
     // Remove any spaces, dashes, or special characters
     let cleaned = phoneNumber.replace(/[\s\-\(\)]/g, '');
     
-    // If starts with 0, replace with 254
-    if (cleaned.startsWith('0')) {
-        cleaned = '254' + cleaned.substring(1);
+    // If already has 254 prefix, keep as is
+    if (cleaned.startsWith('254')) {
+        return cleaned;
     }
     
-    // If already has 254, keep as is
     // If starts with +254, remove the +
     if (cleaned.startsWith('+254')) {
-        cleaned = cleaned.substring(1);
+        return cleaned.substring(1);
+    }
+    
+    // If starts with 0, replace with 254
+    if (cleaned.startsWith('0')) {
+        return '254' + cleaned.substring(1);
+    }
+    
+    // If 9 digits starting with 7 or 1 (no leading 0), add 254
+    if (cleaned.length === 9 && /^[17]/.test(cleaned)) {
+        return '254' + cleaned;
     }
     
     return cleaned;
