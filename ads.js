@@ -368,7 +368,6 @@ function openAdDetails(ad) {
     document.getElementById('adModalSeller').textContent = ad.seller_name;
     document.getElementById('adModalLocation').textContent = ad.seller_location;
     document.getElementById('adModalPrice').textContent = ad.price;
-    document.getElementById('adModalPhone').textContent = ad.phone_number;
     document.getElementById('adModalViews').innerHTML = `👁️ <span>${ad.views_count || 0}</span> views`;
     document.getElementById('adModalId').textContent = `Ad #${ad.id}`;
     
@@ -587,6 +586,107 @@ function setupModalListeners() {
 }
 
 // ========================================
+// POPULATE SUCCESS PAGE ADS
+// ========================================
+function populateSuccessAds() {
+    const container = document.getElementById('successAdsScroll');
+    if (!container) return;
+    
+    // Get ads from the loaded data
+    const ads = adsData.length > 0 ? adsData : HARDCODED_ADS;
+    
+    // Shuffle and take up to 6 ads
+    const shuffled = [...ads].sort(() => Math.random() - 0.5).slice(0, 6);
+    
+    container.innerHTML = shuffled.map(ad => `
+        <div class="success-ad-card" onclick="openAdDetails(${ad.id})" role="button" tabindex="0">
+            <img src="${ad.image_url}" alt="${ad.title}" class="success-ad-img" loading="lazy" 
+                 onerror="this.src='images/placeholder.jpg'">
+            <div class="success-ad-info">
+                <div class="success-ad-title">${ad.title}</div>
+                <div class="success-ad-price">${ad.price}</div>
+            </div>
+        </div>
+    `).join('');
+    
+    console.log('🎨 Populated success page with', shuffled.length, 'ads');
+}
+
+// Make it available globally for script.js
+window.populateSuccessAds = populateSuccessAds;
+
+// ========================================
+// STICKY FOOTER AD - Dynamic from DB
+// ========================================
+let stickyAdIndex = 0;
+let stickyAdInterval = null;
+
+function initStickyAd() {
+    const stickyAd = document.getElementById('stickyAd');
+    const stickyAdContent = document.getElementById('stickyAdContent');
+    const stickyAdClose = document.getElementById('stickyAdClose');
+    
+    if (!stickyAd || !stickyAdContent) return;
+    
+    // Close button handler
+    if (stickyAdClose) {
+        stickyAdClose.addEventListener('click', (e) => {
+            e.stopPropagation();
+            stickyAd.classList.add('hidden');
+            // Remember it was closed for this session
+            sessionStorage.setItem('bitwave_sticky_ad_closed', 'true');
+            if (stickyAdInterval) clearInterval(stickyAdInterval);
+        });
+    }
+    
+    // Click handler to open ad details
+    stickyAdContent.addEventListener('click', () => {
+        const ads = adsData.length > 0 ? adsData : HARDCODED_ADS;
+        if (ads.length > 0) {
+            const currentAd = ads[stickyAdIndex % ads.length];
+            openAdDetails(currentAd.id);
+        }
+    });
+    
+    // Show sticky ad after scroll (only if not closed before)
+    if (!sessionStorage.getItem('bitwave_sticky_ad_closed')) {
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 200) {
+                updateStickyAd();
+                stickyAd.classList.remove('hidden');
+            }
+        }, { once: true });
+    }
+    
+    // Rotate ads every 8 seconds
+    stickyAdInterval = setInterval(() => {
+        if (!stickyAd.classList.contains('hidden')) {
+            stickyAdIndex++;
+            updateStickyAd();
+        }
+    }, 8000);
+}
+
+function updateStickyAd() {
+    const ads = adsData.length > 0 ? adsData : HARDCODED_ADS;
+    if (ads.length === 0) return;
+    
+    const ad = ads[stickyAdIndex % ads.length];
+    
+    const img = document.getElementById('stickyAdImg');
+    const title = document.getElementById('stickyAdTitle');
+    const subtitle = document.getElementById('stickyAdSubtitle');
+    
+    if (img) {
+        img.src = ad.image_url;
+        img.alt = ad.title;
+        img.onerror = () => { img.src = 'images/placeholder.jpg'; };
+    }
+    if (title) title.textContent = ad.title;
+    if (subtitle) subtitle.textContent = `${ad.seller_name} - ${ad.price}`;
+}
+
+// ========================================
 // INITIALIZATION
 // ========================================
 document.addEventListener('DOMContentLoaded', () => {
@@ -596,7 +696,15 @@ document.addEventListener('DOMContentLoaded', () => {
     setupModalListeners();
     
     // Fetch ads (will use hardcoded as fallback)
-    fetchAds();
+    fetchAds().then(() => {
+        // Initialize sticky ad after ads are loaded
+        initStickyAd();
+        
+        // Check for test mode
+        if (window.location.search.includes('test=success')) {
+            setTimeout(() => window.testSuccessPage(), 500);
+        }
+    });
     
     // Retry any pending clicks
     retryPendingClicks();
@@ -629,5 +737,47 @@ window.getAdsAnalytics = function() {
 };
 
 console.log('📢 Ads Service Ready');
-console.log('💡 Debug commands: refreshAds(), getAdsData(), getAdsAnalytics()');
+console.log('💡 Debug commands: refreshAds(), getAdsData(), getAdsAnalytics(), testSuccessPage()');
+
+// Test function to preview the success page
+window.testSuccessPage = function() {
+    // Hide other sections
+    document.getElementById('plansSection')?.classList.add('hidden');
+    document.getElementById('paymentSection')?.classList.add('hidden');
+    document.getElementById('errorSection')?.classList.add('hidden');
+    
+    // Show success section
+    const successSection = document.getElementById('successSection');
+    if (successSection) {
+        successSection.classList.remove('hidden');
+    }
+    
+    // Populate with mock data
+    const connectionDetails = document.getElementById('connectionDetails');
+    if (connectionDetails) {
+        connectionDetails.innerHTML = `
+            <div class="detail-row">
+                <span class="detail-label">Plan</span>
+                <span class="detail-value">24 Hours</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Speed</span>
+                <span class="detail-value">5Mbps</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Phone</span>
+                <span class="detail-value">254712345678</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Valid Until</span>
+                <span class="detail-value">Sun, Jan 18, 10:30 PM</span>
+            </div>
+        `;
+    }
+    
+    // Populate success ads
+    populateSuccessAds();
+    
+    console.log('✅ Success page shown with test data');
+};
 

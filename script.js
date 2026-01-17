@@ -799,35 +799,40 @@ function showProcessingPaymentMessage(phoneNumber, plan) {
 function showAuthenticatedMessage(phoneNumber, plan, data) {
     const formattedPhone = formatPhoneForMpesa(phoneNumber);
     
-    successMessage.innerHTML = `
-        <div style="text-align: center;">
-            <div style="font-size: 3rem; margin-bottom: 0.5rem;">✅</div>
-            <h2 style="font-size: 1.5rem; margin-bottom: 0.75rem; color: #22c55e;">Connected!</h2>
-            
-            <div style="background: #dcfce7; padding: 15px; border-radius: 10px; margin: 15px 0; border: 2px solid #22c55e;">
-                <div style="font-size: 1.1rem; font-weight: 700; color: #166534; margin-bottom: 8px;">
-                    ${data.plan_name || plan.duration}
-                </div>
-                <div style="font-size: 0.9rem; color: #166534; line-height: 1.6;">
-                    ${formattedPhone}<br>
-                    ${data.expiry ? `Valid until ${new Date(data.expiry).toLocaleDateString()}` : ''}
-                </div>
+    // Populate connection details card
+    const connectionDetails = document.getElementById('connectionDetails');
+    if (connectionDetails) {
+        const expiryDate = data.expiry ? new Date(data.expiry) : null;
+        const expiryText = expiryDate ? expiryDate.toLocaleDateString('en-KE', { 
+            weekday: 'short', 
+            month: 'short', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        }) : 'N/A';
+        
+        connectionDetails.innerHTML = `
+            <div class="detail-row">
+                <span class="detail-label">Plan</span>
+                <span class="detail-value">${data.plan_name || plan.duration}</span>
             </div>
-            
-            <div style="background: #fef3c7; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
-                <div style="font-size: 0.95rem; color: #92400e; font-weight: 600; margin-bottom: 6px;">
-                    📶 Refresh WiFi Now
-                </div>
-                <div style="font-size: 0.85rem; color: #78350f;">
-                    Turn WiFi OFF → Wait 3 sec → Turn ON
-                </div>
+            <div class="detail-row">
+                <span class="detail-label">Speed</span>
+                <span class="detail-value">${plan.speed || 'Standard'}</span>
             </div>
-            
-            <button onclick="window.location.href='http://google.com'" style="width: 100%; padding: 14px; background: #22c55e; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1.1rem; font-weight: 700; box-shadow: 0 4px 12px rgba(34,197,94,0.3);">
-                Start Browsing 🚀
-            </button>
-        </div>
-    `;
+            <div class="detail-row">
+                <span class="detail-label">Phone</span>
+                <span class="detail-value">${formattedPhone}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Valid Until</span>
+                <span class="detail-value">${expiryText}</span>
+            </div>
+        `;
+    }
+    
+    // Populate success page ads from the global ads data
+    populateSuccessAds();
 }
 
 // ========================================

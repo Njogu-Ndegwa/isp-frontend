@@ -179,18 +179,65 @@
 
             <!-- Success Section (Hidden Initially) -->
             <section class="success-section hidden" id="successSection">
-                <div class="success-card">
-                    <div class="success-animation">
-                        <div class="checkmark-circle">
-                            <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-                                <circle class="checkmark-bg" cx="26" cy="26" r="25" fill="none"/>
-                                <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
-                            </svg>
-                        </div>
+                <!-- Success Hero -->
+                <div class="success-hero">
+                    <div class="success-icon-wrap">
+                        <div class="success-icon-bg"></div>
+                        <span class="success-icon">📶</span>
                     </div>
-                    <h2 class="success-title">You're Connected! 🎉</h2>
-                    <p class="success-message" id="successMessage"></p>
-                    <button class="primary-button" id="newPurchaseButton">Buy More Time</button>
+                    <h1 class="success-headline">You're Online!</h1>
+                    <p class="success-subtext">Enjoy fast, reliable WiFi</p>
+                </div>
+
+                <!-- Connection Details Card -->
+                <div class="connection-card" id="connectionCard">
+                    <div class="connection-status">
+                        <span class="status-dot"></span>
+                        <span class="status-text">Connected</span>
+                    </div>
+                    <div class="connection-details" id="connectionDetails">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="success-actions">
+                    <a href="http://google.com" class="success-btn success-btn-primary" id="startBrowsingBtn">
+                        <span>Start Browsing</span>
+                        <span class="btn-arrow">→</span>
+                    </a>
+                    <button class="success-btn success-btn-secondary" id="newPurchaseButton">
+                        <span>⏱️</span>
+                        <span>Buy More Time</span>
+                    </button>
+                </div>
+
+                <!-- WiFi Tip -->
+                <div class="wifi-tip">
+                    <span class="tip-icon">💡</span>
+                    <div class="tip-content">
+                        <strong>Connection Tip</strong>
+                        <p>If pages don't load, turn WiFi OFF → wait 3 seconds → turn ON</p>
+                    </div>
+                </div>
+
+                <!-- Success Page Ads -->
+                <div class="success-ads">
+                    <div class="success-ads-header">
+                        <span class="ads-title">🛒 While you browse...</span>
+                        <span class="ads-badge">AD</span>
+                    </div>
+                    <div class="success-ads-scroll" id="successAdsScroll">
+                        <!-- Populated dynamically from DB -->
+                    </div>
+                </div>
+
+                <!-- Support Link -->
+                <div class="success-support">
+                    <a href="tel:0795635364" class="support-link">
+                        <span>📞</span>
+                        <span>Need help? Call Support</span>
+                    </a>
                 </div>
             </section>
 
@@ -207,15 +254,15 @@
 
         </main>
 
-        <!-- Sticky Footer Ad - Only shows when scrolled -->
-        <div class="sticky-footer-ad" id="stickyAd">
-            <div class="sticky-ad-content">
-                <img src="images/tomatoes-thumb.jpg" alt="Featured" class="sticky-ad-img">
+        <!-- Sticky Footer Ad - Populated from DB -->
+        <div class="sticky-footer-ad hidden" id="stickyAd">
+            <div class="sticky-ad-content" id="stickyAdContent">
+                <img src="" alt="Featured" class="sticky-ad-img" id="stickyAdImg">
                 <div class="sticky-ad-text">
-                    <strong>Today's Special!</strong>
-                    <span>Fresh produce at Stall 42</span>
+                    <strong id="stickyAdTitle">Loading...</strong>
+                    <span id="stickyAdSubtitle"></span>
                 </div>
-                <button class="sticky-ad-close" onclick="document.getElementById('stickyAd').classList.add('hidden')">×</button>
+                <button class="sticky-ad-close" id="stickyAdClose">×</button>
             </div>
         </div>
 
@@ -258,7 +305,6 @@
                                 <span class="call-btn-icon">📞</span>
                                 <span class="call-btn-text">Call Seller</span>
                             </a>
-                            <span class="ad-phone-display" id="adModalPhone"></span>
                         </div>
                         
                         <div class="ad-modal-footer">
