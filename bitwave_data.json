@@ -1,0 +1,4512 @@
+{
+  "extractedAt": "2026-01-21T22:24:13.683857",
+  "source": "M-PESA PDF Records",
+  "days": {
+    "jan14": {
+      "date": "2026-01-14",
+      "dateLabel": "January 14, 2026",
+      "totalTransactions": 151,
+      "totalRevenue": 1562,
+      "totalRevenueAmortized": 1392.29,
+      "uniqueUsers": 128,
+      "avgDailySpendPerUser": 10.88,
+      "repeatCustomers": 17,
+      "repeatCustomerPercent": 13.3,
+      "plans": [
+        {
+          "name": "7 minutes",
+          "price": 1,
+          "dailyPrice": 1,
+          "count": 27,
+          "revenue": 27,
+          "revenueAmortized": 27.0,
+          "color": "#ef4444"
+        },
+        {
+          "name": "1 hour",
+          "price": 5,
+          "dailyPrice": 5,
+          "count": 47,
+          "revenue": 235,
+          "revenueAmortized": 235.0,
+          "color": "#f97316"
+        },
+        {
+          "name": "6 hours",
+          "price": 12,
+          "dailyPrice": 12,
+          "count": 36,
+          "revenue": 432,
+          "revenueAmortized": 432.0,
+          "color": "#eab308"
+        },
+        {
+          "name": "12 hours",
+          "price": 15,
+          "dailyPrice": 15,
+          "count": 22,
+          "revenue": 330,
+          "revenueAmortized": 330.0,
+          "color": "#22c55e"
+        },
+        {
+          "name": "24 hours",
+          "price": 20,
+          "dailyPrice": 20,
+          "count": 17,
+          "revenue": 340,
+          "revenueAmortized": 340.0,
+          "color": "#3b82f6"
+        },
+        {
+          "name": "7 days",
+          "price": 99,
+          "dailyPrice": 14.14,
+          "count": 2,
+          "revenue": 198,
+          "revenueAmortized": 28.29,
+          "color": "#a855f7"
+        }
+      ],
+      "hourlyActivity": {
+        "23": 1,
+        "22": 3,
+        "21": 2,
+        "20": 7,
+        "19": 5,
+        "18": 5,
+        "17": 10,
+        "16": 7,
+        "15": 13,
+        "14": 9,
+        "13": 11,
+        "12": 14,
+        "11": 14,
+        "10": 14,
+        "9": 8,
+        "8": 10,
+        "7": 9,
+        "6": 5,
+        "5": 2,
+        "4": 1,
+        "0": 1
+      },
+      "hourlyRevenue": {
+        "23": 1,
+        "22": 26,
+        "21": 21,
+        "20": 49,
+        "19": 24,
+        "18": 47,
+        "17": 92,
+        "16": 48,
+        "15": 109,
+        "14": 118,
+        "13": 148,
+        "12": 219,
+        "11": 140,
+        "10": 159,
+        "9": 139,
+        "8": 79,
+        "7": 77,
+        "6": 50,
+        "5": 6,
+        "4": 5,
+        "0": 5
+      },
+      "hourlyRevenueAmortized": {
+        "23": 1.0,
+        "22": 26.0,
+        "21": 21.0,
+        "20": 49.0,
+        "19": 24.0,
+        "18": 47.0,
+        "17": 92.0,
+        "16": 48.0,
+        "15": 109.0,
+        "14": 118.0,
+        "13": 148.0,
+        "12": 134.14,
+        "11": 140.0,
+        "10": 159.0,
+        "9": 54.14,
+        "8": 79.0,
+        "7": 77.0,
+        "6": 50.0,
+        "5": 6.0,
+        "4": 5.0,
+        "0": 5.0
+      },
+      "hourlyByPlan": {
+        "7 minutes": {
+          "23": 1,
+          "22": 1,
+          "21": 1,
+          "20": 2,
+          "19": 2,
+          "17": 1,
+          "16": 2,
+          "15": 1,
+          "14": 1,
+          "12": 2,
+          "11": 2,
+          "10": 1,
+          "9": 3,
+          "8": 2,
+          "7": 3,
+          "6": 1,
+          "5": 1
+        },
+        "24 hours": {
+          "22": 1,
+          "21": 1,
+          "20": 1,
+          "18": 1,
+          "17": 1,
+          "14": 4,
+          "13": 3,
+          "12": 1,
+          "11": 2,
+          "10": 1,
+          "6": 1
+        },
+        "1 hour": {
+          "22": 1,
+          "20": 3,
+          "19": 2,
+          "18": 3,
+          "17": 4,
+          "16": 2,
+          "15": 6,
+          "14": 2,
+          "13": 2,
+          "12": 4,
+          "11": 4,
+          "10": 3,
+          "9": 2,
+          "8": 4,
+          "7": 1,
+          "6": 1,
+          "5": 1,
+          "4": 1,
+          "0": 1
+        },
+        "6 hours": {
+          "20": 1,
+          "19": 1,
+          "18": 1,
+          "17": 3,
+          "16": 3,
+          "15": 4,
+          "14": 1,
+          "13": 4,
+          "12": 4,
+          "11": 4,
+          "10": 4,
+          "9": 1,
+          "8": 1,
+          "7": 2,
+          "6": 2
+        },
+        "12 hours": {
+          "17": 1,
+          "15": 2,
+          "14": 1,
+          "13": 2,
+          "12": 2,
+          "11": 2,
+          "10": 5,
+          "9": 1,
+          "8": 3,
+          "7": 3
+        },
+        "7 days": {
+          "12": 1,
+          "9": 1
+        }
+      },
+      "topSpenders": [
+        {
+          "phone": "4681",
+          "amount": 99
+        },
+        {
+          "phone": "0750",
+          "amount": 99
+        },
+        {
+          "phone": "2463",
+          "amount": 32
+        },
+        {
+          "phone": "3836",
+          "amount": 30
+        },
+        {
+          "phone": "0747",
+          "amount": 29
+        }
+      ],
+      "firstTransaction": "00:44:43",
+      "lastTransaction": "23:49:55",
+      "userPurchaseCounts": {
+        "1_purchase": 111,
+        "2_purchases": 12,
+        "3_purchases": 4,
+        "4plus_purchases": 1
+      }
+    },
+    "jan13": {
+      "date": "2026-01-13",
+      "dateLabel": "January 13, 2026",
+      "totalTransactions": 151,
+      "totalRevenue": 1390,
+      "totalRevenueAmortized": 1220.29,
+      "uniqueUsers": 122,
+      "avgDailySpendPerUser": 10.0,
+      "repeatCustomers": 21,
+      "repeatCustomerPercent": 17.2,
+      "plans": [
+        {
+          "name": "7 minutes",
+          "price": 1,
+          "dailyPrice": 1,
+          "count": 38,
+          "revenue": 38,
+          "revenueAmortized": 38.0,
+          "color": "#ef4444"
+        },
+        {
+          "name": "1 hour",
+          "price": 5,
+          "dailyPrice": 5,
+          "count": 53,
+          "revenue": 265,
+          "revenueAmortized": 265.0,
+          "color": "#f97316"
+        },
+        {
+          "name": "6 hours",
+          "price": 12,
+          "dailyPrice": 12,
+          "count": 22,
+          "revenue": 264,
+          "revenueAmortized": 264.0,
+          "color": "#eab308"
+        },
+        {
+          "name": "12 hours",
+          "price": 15,
+          "dailyPrice": 15,
+          "count": 19,
+          "revenue": 285,
+          "revenueAmortized": 285.0,
+          "color": "#22c55e"
+        },
+        {
+          "name": "24 hours",
+          "price": 20,
+          "dailyPrice": 20,
+          "count": 17,
+          "revenue": 340,
+          "revenueAmortized": 340.0,
+          "color": "#3b82f6"
+        },
+        {
+          "name": "7 days",
+          "price": 99,
+          "dailyPrice": 14.14,
+          "count": 2,
+          "revenue": 198,
+          "revenueAmortized": 28.29,
+          "color": "#a855f7"
+        }
+      ],
+      "hourlyActivity": {
+        "23": 1,
+        "22": 2,
+        "21": 6,
+        "20": 5,
+        "19": 7,
+        "18": 12,
+        "17": 7,
+        "16": 9,
+        "15": 9,
+        "14": 11,
+        "13": 8,
+        "12": 5,
+        "11": 19,
+        "10": 8,
+        "9": 12,
+        "8": 11,
+        "7": 7,
+        "6": 2,
+        "5": 6,
+        "3": 2,
+        "2": 1,
+        "0": 1
+      },
+      "hourlyRevenue": {
+        "23": 5,
+        "22": 25,
+        "21": 41,
+        "20": 17,
+        "19": 37,
+        "18": 54,
+        "17": 142,
+        "16": 87,
+        "15": 183,
+        "14": 65,
+        "13": 92,
+        "12": 63,
+        "11": 182,
+        "10": 76,
+        "9": 129,
+        "8": 108,
+        "7": 31,
+        "6": 6,
+        "5": 21,
+        "3": 6,
+        "2": 15,
+        "0": 5
+      },
+      "hourlyRevenueAmortized": {
+        "23": 5.0,
+        "22": 25.0,
+        "21": 41.0,
+        "20": 17.0,
+        "19": 37.0,
+        "18": 54.0,
+        "17": 57.14,
+        "16": 87.0,
+        "15": 98.14,
+        "14": 65.0,
+        "13": 92.0,
+        "12": 63.0,
+        "11": 182.0,
+        "10": 76.0,
+        "9": 129.0,
+        "8": 108.0,
+        "7": 31.0,
+        "6": 6.0,
+        "5": 21.0,
+        "3": 6.0,
+        "2": 15.0,
+        "0": 5.0
+      },
+      "hourlyByPlan": {
+        "1 hour": {
+          "23": 1,
+          "22": 1,
+          "21": 4,
+          "20": 3,
+          "18": 5,
+          "17": 3,
+          "16": 3,
+          "15": 2,
+          "14": 6,
+          "13": 1,
+          "11": 3,
+          "10": 3,
+          "9": 3,
+          "8": 5,
+          "7": 6,
+          "6": 1,
+          "5": 1,
+          "3": 1,
+          "0": 1
+        },
+        "24 hours": {
+          "22": 1,
+          "21": 1,
+          "19": 1,
+          "16": 1,
+          "15": 3,
+          "14": 1,
+          "13": 1,
+          "12": 1,
+          "11": 3,
+          "9": 2,
+          "8": 2
+        },
+        "7 minutes": {
+          "21": 1,
+          "20": 2,
+          "19": 5,
+          "18": 5,
+          "17": 1,
+          "16": 1,
+          "15": 2,
+          "14": 3,
+          "13": 1,
+          "12": 1,
+          "11": 5,
+          "10": 1,
+          "9": 2,
+          "8": 1,
+          "7": 1,
+          "6": 1,
+          "5": 4,
+          "3": 1
+        },
+        "6 hours": {
+          "19": 1,
+          "18": 2,
+          "17": 1,
+          "16": 3,
+          "15": 1,
+          "14": 1,
+          "13": 3,
+          "12": 1,
+          "11": 6,
+          "9": 1,
+          "8": 1,
+          "5": 1
+        },
+        "12 hours": {
+          "17": 1,
+          "16": 1,
+          "13": 2,
+          "12": 2,
+          "11": 2,
+          "10": 4,
+          "9": 4,
+          "8": 2,
+          "2": 1
+        },
+        "7 days": {
+          "17": 1,
+          "15": 1
+        }
+      },
+      "topSpenders": [
+        {
+          "phone": "0175",
+          "amount": 99
+        },
+        {
+          "phone": "9610",
+          "amount": 99
+        },
+        {
+          "phone": "0680",
+          "amount": 40
+        },
+        {
+          "phone": "5114",
+          "amount": 20
+        },
+        {
+          "phone": "0654",
+          "amount": 20
+        }
+      ],
+      "firstTransaction": "00:11:45",
+      "lastTransaction": "23:10:41",
+      "userPurchaseCounts": {
+        "1_purchase": 101,
+        "2_purchases": 15,
+        "3_purchases": 5,
+        "4plus_purchases": 1
+      }
+    },
+    "jan9": {
+      "date": "2026-01-09",
+      "dateLabel": "January 9, 2026",
+      "totalTransactions": 161,
+      "totalRevenue": 1428,
+      "totalRevenueAmortized": 1343.14,
+      "uniqueUsers": 133,
+      "avgDailySpendPerUser": 10.1,
+      "repeatCustomers": 25,
+      "repeatCustomerPercent": 18.8,
+      "plans": [
+        {
+          "name": "7 minutes",
+          "price": 1,
+          "dailyPrice": 1,
+          "count": 38,
+          "revenue": 38,
+          "revenueAmortized": 38.0,
+          "color": "#ef4444"
+        },
+        {
+          "name": "1 hour",
+          "price": 5,
+          "dailyPrice": 5,
+          "count": 53,
+          "revenue": 265,
+          "revenueAmortized": 265.0,
+          "color": "#f97316"
+        },
+        {
+          "name": "6 hours",
+          "price": 12,
+          "dailyPrice": 12,
+          "count": 28,
+          "revenue": 336,
+          "revenueAmortized": 336.0,
+          "color": "#eab308"
+        },
+        {
+          "name": "12 hours",
+          "price": 15,
+          "dailyPrice": 15,
+          "count": 26,
+          "revenue": 390,
+          "revenueAmortized": 390.0,
+          "color": "#22c55e"
+        },
+        {
+          "name": "24 hours",
+          "price": 20,
+          "dailyPrice": 20,
+          "count": 15,
+          "revenue": 300,
+          "revenueAmortized": 300.0,
+          "color": "#3b82f6"
+        },
+        {
+          "name": "7 days",
+          "price": 99,
+          "dailyPrice": 14.14,
+          "count": 1,
+          "revenue": 99,
+          "revenueAmortized": 14.14,
+          "color": "#a855f7"
+        }
+      ],
+      "hourlyActivity": {
+        "21": 2,
+        "20": 8,
+        "19": 4,
+        "18": 11,
+        "17": 8,
+        "16": 10,
+        "15": 14,
+        "14": 19,
+        "13": 8,
+        "12": 8,
+        "11": 17,
+        "10": 10,
+        "9": 8,
+        "8": 13,
+        "7": 8,
+        "6": 4,
+        "5": 1,
+        "4": 3,
+        "3": 4,
+        "0": 1
+      },
+      "hourlyRevenue": {
+        "21": 40,
+        "20": 58,
+        "19": 16,
+        "18": 50,
+        "17": 27,
+        "16": 92,
+        "15": 105,
+        "14": 148,
+        "13": 64,
+        "12": 85,
+        "11": 285,
+        "10": 132,
+        "9": 85,
+        "8": 127,
+        "7": 31,
+        "6": 23,
+        "5": 12,
+        "4": 14,
+        "3": 29,
+        "0": 5
+      },
+      "hourlyRevenueAmortized": {
+        "21": 40.0,
+        "20": 58.0,
+        "19": 16.0,
+        "18": 50.0,
+        "17": 27.0,
+        "16": 92.0,
+        "15": 105.0,
+        "14": 148.0,
+        "13": 64.0,
+        "12": 85.0,
+        "11": 200.14,
+        "10": 132.0,
+        "9": 85.0,
+        "8": 127.0,
+        "7": 31.0,
+        "6": 23.0,
+        "5": 12.0,
+        "4": 14.0,
+        "3": 29.0,
+        "0": 5.0
+      },
+      "hourlyByPlan": {
+        "24 hours": {
+          "21": 2,
+          "20": 2,
+          "16": 1,
+          "15": 1,
+          "14": 1,
+          "13": 1,
+          "12": 1,
+          "11": 2,
+          "10": 1,
+          "9": 2,
+          "8": 1
+        },
+        "7 minutes": {
+          "20": 3,
+          "19": 1,
+          "18": 3,
+          "17": 5,
+          "16": 1,
+          "15": 2,
+          "14": 4,
+          "13": 2,
+          "12": 2,
+          "11": 3,
+          "9": 3,
+          "7": 4,
+          "6": 1,
+          "4": 2,
+          "3": 2
+        },
+        "1 hour": {
+          "20": 3,
+          "19": 3,
+          "18": 7,
+          "17": 2,
+          "16": 4,
+          "15": 7,
+          "14": 8,
+          "13": 3,
+          "11": 1,
+          "10": 2,
+          "8": 7,
+          "7": 3,
+          "6": 2,
+          "0": 1
+        },
+        "6 hours": {
+          "18": 1,
+          "17": 1,
+          "16": 3,
+          "15": 4,
+          "14": 2,
+          "13": 1,
+          "12": 4,
+          "11": 4,
+          "10": 1,
+          "9": 1,
+          "8": 1,
+          "7": 1,
+          "6": 1,
+          "5": 1,
+          "4": 1,
+          "3": 1
+        },
+        "12 hours": {
+          "16": 1,
+          "14": 4,
+          "13": 1,
+          "12": 1,
+          "11": 6,
+          "10": 6,
+          "9": 2,
+          "8": 4,
+          "3": 1
+        },
+        "7 days": {
+          "11": 1
+        }
+      },
+      "topSpenders": [
+        {
+          "phone": "5048",
+          "amount": 99
+        },
+        {
+          "phone": "8777",
+          "amount": 30
+        },
+        {
+          "phone": "1042",
+          "amount": 30
+        },
+        {
+          "phone": "5509",
+          "amount": 25
+        },
+        {
+          "phone": "5429",
+          "amount": 24
+        }
+      ],
+      "firstTransaction": "00:01:53",
+      "lastTransaction": "21:08:38",
+      "userPurchaseCounts": {
+        "1_purchase": 108,
+        "2_purchases": 22,
+        "3_purchases": 3,
+        "4plus_purchases": 0
+      }
+    },
+    "jan8": {
+      "date": "2026-01-08",
+      "dateLabel": "January 8, 2026",
+      "totalTransactions": 126,
+      "totalRevenue": 1158,
+      "totalRevenueAmortized": 1073.14,
+      "uniqueUsers": 109,
+      "avgDailySpendPerUser": 9.85,
+      "repeatCustomers": 15,
+      "repeatCustomerPercent": 13.8,
+      "plans": [
+        {
+          "name": "7 minutes",
+          "price": 1,
+          "dailyPrice": 1,
+          "count": 33,
+          "revenue": 33,
+          "revenueAmortized": 33.0,
+          "color": "#ef4444"
+        },
+        {
+          "name": "1 hour",
+          "price": 5,
+          "dailyPrice": 5,
+          "count": 37,
+          "revenue": 185,
+          "revenueAmortized": 185.0,
+          "color": "#f97316"
+        },
+        {
+          "name": "6 hours",
+          "price": 12,
+          "dailyPrice": 12,
+          "count": 18,
+          "revenue": 216,
+          "revenueAmortized": 216.0,
+          "color": "#eab308"
+        },
+        {
+          "name": "12 hours",
+          "price": 15,
+          "dailyPrice": 15,
+          "count": 23,
+          "revenue": 345,
+          "revenueAmortized": 345.0,
+          "color": "#22c55e"
+        },
+        {
+          "name": "24 hours",
+          "price": 20,
+          "dailyPrice": 20,
+          "count": 14,
+          "revenue": 280,
+          "revenueAmortized": 280.0,
+          "color": "#3b82f6"
+        },
+        {
+          "name": "7 days",
+          "price": 99,
+          "dailyPrice": 14.14,
+          "count": 1,
+          "revenue": 99,
+          "revenueAmortized": 14.14,
+          "color": "#a855f7"
+        }
+      ],
+      "hourlyActivity": {
+        "21": 4,
+        "20": 5,
+        "19": 7,
+        "18": 5,
+        "17": 11,
+        "16": 10,
+        "15": 11,
+        "14": 11,
+        "13": 11,
+        "12": 9,
+        "11": 19,
+        "10": 11,
+        "9": 12
+      },
+      "hourlyRevenue": {
+        "21": 8,
+        "20": 47,
+        "19": 45,
+        "18": 36,
+        "17": 68,
+        "16": 36,
+        "15": 68,
+        "14": 99,
+        "13": 85,
+        "12": 103,
+        "11": 267,
+        "10": 150,
+        "9": 146
+      },
+      "hourlyRevenueAmortized": {
+        "21": 8.0,
+        "20": 47.0,
+        "19": 45.0,
+        "18": 36.0,
+        "17": 68.0,
+        "16": 36.0,
+        "15": 68.0,
+        "14": 99.0,
+        "13": 85.0,
+        "12": 103.0,
+        "11": 182.14,
+        "10": 150.0,
+        "9": 146.0
+      },
+      "hourlyByPlan": {
+        "7 minutes": {
+          "21": 3,
+          "20": 2,
+          "19": 3,
+          "18": 1,
+          "17": 3,
+          "16": 6,
+          "15": 4,
+          "14": 1,
+          "13": 4,
+          "12": 1,
+          "11": 2,
+          "10": 1,
+          "9": 2
+        },
+        "1 hour": {
+          "21": 1,
+          "20": 1,
+          "19": 2,
+          "18": 3,
+          "17": 6,
+          "16": 3,
+          "15": 4,
+          "14": 4,
+          "13": 2,
+          "12": 2,
+          "11": 7,
+          "10": 1,
+          "9": 1
+        },
+        "24 hours": {
+          "20": 2,
+          "19": 1,
+          "18": 1,
+          "17": 1,
+          "15": 1,
+          "13": 1,
+          "12": 1,
+          "11": 1,
+          "10": 3,
+          "9": 2
+        },
+        "6 hours": {
+          "19": 1,
+          "15": 2,
+          "14": 4,
+          "13": 3,
+          "12": 1,
+          "11": 3,
+          "10": 2,
+          "9": 2
+        },
+        "12 hours": {
+          "17": 1,
+          "16": 1,
+          "14": 2,
+          "13": 1,
+          "12": 4,
+          "11": 5,
+          "10": 4,
+          "9": 5
+        },
+        "7 days": {
+          "11": 1
+        }
+      },
+      "topSpenders": [
+        {
+          "phone": "9479",
+          "amount": 99
+        },
+        {
+          "phone": "5429",
+          "amount": 24
+        },
+        {
+          "phone": "6408",
+          "amount": 21
+        },
+        {
+          "phone": "2535",
+          "amount": 20
+        },
+        {
+          "phone": "1193",
+          "amount": 20
+        }
+      ],
+      "firstTransaction": "09:01:52",
+      "lastTransaction": "21:53:48",
+      "userPurchaseCounts": {
+        "1_purchase": 94,
+        "2_purchases": 14,
+        "3_purchases": 0,
+        "4plus_purchases": 1
+      }
+    },
+    "jan7": {
+      "date": "2026-01-07",
+      "dateLabel": "January 7, 2026",
+      "totalTransactions": 139,
+      "totalRevenue": 1299,
+      "totalRevenueAmortized": 1129.29,
+      "uniqueUsers": 114,
+      "avgDailySpendPerUser": 9.91,
+      "repeatCustomers": 20,
+      "repeatCustomerPercent": 17.5,
+      "plans": [
+        {
+          "name": "7 minutes",
+          "price": 1,
+          "dailyPrice": 1,
+          "count": 42,
+          "revenue": 42,
+          "revenueAmortized": 42.0,
+          "color": "#ef4444"
+        },
+        {
+          "name": "1 hour",
+          "price": 5,
+          "dailyPrice": 5,
+          "count": 36,
+          "revenue": 180,
+          "revenueAmortized": 180.0,
+          "color": "#f97316"
+        },
+        {
+          "name": "6 hours",
+          "price": 12,
+          "dailyPrice": 12,
+          "count": 27,
+          "revenue": 324,
+          "revenueAmortized": 324.0,
+          "color": "#eab308"
+        },
+        {
+          "name": "12 hours",
+          "price": 15,
+          "dailyPrice": 15,
+          "count": 17,
+          "revenue": 255,
+          "revenueAmortized": 255.0,
+          "color": "#22c55e"
+        },
+        {
+          "name": "24 hours",
+          "price": 20,
+          "dailyPrice": 20,
+          "count": 15,
+          "revenue": 300,
+          "revenueAmortized": 300.0,
+          "color": "#3b82f6"
+        },
+        {
+          "name": "7 days",
+          "price": 99,
+          "dailyPrice": 14.14,
+          "count": 2,
+          "revenue": 198,
+          "revenueAmortized": 28.29,
+          "color": "#a855f7"
+        }
+      ],
+      "hourlyActivity": {
+        "19": 7,
+        "18": 6,
+        "17": 12,
+        "16": 12,
+        "15": 6,
+        "14": 8,
+        "13": 5,
+        "12": 11,
+        "11": 12,
+        "10": 10,
+        "9": 20,
+        "8": 9,
+        "7": 10,
+        "6": 4,
+        "5": 2,
+        "4": 1,
+        "3": 2,
+        "1": 2
+      },
+      "hourlyRevenue": {
+        "19": 38,
+        "18": 29,
+        "17": 80,
+        "16": 61,
+        "15": 29,
+        "14": 53,
+        "13": 39,
+        "12": 115,
+        "11": 110,
+        "10": 144,
+        "9": 285,
+        "8": 71,
+        "7": 181,
+        "6": 19,
+        "5": 2,
+        "4": 20,
+        "3": 6,
+        "1": 17
+      },
+      "hourlyRevenueAmortized": {
+        "19": 38.0,
+        "18": 29.0,
+        "17": 80.0,
+        "16": 61.0,
+        "15": 29.0,
+        "14": 53.0,
+        "13": 39.0,
+        "12": 115.0,
+        "11": 110.0,
+        "10": 144.0,
+        "9": 200.14,
+        "8": 71.0,
+        "7": 96.14,
+        "6": 19.0,
+        "5": 2.0,
+        "4": 20.0,
+        "3": 6.0,
+        "1": 17.0
+      },
+      "hourlyByPlan": {
+        "7 minutes": {
+          "19": 3,
+          "18": 4,
+          "17": 5,
+          "16": 5,
+          "15": 2,
+          "14": 2,
+          "13": 2,
+          "12": 3,
+          "11": 2,
+          "10": 1,
+          "9": 5,
+          "8": 2,
+          "7": 1,
+          "6": 2,
+          "5": 2,
+          "3": 1
+        },
+        "1 hour": {
+          "19": 3,
+          "18": 1,
+          "17": 4,
+          "16": 4,
+          "15": 3,
+          "14": 3,
+          "13": 1,
+          "12": 2,
+          "11": 3,
+          "9": 3,
+          "8": 3,
+          "7": 3,
+          "6": 1,
+          "3": 1,
+          "1": 1
+        },
+        "24 hours": {
+          "19": 1,
+          "18": 1,
+          "17": 2,
+          "13": 1,
+          "12": 3,
+          "10": 4,
+          "9": 2,
+          "4": 1
+        },
+        "12 hours": {
+          "17": 1,
+          "12": 2,
+          "11": 3,
+          "10": 1,
+          "9": 6,
+          "8": 2,
+          "7": 2
+        },
+        "6 hours": {
+          "16": 3,
+          "15": 1,
+          "14": 3,
+          "13": 1,
+          "12": 1,
+          "11": 4,
+          "10": 4,
+          "9": 3,
+          "8": 2,
+          "7": 3,
+          "6": 1,
+          "1": 1
+        },
+        "7 days": {
+          "9": 1,
+          "7": 1
+        }
+      },
+      "topSpenders": [
+        {
+          "phone": "0750",
+          "amount": 99
+        },
+        {
+          "phone": "4681",
+          "amount": 99
+        },
+        {
+          "phone": "3623",
+          "amount": 32
+        },
+        {
+          "phone": "0680",
+          "amount": 32
+        },
+        {
+          "phone": "5429",
+          "amount": 24
+        }
+      ],
+      "firstTransaction": "01:02:16",
+      "lastTransaction": "19:20:51",
+      "userPurchaseCounts": {
+        "1_purchase": 94,
+        "2_purchases": 15,
+        "3_purchases": 5,
+        "4plus_purchases": 0
+      }
+    },
+    "jan6": {
+      "date": "2026-01-06",
+      "dateLabel": "January 6, 2026",
+      "totalTransactions": 97,
+      "totalRevenue": 581,
+      "totalRevenueAmortized": 581,
+      "uniqueUsers": 76,
+      "avgDailySpendPerUser": 7.64,
+      "repeatCustomers": 18,
+      "repeatCustomerPercent": 23.7,
+      "plans": [
+        {
+          "name": "7 minutes",
+          "price": 1,
+          "dailyPrice": 1,
+          "count": 45,
+          "revenue": 45,
+          "revenueAmortized": 45.0,
+          "color": "#ef4444"
+        },
+        {
+          "name": "1 hour",
+          "price": 5,
+          "dailyPrice": 5,
+          "count": 28,
+          "revenue": 140,
+          "revenueAmortized": 140.0,
+          "color": "#f97316"
+        },
+        {
+          "name": "6 hours",
+          "price": 12,
+          "dailyPrice": 12,
+          "count": 8,
+          "revenue": 96,
+          "revenueAmortized": 96.0,
+          "color": "#eab308"
+        },
+        {
+          "name": "12 hours",
+          "price": 15,
+          "dailyPrice": 15,
+          "count": 4,
+          "revenue": 60,
+          "revenueAmortized": 60.0,
+          "color": "#22c55e"
+        },
+        {
+          "name": "24 hours",
+          "price": 20,
+          "dailyPrice": 20,
+          "count": 12,
+          "revenue": 240,
+          "revenueAmortized": 240.0,
+          "color": "#3b82f6"
+        },
+        {
+          "name": "7 days",
+          "price": 99,
+          "dailyPrice": 14.14,
+          "count": 0,
+          "revenue": 0,
+          "revenueAmortized": 0,
+          "color": "#a855f7"
+        }
+      ],
+      "hourlyActivity": {
+        "23": 1,
+        "22": 3,
+        "21": 9,
+        "20": 8,
+        "19": 4,
+        "18": 9,
+        "17": 10,
+        "16": 17,
+        "15": 13,
+        "14": 12,
+        "13": 11
+      },
+      "hourlyRevenue": {
+        "23": 1,
+        "22": 11,
+        "21": 36,
+        "20": 31,
+        "19": 27,
+        "18": 35,
+        "17": 124,
+        "16": 77,
+        "15": 56,
+        "14": 106,
+        "13": 77
+      },
+      "hourlyRevenueAmortized": {
+        "23": 1.0,
+        "22": 11.0,
+        "21": 36.0,
+        "20": 31.0,
+        "19": 27.0,
+        "18": 35.0,
+        "17": 124.0,
+        "16": 77.0,
+        "15": 56.0,
+        "14": 106.0,
+        "13": 77.0
+      },
+      "hourlyByPlan": {
+        "7 minutes": {
+          "23": 1,
+          "22": 1,
+          "21": 4,
+          "20": 6,
+          "19": 2,
+          "18": 5,
+          "16": 10,
+          "15": 6,
+          "14": 5,
+          "13": 5
+        },
+        "1 hour": {
+          "22": 2,
+          "21": 4,
+          "20": 1,
+          "19": 1,
+          "18": 3,
+          "17": 4,
+          "16": 4,
+          "15": 6,
+          "14": 1,
+          "13": 2
+        },
+        "6 hours": {
+          "21": 1,
+          "17": 2,
+          "16": 1,
+          "14": 3,
+          "13": 1
+        },
+        "24 hours": {
+          "20": 1,
+          "19": 1,
+          "17": 4,
+          "16": 1,
+          "15": 1,
+          "14": 3,
+          "13": 1
+        },
+        "12 hours": {
+          "18": 1,
+          "16": 1,
+          "13": 2
+        }
+      },
+      "topSpenders": [
+        {
+          "phone": "0506",
+          "amount": 25
+        },
+        {
+          "phone": "4754",
+          "amount": 20
+        },
+        {
+          "phone": "4479",
+          "amount": 20
+        },
+        {
+          "phone": "6732",
+          "amount": 20
+        },
+        {
+          "phone": "1436",
+          "amount": 20
+        }
+      ],
+      "firstTransaction": "13:22:02",
+      "lastTransaction": "23:46:19",
+      "userPurchaseCounts": {
+        "1_purchase": 58,
+        "2_purchases": 15,
+        "3_purchases": 3,
+        "4plus_purchases": 0
+      }
+    },
+    "jan1": {
+      "date": "2026-01-01",
+      "dateLabel": "January 1, 2026 (PROMO)",
+      "totalTransactions": 97,
+      "totalRevenue": 97,
+      "totalRevenueAmortized": 97,
+      "uniqueUsers": 92,
+      "avgDailySpendPerUser": 1.05,
+      "repeatCustomers": 5,
+      "repeatCustomerPercent": 5.4,
+      "plans": [
+        {
+          "name": "7 minutes",
+          "price": 1,
+          "dailyPrice": 1,
+          "count": 97,
+          "revenue": 97,
+          "revenueAmortized": 97.0,
+          "color": "#ef4444"
+        },
+        {
+          "name": "1 hour",
+          "price": 5,
+          "dailyPrice": 5,
+          "count": 0,
+          "revenue": 0,
+          "revenueAmortized": 0,
+          "color": "#f97316"
+        },
+        {
+          "name": "6 hours",
+          "price": 12,
+          "dailyPrice": 12,
+          "count": 0,
+          "revenue": 0,
+          "revenueAmortized": 0,
+          "color": "#eab308"
+        },
+        {
+          "name": "12 hours",
+          "price": 15,
+          "dailyPrice": 15,
+          "count": 0,
+          "revenue": 0,
+          "revenueAmortized": 0,
+          "color": "#22c55e"
+        },
+        {
+          "name": "24 hours",
+          "price": 20,
+          "dailyPrice": 20,
+          "count": 0,
+          "revenue": 0,
+          "revenueAmortized": 0,
+          "color": "#3b82f6"
+        },
+        {
+          "name": "7 days",
+          "price": 99,
+          "dailyPrice": 14.14,
+          "count": 0,
+          "revenue": 0,
+          "revenueAmortized": 0,
+          "color": "#a855f7"
+        }
+      ],
+      "hourlyActivity": {
+        "23": 1,
+        "22": 3,
+        "21": 5,
+        "20": 3,
+        "19": 7,
+        "18": 5,
+        "17": 7,
+        "16": 7,
+        "15": 6,
+        "14": 7,
+        "13": 7,
+        "12": 13,
+        "11": 2,
+        "10": 4,
+        "9": 3,
+        "8": 4,
+        "7": 5,
+        "6": 3,
+        "5": 1,
+        "4": 1,
+        "3": 1,
+        "0": 2
+      },
+      "hourlyRevenue": {
+        "23": 1,
+        "22": 3,
+        "21": 5,
+        "20": 3,
+        "19": 7,
+        "18": 5,
+        "17": 7,
+        "16": 7,
+        "15": 6,
+        "14": 7,
+        "13": 7,
+        "12": 13,
+        "11": 2,
+        "10": 4,
+        "9": 3,
+        "8": 4,
+        "7": 5,
+        "6": 3,
+        "5": 1,
+        "4": 1,
+        "3": 1,
+        "0": 2
+      },
+      "hourlyRevenueAmortized": {
+        "23": 1.0,
+        "22": 3.0,
+        "21": 5.0,
+        "20": 3.0,
+        "19": 7.0,
+        "18": 5.0,
+        "17": 7.0,
+        "16": 7.0,
+        "15": 6.0,
+        "14": 7.0,
+        "13": 7.0,
+        "12": 13.0,
+        "11": 2.0,
+        "10": 4.0,
+        "9": 3.0,
+        "8": 4.0,
+        "7": 5.0,
+        "6": 3.0,
+        "5": 1.0,
+        "4": 1.0,
+        "3": 1.0,
+        "0": 2.0
+      },
+      "hourlyByPlan": {
+        "7 minutes": {
+          "23": 1,
+          "22": 3,
+          "21": 5,
+          "20": 3,
+          "19": 7,
+          "18": 5,
+          "17": 7,
+          "16": 7,
+          "15": 6,
+          "14": 7,
+          "13": 7,
+          "12": 13,
+          "11": 2,
+          "10": 4,
+          "9": 3,
+          "8": 4,
+          "7": 5,
+          "6": 3,
+          "5": 1,
+          "4": 1,
+          "3": 1,
+          "0": 2
+        }
+      },
+      "topSpenders": [
+        {
+          "phone": "4330",
+          "amount": 2
+        },
+        {
+          "phone": "3836",
+          "amount": 2
+        },
+        {
+          "phone": "9163",
+          "amount": 2
+        },
+        {
+          "phone": "2519",
+          "amount": 2
+        },
+        {
+          "phone": "5509",
+          "amount": 2
+        }
+      ],
+      "firstTransaction": "00:33:56",
+      "lastTransaction": "23:08:44",
+      "userPurchaseCounts": {
+        "1_purchase": 87,
+        "2_purchases": 5,
+        "3_purchases": 0,
+        "4plus_purchases": 0
+      }
+    },
+    "jan2": {
+      "date": "2026-01-02",
+      "dateLabel": "January 2, 2026 (PROMO)",
+      "totalTransactions": 150,
+      "totalRevenue": 150,
+      "totalRevenueAmortized": 150,
+      "uniqueUsers": 140,
+      "avgDailySpendPerUser": 1.07,
+      "repeatCustomers": 9,
+      "repeatCustomerPercent": 6.4,
+      "plans": [
+        {
+          "name": "7 minutes",
+          "price": 1,
+          "dailyPrice": 1,
+          "count": 150,
+          "revenue": 150,
+          "revenueAmortized": 150.0,
+          "color": "#ef4444"
+        },
+        {
+          "name": "1 hour",
+          "price": 5,
+          "dailyPrice": 5,
+          "count": 0,
+          "revenue": 0,
+          "revenueAmortized": 0,
+          "color": "#f97316"
+        },
+        {
+          "name": "6 hours",
+          "price": 12,
+          "dailyPrice": 12,
+          "count": 0,
+          "revenue": 0,
+          "revenueAmortized": 0,
+          "color": "#eab308"
+        },
+        {
+          "name": "12 hours",
+          "price": 15,
+          "dailyPrice": 15,
+          "count": 0,
+          "revenue": 0,
+          "revenueAmortized": 0,
+          "color": "#22c55e"
+        },
+        {
+          "name": "24 hours",
+          "price": 20,
+          "dailyPrice": 20,
+          "count": 0,
+          "revenue": 0,
+          "revenueAmortized": 0,
+          "color": "#3b82f6"
+        },
+        {
+          "name": "7 days",
+          "price": 99,
+          "dailyPrice": 14.14,
+          "count": 0,
+          "revenue": 0,
+          "revenueAmortized": 0,
+          "color": "#a855f7"
+        }
+      ],
+      "hourlyActivity": {
+        "23": 3,
+        "22": 1,
+        "21": 1,
+        "20": 2,
+        "19": 10,
+        "18": 9,
+        "17": 6,
+        "16": 14,
+        "15": 3,
+        "14": 11,
+        "13": 14,
+        "12": 15,
+        "11": 15,
+        "10": 10,
+        "9": 11,
+        "8": 7,
+        "7": 10,
+        "6": 4,
+        "5": 2,
+        "4": 1,
+        "1": 1
+      },
+      "hourlyRevenue": {
+        "23": 3,
+        "22": 1,
+        "21": 1,
+        "20": 2,
+        "19": 10,
+        "18": 9,
+        "17": 6,
+        "16": 14,
+        "15": 3,
+        "14": 11,
+        "13": 14,
+        "12": 15,
+        "11": 15,
+        "10": 10,
+        "9": 11,
+        "8": 7,
+        "7": 10,
+        "6": 4,
+        "5": 2,
+        "4": 1,
+        "1": 1
+      },
+      "hourlyRevenueAmortized": {
+        "23": 3.0,
+        "22": 1.0,
+        "21": 1.0,
+        "20": 2.0,
+        "19": 10.0,
+        "18": 9.0,
+        "17": 6.0,
+        "16": 14.0,
+        "15": 3.0,
+        "14": 11.0,
+        "13": 14.0,
+        "12": 15.0,
+        "11": 15.0,
+        "10": 10.0,
+        "9": 11.0,
+        "8": 7.0,
+        "7": 10.0,
+        "6": 4.0,
+        "5": 2.0,
+        "4": 1.0,
+        "1": 1.0
+      },
+      "hourlyByPlan": {
+        "7 minutes": {
+          "23": 3,
+          "22": 1,
+          "21": 1,
+          "20": 2,
+          "19": 10,
+          "18": 9,
+          "17": 6,
+          "16": 14,
+          "15": 3,
+          "14": 11,
+          "13": 14,
+          "12": 15,
+          "11": 15,
+          "10": 10,
+          "9": 11,
+          "8": 7,
+          "7": 10,
+          "6": 4,
+          "5": 2,
+          "4": 1,
+          "1": 1
+        }
+      },
+      "topSpenders": [
+        {
+          "phone": "8777",
+          "amount": 3
+        },
+        {
+          "phone": "2096",
+          "amount": 2
+        },
+        {
+          "phone": "9906",
+          "amount": 2
+        },
+        {
+          "phone": "4182",
+          "amount": 2
+        },
+        {
+          "phone": "6018",
+          "amount": 2
+        }
+      ],
+      "firstTransaction": "01:56:33",
+      "lastTransaction": "23:54:41",
+      "userPurchaseCounts": {
+        "1_purchase": 131,
+        "2_purchases": 8,
+        "3_purchases": 1,
+        "4plus_purchases": 0
+      }
+    },
+    "jan3": {
+      "date": "2026-01-03",
+      "dateLabel": "January 3, 2026 (PROMO)",
+      "totalTransactions": 165,
+      "totalRevenue": 165,
+      "totalRevenueAmortized": 165,
+      "uniqueUsers": 161,
+      "avgDailySpendPerUser": 1.02,
+      "repeatCustomers": 4,
+      "repeatCustomerPercent": 2.5,
+      "plans": [
+        {
+          "name": "7 minutes",
+          "price": 1,
+          "dailyPrice": 1,
+          "count": 165,
+          "revenue": 165,
+          "revenueAmortized": 165.0,
+          "color": "#ef4444"
+        },
+        {
+          "name": "1 hour",
+          "price": 5,
+          "dailyPrice": 5,
+          "count": 0,
+          "revenue": 0,
+          "revenueAmortized": 0,
+          "color": "#f97316"
+        },
+        {
+          "name": "6 hours",
+          "price": 12,
+          "dailyPrice": 12,
+          "count": 0,
+          "revenue": 0,
+          "revenueAmortized": 0,
+          "color": "#eab308"
+        },
+        {
+          "name": "12 hours",
+          "price": 15,
+          "dailyPrice": 15,
+          "count": 0,
+          "revenue": 0,
+          "revenueAmortized": 0,
+          "color": "#22c55e"
+        },
+        {
+          "name": "24 hours",
+          "price": 20,
+          "dailyPrice": 20,
+          "count": 0,
+          "revenue": 0,
+          "revenueAmortized": 0,
+          "color": "#3b82f6"
+        },
+        {
+          "name": "7 days",
+          "price": 99,
+          "dailyPrice": 14.14,
+          "count": 0,
+          "revenue": 0,
+          "revenueAmortized": 0,
+          "color": "#a855f7"
+        }
+      ],
+      "hourlyActivity": {
+        "23": 3,
+        "21": 2,
+        "20": 4,
+        "19": 8,
+        "18": 12,
+        "17": 9,
+        "16": 7,
+        "15": 8,
+        "14": 14,
+        "13": 15,
+        "12": 19,
+        "11": 10,
+        "10": 13,
+        "9": 15,
+        "8": 8,
+        "7": 5,
+        "6": 8,
+        "5": 1,
+        "4": 1,
+        "3": 1,
+        "2": 1,
+        "0": 1
+      },
+      "hourlyRevenue": {
+        "23": 3,
+        "21": 2,
+        "20": 4,
+        "19": 8,
+        "18": 12,
+        "17": 9,
+        "16": 7,
+        "15": 8,
+        "14": 14,
+        "13": 15,
+        "12": 19,
+        "11": 10,
+        "10": 13,
+        "9": 15,
+        "8": 8,
+        "7": 5,
+        "6": 8,
+        "5": 1,
+        "4": 1,
+        "3": 1,
+        "2": 1,
+        "0": 1
+      },
+      "hourlyRevenueAmortized": {
+        "23": 3.0,
+        "21": 2.0,
+        "20": 4.0,
+        "19": 8.0,
+        "18": 12.0,
+        "17": 9.0,
+        "16": 7.0,
+        "15": 8.0,
+        "14": 14.0,
+        "13": 15.0,
+        "12": 19.0,
+        "11": 10.0,
+        "10": 13.0,
+        "9": 15.0,
+        "8": 8.0,
+        "7": 5.0,
+        "6": 8.0,
+        "5": 1.0,
+        "4": 1.0,
+        "3": 1.0,
+        "2": 1.0,
+        "0": 1.0
+      },
+      "hourlyByPlan": {
+        "7 minutes": {
+          "23": 3,
+          "21": 2,
+          "20": 4,
+          "19": 8,
+          "18": 12,
+          "17": 9,
+          "16": 7,
+          "15": 8,
+          "14": 14,
+          "13": 15,
+          "12": 19,
+          "11": 10,
+          "10": 13,
+          "9": 15,
+          "8": 8,
+          "7": 5,
+          "6": 8,
+          "5": 1,
+          "4": 1,
+          "3": 1,
+          "2": 1,
+          "0": 1
+        }
+      },
+      "topSpenders": [
+        {
+          "phone": "5509",
+          "amount": 2
+        },
+        {
+          "phone": "1868",
+          "amount": 2
+        },
+        {
+          "phone": "5429",
+          "amount": 2
+        },
+        {
+          "phone": "7639",
+          "amount": 2
+        },
+        {
+          "phone": "2758",
+          "amount": 1
+        }
+      ],
+      "firstTransaction": "00:26:33",
+      "lastTransaction": "23:39:03",
+      "userPurchaseCounts": {
+        "1_purchase": 157,
+        "2_purchases": 4,
+        "3_purchases": 0,
+        "4plus_purchases": 0
+      }
+    },
+    "jan4": {
+      "date": "2026-01-04",
+      "dateLabel": "January 4, 2026 (PROMO)",
+      "totalTransactions": 93,
+      "totalRevenue": 93,
+      "totalRevenueAmortized": 93,
+      "uniqueUsers": 90,
+      "avgDailySpendPerUser": 1.03,
+      "repeatCustomers": 3,
+      "repeatCustomerPercent": 3.3,
+      "plans": [
+        {
+          "name": "7 minutes",
+          "price": 1,
+          "dailyPrice": 1,
+          "count": 93,
+          "revenue": 93,
+          "revenueAmortized": 93.0,
+          "color": "#ef4444"
+        },
+        {
+          "name": "1 hour",
+          "price": 5,
+          "dailyPrice": 5,
+          "count": 0,
+          "revenue": 0,
+          "revenueAmortized": 0,
+          "color": "#f97316"
+        },
+        {
+          "name": "6 hours",
+          "price": 12,
+          "dailyPrice": 12,
+          "count": 0,
+          "revenue": 0,
+          "revenueAmortized": 0,
+          "color": "#eab308"
+        },
+        {
+          "name": "12 hours",
+          "price": 15,
+          "dailyPrice": 15,
+          "count": 0,
+          "revenue": 0,
+          "revenueAmortized": 0,
+          "color": "#22c55e"
+        },
+        {
+          "name": "24 hours",
+          "price": 20,
+          "dailyPrice": 20,
+          "count": 0,
+          "revenue": 0,
+          "revenueAmortized": 0,
+          "color": "#3b82f6"
+        },
+        {
+          "name": "7 days",
+          "price": 99,
+          "dailyPrice": 14.14,
+          "count": 0,
+          "revenue": 0,
+          "revenueAmortized": 0,
+          "color": "#a855f7"
+        }
+      ],
+      "hourlyActivity": {
+        "20": 3,
+        "19": 13,
+        "18": 6,
+        "17": 6,
+        "16": 9,
+        "15": 5,
+        "14": 10,
+        "13": 10,
+        "12": 7,
+        "11": 9,
+        "9": 2,
+        "8": 4,
+        "7": 1,
+        "6": 3,
+        "5": 1,
+        "4": 1,
+        "1": 1,
+        "0": 2
+      },
+      "hourlyRevenue": {
+        "20": 3,
+        "19": 13,
+        "18": 6,
+        "17": 6,
+        "16": 9,
+        "15": 5,
+        "14": 10,
+        "13": 10,
+        "12": 7,
+        "11": 9,
+        "9": 2,
+        "8": 4,
+        "7": 1,
+        "6": 3,
+        "5": 1,
+        "4": 1,
+        "1": 1,
+        "0": 2
+      },
+      "hourlyRevenueAmortized": {
+        "20": 3.0,
+        "19": 13.0,
+        "18": 6.0,
+        "17": 6.0,
+        "16": 9.0,
+        "15": 5.0,
+        "14": 10.0,
+        "13": 10.0,
+        "12": 7.0,
+        "11": 9.0,
+        "9": 2.0,
+        "8": 4.0,
+        "7": 1.0,
+        "6": 3.0,
+        "5": 1.0,
+        "4": 1.0,
+        "1": 1.0,
+        "0": 2.0
+      },
+      "hourlyByPlan": {
+        "7 minutes": {
+          "20": 3,
+          "19": 13,
+          "18": 6,
+          "17": 6,
+          "16": 9,
+          "15": 5,
+          "14": 10,
+          "13": 10,
+          "12": 7,
+          "11": 9,
+          "9": 2,
+          "8": 4,
+          "7": 1,
+          "6": 3,
+          "5": 1,
+          "4": 1,
+          "1": 1,
+          "0": 2
+        }
+      },
+      "topSpenders": [
+        {
+          "phone": "3836",
+          "amount": 2
+        },
+        {
+          "phone": "5429",
+          "amount": 2
+        },
+        {
+          "phone": "5509",
+          "amount": 2
+        },
+        {
+          "phone": "6649",
+          "amount": 1
+        },
+        {
+          "phone": "4240",
+          "amount": 1
+        }
+      ],
+      "firstTransaction": "00:29:37",
+      "lastTransaction": "20:16:50",
+      "userPurchaseCounts": {
+        "1_purchase": 87,
+        "2_purchases": 3,
+        "3_purchases": 0,
+        "4plus_purchases": 0
+      }
+    },
+    "jan10": {
+      "date": "2026-01-10",
+      "dateLabel": "January 10, 2026",
+      "totalTransactions": 156,
+      "totalRevenue": 1130,
+      "totalRevenueAmortized": 1130,
+      "uniqueUsers": 119,
+      "avgDailySpendPerUser": 9.5,
+      "repeatCustomers": 25,
+      "repeatCustomerPercent": 21.0,
+      "plans": [
+        {
+          "name": "7 minutes",
+          "price": 1,
+          "dailyPrice": 1,
+          "count": 44,
+          "revenue": 44,
+          "revenueAmortized": 44.0,
+          "color": "#ef4444"
+        },
+        {
+          "name": "1 hour",
+          "price": 5,
+          "dailyPrice": 5,
+          "count": 56,
+          "revenue": 280,
+          "revenueAmortized": 280.0,
+          "color": "#f97316"
+        },
+        {
+          "name": "6 hours",
+          "price": 12,
+          "dailyPrice": 12,
+          "count": 28,
+          "revenue": 336,
+          "revenueAmortized": 336.0,
+          "color": "#eab308"
+        },
+        {
+          "name": "12 hours",
+          "price": 15,
+          "dailyPrice": 15,
+          "count": 18,
+          "revenue": 270,
+          "revenueAmortized": 270.0,
+          "color": "#22c55e"
+        },
+        {
+          "name": "24 hours",
+          "price": 20,
+          "dailyPrice": 20,
+          "count": 10,
+          "revenue": 200,
+          "revenueAmortized": 200.0,
+          "color": "#3b82f6"
+        },
+        {
+          "name": "7 days",
+          "price": 99,
+          "dailyPrice": 14.14,
+          "count": 0,
+          "revenue": 0,
+          "revenueAmortized": 0,
+          "color": "#a855f7"
+        }
+      ],
+      "hourlyActivity": {
+        "23": 1,
+        "22": 1,
+        "21": 7,
+        "20": 6,
+        "19": 7,
+        "18": 4,
+        "17": 5,
+        "16": 12,
+        "15": 14,
+        "14": 12,
+        "13": 13,
+        "12": 16,
+        "11": 11,
+        "10": 9,
+        "9": 9,
+        "8": 6,
+        "7": 10,
+        "6": 6,
+        "5": 4,
+        "3": 2,
+        "0": 1
+      },
+      "hourlyRevenue": {
+        "23": 20,
+        "22": 12,
+        "21": 19,
+        "20": 29,
+        "19": 19,
+        "18": 23,
+        "17": 28,
+        "16": 122,
+        "15": 97,
+        "14": 80,
+        "13": 89,
+        "12": 143,
+        "11": 84,
+        "10": 72,
+        "9": 96,
+        "8": 77,
+        "7": 73,
+        "6": 21,
+        "5": 19,
+        "3": 2,
+        "0": 5
+      },
+      "hourlyRevenueAmortized": {
+        "23": 20.0,
+        "22": 12.0,
+        "21": 19.0,
+        "20": 29.0,
+        "19": 19.0,
+        "18": 23.0,
+        "17": 28.0,
+        "16": 122.0,
+        "15": 97.0,
+        "14": 80.0,
+        "13": 89.0,
+        "12": 143.0,
+        "11": 84.0,
+        "10": 72.0,
+        "9": 96.0,
+        "8": 77.0,
+        "7": 73.0,
+        "6": 21.0,
+        "5": 19.0,
+        "3": 2.0,
+        "0": 5.0
+      },
+      "hourlyByPlan": {
+        "24 hours": {
+          "23": 1,
+          "20": 1,
+          "16": 4,
+          "13": 1,
+          "12": 1,
+          "9": 1,
+          "7": 1
+        },
+        "6 hours": {
+          "22": 1,
+          "18": 1,
+          "17": 1,
+          "16": 2,
+          "15": 3,
+          "14": 4,
+          "13": 1,
+          "12": 4,
+          "11": 3,
+          "10": 3,
+          "8": 1,
+          "7": 2,
+          "6": 1,
+          "5": 1
+        },
+        "7 minutes": {
+          "21": 4,
+          "20": 4,
+          "19": 4,
+          "18": 1,
+          "17": 1,
+          "16": 3,
+          "15": 1,
+          "14": 2,
+          "13": 2,
+          "12": 5,
+          "11": 3,
+          "10": 1,
+          "9": 1,
+          "7": 4,
+          "6": 4,
+          "5": 2,
+          "3": 2
+        },
+        "1 hour": {
+          "21": 3,
+          "20": 1,
+          "19": 3,
+          "18": 2,
+          "17": 3,
+          "16": 3,
+          "15": 9,
+          "14": 6,
+          "13": 8,
+          "12": 2,
+          "11": 3,
+          "10": 4,
+          "9": 3,
+          "8": 1,
+          "7": 2,
+          "6": 1,
+          "5": 1,
+          "0": 1
+        },
+        "12 hours": {
+          "15": 1,
+          "13": 1,
+          "12": 4,
+          "11": 2,
+          "10": 1,
+          "9": 4,
+          "8": 4,
+          "7": 1
+        }
+      },
+      "topSpenders": [
+        {
+          "phone": "5210",
+          "amount": 27
+        },
+        {
+          "phone": "5429",
+          "amount": 22
+        },
+        {
+          "phone": "2096",
+          "amount": 20
+        },
+        {
+          "phone": "5803",
+          "amount": 20
+        },
+        {
+          "phone": "1193",
+          "amount": 20
+        }
+      ],
+      "firstTransaction": "00:11:10",
+      "lastTransaction": "23:31:24",
+      "userPurchaseCounts": {
+        "1_purchase": 94,
+        "2_purchases": 15,
+        "3_purchases": 8,
+        "4plus_purchases": 2
+      }
+    },
+    "jan11": {
+      "date": "2026-01-11",
+      "dateLabel": "January 11, 2026",
+      "totalTransactions": 102,
+      "totalRevenue": 729,
+      "totalRevenueAmortized": 729,
+      "uniqueUsers": 77,
+      "avgDailySpendPerUser": 9.47,
+      "repeatCustomers": 16,
+      "repeatCustomerPercent": 20.8,
+      "plans": [
+        {
+          "name": "7 minutes",
+          "price": 1,
+          "dailyPrice": 1,
+          "count": 28,
+          "revenue": 28,
+          "revenueAmortized": 28.0,
+          "color": "#ef4444"
+        },
+        {
+          "name": "1 hour",
+          "price": 5,
+          "dailyPrice": 5,
+          "count": 40,
+          "revenue": 200,
+          "revenueAmortized": 200.0,
+          "color": "#f97316"
+        },
+        {
+          "name": "6 hours",
+          "price": 12,
+          "dailyPrice": 12,
+          "count": 18,
+          "revenue": 216,
+          "revenueAmortized": 216.0,
+          "color": "#eab308"
+        },
+        {
+          "name": "12 hours",
+          "price": 15,
+          "dailyPrice": 15,
+          "count": 7,
+          "revenue": 105,
+          "revenueAmortized": 105.0,
+          "color": "#22c55e"
+        },
+        {
+          "name": "24 hours",
+          "price": 20,
+          "dailyPrice": 20,
+          "count": 9,
+          "revenue": 180,
+          "revenueAmortized": 180.0,
+          "color": "#3b82f6"
+        },
+        {
+          "name": "7 days",
+          "price": 99,
+          "dailyPrice": 14.14,
+          "count": 0,
+          "revenue": 0,
+          "revenueAmortized": 0,
+          "color": "#a855f7"
+        }
+      ],
+      "hourlyActivity": {
+        "23": 1,
+        "22": 2,
+        "21": 4,
+        "20": 6,
+        "19": 7,
+        "18": 4,
+        "17": 3,
+        "16": 8,
+        "15": 5,
+        "14": 6,
+        "13": 8,
+        "12": 6,
+        "11": 11,
+        "10": 6,
+        "9": 5,
+        "8": 8,
+        "7": 5,
+        "6": 2,
+        "5": 2,
+        "4": 1,
+        "3": 1,
+        "2": 1
+      },
+      "hourlyRevenue": {
+        "23": 20,
+        "22": 16,
+        "21": 50,
+        "20": 10,
+        "19": 38,
+        "18": 16,
+        "17": 29,
+        "16": 73,
+        "15": 17,
+        "14": 51,
+        "13": 78,
+        "12": 46,
+        "11": 67,
+        "10": 39,
+        "9": 42,
+        "8": 79,
+        "7": 35,
+        "6": 2,
+        "5": 6,
+        "4": 5,
+        "3": 5,
+        "2": 5
+      },
+      "hourlyRevenueAmortized": {
+        "23": 20.0,
+        "22": 16.0,
+        "21": 50.0,
+        "20": 10.0,
+        "19": 38.0,
+        "18": 16.0,
+        "17": 29.0,
+        "16": 73.0,
+        "15": 17.0,
+        "14": 51.0,
+        "13": 78.0,
+        "12": 46.0,
+        "11": 67.0,
+        "10": 39.0,
+        "9": 42.0,
+        "8": 79.0,
+        "7": 35.0,
+        "6": 2.0,
+        "5": 6.0,
+        "4": 5.0,
+        "3": 5.0,
+        "2": 5.0
+      },
+      "hourlyByPlan": {
+        "24 hours": {
+          "23": 1,
+          "21": 2,
+          "16": 2,
+          "14": 1,
+          "9": 1,
+          "8": 2
+        },
+        "12 hours": {
+          "22": 1,
+          "13": 1,
+          "12": 1,
+          "11": 1,
+          "10": 1,
+          "9": 1,
+          "8": 1
+        },
+        "7 minutes": {
+          "22": 1,
+          "20": 5,
+          "19": 1,
+          "18": 1,
+          "16": 1,
+          "15": 2,
+          "14": 2,
+          "12": 2,
+          "11": 3,
+          "10": 2,
+          "9": 2,
+          "8": 2,
+          "7": 1,
+          "6": 2,
+          "5": 1
+        },
+        "1 hour": {
+          "21": 2,
+          "20": 1,
+          "19": 5,
+          "18": 3,
+          "17": 1,
+          "16": 4,
+          "15": 3,
+          "14": 1,
+          "13": 3,
+          "12": 1,
+          "11": 5,
+          "10": 2,
+          "9": 1,
+          "8": 2,
+          "7": 2,
+          "5": 1,
+          "4": 1,
+          "3": 1,
+          "2": 1
+        },
+        "6 hours": {
+          "19": 1,
+          "17": 2,
+          "16": 1,
+          "14": 2,
+          "13": 4,
+          "12": 2,
+          "11": 2,
+          "10": 1,
+          "8": 1,
+          "7": 2
+        }
+      },
+      "topSpenders": [
+        {
+          "phone": "3054",
+          "amount": 27
+        },
+        {
+          "phone": "5439",
+          "amount": 22
+        },
+        {
+          "phone": "2096",
+          "amount": 20
+        },
+        {
+          "phone": "9476",
+          "amount": 20
+        },
+        {
+          "phone": "1193",
+          "amount": 20
+        }
+      ],
+      "firstTransaction": "02:51:57",
+      "lastTransaction": "23:34:54",
+      "userPurchaseCounts": {
+        "1_purchase": 61,
+        "2_purchases": 9,
+        "3_purchases": 5,
+        "4plus_purchases": 2
+      }
+    },
+    "jan12": {
+      "date": "2026-01-12",
+      "dateLabel": "January 12, 2026",
+      "totalTransactions": 156,
+      "totalRevenue": 1226,
+      "totalRevenueAmortized": 1226,
+      "uniqueUsers": 133,
+      "avgDailySpendPerUser": 9.22,
+      "repeatCustomers": 15,
+      "repeatCustomerPercent": 11.3,
+      "plans": [
+        {
+          "name": "7 minutes",
+          "price": 1,
+          "dailyPrice": 1,
+          "count": 48,
+          "revenue": 48,
+          "revenueAmortized": 48.0,
+          "color": "#ef4444"
+        },
+        {
+          "name": "1 hour",
+          "price": 5,
+          "dailyPrice": 5,
+          "count": 45,
+          "revenue": 225,
+          "revenueAmortized": 225.0,
+          "color": "#f97316"
+        },
+        {
+          "name": "6 hours",
+          "price": 12,
+          "dailyPrice": 12,
+          "count": 24,
+          "revenue": 288,
+          "revenueAmortized": 288.0,
+          "color": "#eab308"
+        },
+        {
+          "name": "12 hours",
+          "price": 15,
+          "dailyPrice": 15,
+          "count": 23,
+          "revenue": 345,
+          "revenueAmortized": 345.0,
+          "color": "#22c55e"
+        },
+        {
+          "name": "24 hours",
+          "price": 20,
+          "dailyPrice": 20,
+          "count": 16,
+          "revenue": 320,
+          "revenueAmortized": 320.0,
+          "color": "#3b82f6"
+        },
+        {
+          "name": "7 days",
+          "price": 99,
+          "dailyPrice": 14.14,
+          "count": 0,
+          "revenue": 0,
+          "revenueAmortized": 0,
+          "color": "#a855f7"
+        }
+      ],
+      "hourlyActivity": {
+        "23": 2,
+        "22": 2,
+        "21": 2,
+        "20": 5,
+        "19": 10,
+        "18": 10,
+        "17": 7,
+        "16": 4,
+        "15": 6,
+        "14": 12,
+        "13": 24,
+        "12": 17,
+        "11": 10,
+        "10": 8,
+        "9": 6,
+        "8": 11,
+        "7": 6,
+        "6": 5,
+        "5": 2,
+        "4": 1,
+        "3": 4,
+        "1": 2
+      },
+      "hourlyRevenue": {
+        "23": 25,
+        "22": 10,
+        "21": 25,
+        "20": 13,
+        "19": 37,
+        "18": 75,
+        "17": 51,
+        "16": 20,
+        "15": 48,
+        "14": 90,
+        "13": 175,
+        "12": 156,
+        "11": 98,
+        "10": 81,
+        "9": 53,
+        "8": 122,
+        "7": 54,
+        "6": 55,
+        "5": 16,
+        "4": 1,
+        "3": 19,
+        "1": 2
+      },
+      "hourlyRevenueAmortized": {
+        "23": 25.0,
+        "22": 10.0,
+        "21": 25.0,
+        "20": 13.0,
+        "19": 37.0,
+        "18": 75.0,
+        "17": 51.0,
+        "16": 20.0,
+        "15": 48.0,
+        "14": 90.0,
+        "13": 175.0,
+        "12": 156.0,
+        "11": 98.0,
+        "10": 81.0,
+        "9": 53.0,
+        "8": 122.0,
+        "7": 54.0,
+        "6": 55.0,
+        "5": 16.0,
+        "4": 1.0,
+        "3": 19.0,
+        "1": 2.0
+      },
+      "hourlyByPlan": {
+        "1 hour": {
+          "23": 1,
+          "22": 2,
+          "21": 1,
+          "20": 2,
+          "19": 4,
+          "18": 4,
+          "17": 2,
+          "16": 4,
+          "15": 3,
+          "14": 1,
+          "13": 6,
+          "12": 6,
+          "11": 2,
+          "10": 1,
+          "9": 2,
+          "8": 2,
+          "7": 1,
+          "3": 1
+        },
+        "24 hours": {
+          "23": 1,
+          "21": 1,
+          "18": 2,
+          "15": 1,
+          "14": 1,
+          "13": 2,
+          "12": 4,
+          "11": 1,
+          "10": 1,
+          "8": 1,
+          "7": 1
+        },
+        "7 minutes": {
+          "20": 3,
+          "19": 5,
+          "18": 3,
+          "17": 2,
+          "15": 1,
+          "14": 5,
+          "13": 9,
+          "12": 4,
+          "11": 2,
+          "10": 2,
+          "9": 1,
+          "8": 2,
+          "7": 2,
+          "6": 1,
+          "5": 1,
+          "4": 1,
+          "3": 2,
+          "1": 2
+        },
+        "6 hours": {
+          "19": 1,
+          "18": 1,
+          "17": 2,
+          "15": 1,
+          "14": 5,
+          "13": 3,
+          "12": 1,
+          "11": 3,
+          "10": 2,
+          "9": 1,
+          "7": 1,
+          "6": 2,
+          "3": 1
+        },
+        "12 hours": {
+          "17": 1,
+          "13": 4,
+          "12": 2,
+          "11": 2,
+          "10": 2,
+          "9": 2,
+          "8": 6,
+          "7": 1,
+          "6": 2,
+          "5": 1
+        }
+      },
+      "topSpenders": [
+        {
+          "phone": "0680",
+          "amount": 30
+        },
+        {
+          "phone": "2266",
+          "amount": 25
+        },
+        {
+          "phone": "2096",
+          "amount": 20
+        },
+        {
+          "phone": "0654",
+          "amount": 20
+        },
+        {
+          "phone": "2535",
+          "amount": 20
+        }
+      ],
+      "firstTransaction": "01:24:08",
+      "lastTransaction": "23:54:38",
+      "userPurchaseCounts": {
+        "1_purchase": 118,
+        "2_purchases": 11,
+        "3_purchases": 3,
+        "4plus_purchases": 1
+      }
+    },
+    "jan15": {
+      "date": "2026-01-15",
+      "dateLabel": "January 15, 2026",
+      "totalTransactions": 168,
+      "totalRevenue": 1383,
+      "totalRevenueAmortized": 1383,
+      "uniqueUsers": 134,
+      "avgDailySpendPerUser": 10.32,
+      "repeatCustomers": 26,
+      "repeatCustomerPercent": 19.4,
+      "plans": [
+        {
+          "name": "7 minutes",
+          "price": 1,
+          "dailyPrice": 1,
+          "count": 37,
+          "revenue": 37,
+          "revenueAmortized": 37.0,
+          "color": "#ef4444"
+        },
+        {
+          "name": "1 hour",
+          "price": 5,
+          "dailyPrice": 5,
+          "count": 57,
+          "revenue": 285,
+          "revenueAmortized": 285.0,
+          "color": "#f97316"
+        },
+        {
+          "name": "6 hours",
+          "price": 12,
+          "dailyPrice": 12,
+          "count": 38,
+          "revenue": 456,
+          "revenueAmortized": 456.0,
+          "color": "#eab308"
+        },
+        {
+          "name": "12 hours",
+          "price": 15,
+          "dailyPrice": 15,
+          "count": 23,
+          "revenue": 345,
+          "revenueAmortized": 345.0,
+          "color": "#22c55e"
+        },
+        {
+          "name": "24 hours",
+          "price": 20,
+          "dailyPrice": 20,
+          "count": 13,
+          "revenue": 260,
+          "revenueAmortized": 260.0,
+          "color": "#3b82f6"
+        },
+        {
+          "name": "7 days",
+          "price": 99,
+          "dailyPrice": 14.14,
+          "count": 0,
+          "revenue": 0,
+          "revenueAmortized": 0,
+          "color": "#a855f7"
+        }
+      ],
+      "hourlyActivity": {
+        "23": 2,
+        "22": 4,
+        "21": 6,
+        "20": 6,
+        "19": 4,
+        "18": 8,
+        "17": 6,
+        "16": 14,
+        "15": 14,
+        "14": 11,
+        "13": 12,
+        "12": 17,
+        "11": 13,
+        "10": 16,
+        "9": 11,
+        "8": 11,
+        "7": 3,
+        "6": 4,
+        "5": 2,
+        "4": 2,
+        "2": 1,
+        "0": 1
+      },
+      "hourlyRevenue": {
+        "23": 25,
+        "22": 27,
+        "21": 29,
+        "20": 22,
+        "19": 31,
+        "18": 51,
+        "17": 54,
+        "16": 126,
+        "15": 118,
+        "14": 75,
+        "13": 71,
+        "12": 164,
+        "11": 163,
+        "10": 126,
+        "9": 85,
+        "8": 124,
+        "7": 11,
+        "6": 32,
+        "5": 20,
+        "4": 13,
+        "2": 15,
+        "0": 1
+      },
+      "hourlyRevenueAmortized": {
+        "23": 25.0,
+        "22": 27.0,
+        "21": 29.0,
+        "20": 22.0,
+        "19": 31.0,
+        "18": 51.0,
+        "17": 54.0,
+        "16": 126.0,
+        "15": 118.0,
+        "14": 75.0,
+        "13": 71.0,
+        "12": 164.0,
+        "11": 163.0,
+        "10": 126.0,
+        "9": 85.0,
+        "8": 124.0,
+        "7": 11.0,
+        "6": 32.0,
+        "5": 20.0,
+        "4": 13.0,
+        "2": 15.0,
+        "0": 1.0
+      },
+      "hourlyByPlan": {
+        "1 hour": {
+          "23": 1,
+          "22": 3,
+          "21": 1,
+          "20": 4,
+          "19": 2,
+          "18": 6,
+          "17": 1,
+          "16": 6,
+          "15": 2,
+          "14": 5,
+          "13": 5,
+          "12": 3,
+          "11": 2,
+          "10": 4,
+          "9": 4,
+          "8": 5,
+          "7": 2,
+          "5": 1
+        },
+        "24 hours": {
+          "23": 1,
+          "21": 1,
+          "19": 1,
+          "18": 1,
+          "16": 1,
+          "15": 2,
+          "12": 2,
+          "11": 1,
+          "8": 3
+        },
+        "6 hours": {
+          "22": 1,
+          "17": 4,
+          "16": 5,
+          "15": 4,
+          "14": 4,
+          "13": 1,
+          "12": 5,
+          "11": 1,
+          "10": 6,
+          "9": 4,
+          "8": 2,
+          "4": 1
+        },
+        "7 minutes": {
+          "21": 4,
+          "20": 2,
+          "19": 1,
+          "18": 1,
+          "17": 1,
+          "16": 1,
+          "15": 5,
+          "14": 2,
+          "13": 4,
+          "12": 4,
+          "11": 1,
+          "10": 4,
+          "9": 2,
+          "7": 1,
+          "6": 2,
+          "4": 1,
+          "0": 1
+        },
+        "12 hours": {
+          "16": 1,
+          "15": 1,
+          "13": 2,
+          "12": 3,
+          "11": 8,
+          "10": 2,
+          "9": 1,
+          "8": 1,
+          "6": 2,
+          "5": 1,
+          "2": 1
+        }
+      },
+      "topSpenders": [
+        {
+          "phone": "6217",
+          "amount": 24
+        },
+        {
+          "phone": "8558",
+          "amount": 24
+        },
+        {
+          "phone": "5488",
+          "amount": 24
+        },
+        {
+          "phone": "2059",
+          "amount": 24
+        },
+        {
+          "phone": "0680",
+          "amount": 22
+        }
+      ],
+      "firstTransaction": "00:00:29",
+      "lastTransaction": "23:27:04",
+      "userPurchaseCounts": {
+        "1_purchase": 108,
+        "2_purchases": 20,
+        "3_purchases": 5,
+        "4plus_purchases": 1
+      }
+    },
+    "jan16": {
+      "date": "2026-01-16",
+      "dateLabel": "January 16, 2026",
+      "totalTransactions": 100,
+      "totalRevenue": 903,
+      "totalRevenueAmortized": 818.14,
+      "uniqueUsers": 87,
+      "avgDailySpendPerUser": 9.4,
+      "repeatCustomers": 10,
+      "repeatCustomerPercent": 11.5,
+      "plans": [
+        {
+          "name": "7 minutes",
+          "price": 1,
+          "dailyPrice": 1,
+          "count": 22,
+          "revenue": 22,
+          "revenueAmortized": 22.0,
+          "color": "#ef4444"
+        },
+        {
+          "name": "1 hour",
+          "price": 5,
+          "dailyPrice": 5,
+          "count": 34,
+          "revenue": 170,
+          "revenueAmortized": 170.0,
+          "color": "#f97316"
+        },
+        {
+          "name": "6 hours",
+          "price": 12,
+          "dailyPrice": 12,
+          "count": 26,
+          "revenue": 312,
+          "revenueAmortized": 312.0,
+          "color": "#eab308"
+        },
+        {
+          "name": "12 hours",
+          "price": 15,
+          "dailyPrice": 15,
+          "count": 8,
+          "revenue": 120,
+          "revenueAmortized": 120.0,
+          "color": "#22c55e"
+        },
+        {
+          "name": "24 hours",
+          "price": 20,
+          "dailyPrice": 20,
+          "count": 9,
+          "revenue": 180,
+          "revenueAmortized": 180.0,
+          "color": "#3b82f6"
+        },
+        {
+          "name": "7 days",
+          "price": 99,
+          "dailyPrice": 14.14,
+          "count": 1,
+          "revenue": 99,
+          "revenueAmortized": 14.14,
+          "color": "#a855f7"
+        }
+      ],
+      "hourlyActivity": {
+        "22": 1,
+        "21": 2,
+        "20": 5,
+        "19": 5,
+        "18": 3,
+        "17": 15,
+        "16": 10,
+        "15": 14,
+        "14": 11,
+        "13": 12,
+        "8": 4,
+        "7": 5,
+        "6": 6,
+        "5": 1,
+        "3": 4,
+        "0": 2
+      },
+      "hourlyRevenue": {
+        "22": 1,
+        "21": 25,
+        "20": 50,
+        "19": 17,
+        "18": 11,
+        "17": 102,
+        "16": 67,
+        "15": 127,
+        "14": 186,
+        "13": 135,
+        "8": 45,
+        "7": 38,
+        "6": 37,
+        "5": 1,
+        "3": 26,
+        "0": 35
+      },
+      "hourlyRevenueAmortized": {
+        "22": 1.0,
+        "21": 25.0,
+        "20": 50.0,
+        "19": 17.0,
+        "18": 11.0,
+        "17": 102.0,
+        "16": 67.0,
+        "15": 127.0,
+        "14": 101.14,
+        "13": 135.0,
+        "8": 45.0,
+        "7": 38.0,
+        "6": 37.0,
+        "5": 1.0,
+        "3": 26.0,
+        "0": 35.0
+      },
+      "hourlyByPlan": {
+        "7 minutes": {
+          "22": 1,
+          "20": 1,
+          "19": 2,
+          "18": 1,
+          "17": 4,
+          "16": 3,
+          "15": 2,
+          "14": 1,
+          "13": 1,
+          "7": 1,
+          "6": 2,
+          "5": 1,
+          "3": 2
+        },
+        "24 hours": {
+          "21": 1,
+          "20": 1,
+          "17": 1,
+          "16": 1,
+          "15": 2,
+          "8": 1,
+          "6": 1,
+          "0": 1
+        },
+        "1 hour": {
+          "21": 1,
+          "20": 1,
+          "19": 3,
+          "18": 2,
+          "17": 6,
+          "16": 4,
+          "15": 5,
+          "14": 4,
+          "13": 1,
+          "8": 2,
+          "7": 2,
+          "6": 3
+        },
+        "6 hours": {
+          "20": 2,
+          "17": 4,
+          "16": 2,
+          "15": 5,
+          "14": 3,
+          "13": 7,
+          "7": 1,
+          "3": 2
+        },
+        "7 days": {
+          "14": 1
+        },
+        "12 hours": {
+          "14": 2,
+          "13": 3,
+          "8": 1,
+          "7": 1,
+          "0": 1
+        }
+      },
+      "topSpenders": [
+        {
+          "phone": "9479",
+          "amount": 99
+        },
+        {
+          "phone": "0680",
+          "amount": 35
+        },
+        {
+          "phone": "8777",
+          "amount": 30
+        },
+        {
+          "phone": "0654",
+          "amount": 20
+        },
+        {
+          "phone": "2535",
+          "amount": 20
+        }
+      ],
+      "firstTransaction": "00:06:15",
+      "lastTransaction": "22:11:35",
+      "userPurchaseCounts": {
+        "1_purchase": 77,
+        "2_purchases": 8,
+        "3_purchases": 1,
+        "4plus_purchases": 1
+      }
+    },
+    "jan17": {
+      "date": "2026-01-17",
+      "dateLabel": "January 17, 2026",
+      "totalTransactions": 135,
+      "totalRevenue": 1158,
+      "totalRevenueAmortized": 1158,
+      "uniqueUsers": 106,
+      "avgDailySpendPerUser": 10.92,
+      "repeatCustomers": 25,
+      "repeatCustomerPercent": 23.6,
+      "plans": [
+        {
+          "name": "7 minutes",
+          "price": 1,
+          "dailyPrice": 1,
+          "count": 25,
+          "revenue": 25,
+          "revenueAmortized": 25.0,
+          "color": "#ef4444"
+        },
+        {
+          "name": "1 hour",
+          "price": 5,
+          "dailyPrice": 5,
+          "count": 48,
+          "revenue": 240,
+          "revenueAmortized": 240.0,
+          "color": "#f97316"
+        },
+        {
+          "name": "6 hours",
+          "price": 12,
+          "dailyPrice": 12,
+          "count": 34,
+          "revenue": 408,
+          "revenueAmortized": 408.0,
+          "color": "#eab308"
+        },
+        {
+          "name": "12 hours",
+          "price": 15,
+          "dailyPrice": 15,
+          "count": 15,
+          "revenue": 225,
+          "revenueAmortized": 225.0,
+          "color": "#22c55e"
+        },
+        {
+          "name": "24 hours",
+          "price": 20,
+          "dailyPrice": 20,
+          "count": 13,
+          "revenue": 260,
+          "revenueAmortized": 260.0,
+          "color": "#3b82f6"
+        },
+        {
+          "name": "7 days",
+          "price": 99,
+          "dailyPrice": 14.14,
+          "count": 0,
+          "revenue": 0,
+          "revenueAmortized": 0,
+          "color": "#a855f7"
+        }
+      ],
+      "hourlyActivity": {
+        "23": 3,
+        "22": 4,
+        "21": 5,
+        "20": 4,
+        "19": 2,
+        "18": 8,
+        "17": 12,
+        "16": 9,
+        "15": 6,
+        "14": 8,
+        "13": 7,
+        "12": 17,
+        "11": 11,
+        "10": 9,
+        "9": 7,
+        "8": 7,
+        "7": 5,
+        "6": 2,
+        "5": 3,
+        "3": 1,
+        "2": 1,
+        "1": 2,
+        "0": 2
+      },
+      "hourlyRevenue": {
+        "23": 15,
+        "22": 27,
+        "21": 62,
+        "20": 16,
+        "19": 6,
+        "18": 39,
+        "17": 85,
+        "16": 77,
+        "15": 43,
+        "14": 97,
+        "13": 80,
+        "12": 140,
+        "11": 111,
+        "10": 97,
+        "9": 80,
+        "8": 72,
+        "7": 28,
+        "6": 6,
+        "5": 18,
+        "3": 12,
+        "2": 15,
+        "1": 2,
+        "0": 30
+      },
+      "hourlyRevenueAmortized": {
+        "23": 15.0,
+        "22": 27.0,
+        "21": 62.0,
+        "20": 16.0,
+        "19": 6.0,
+        "18": 39.0,
+        "17": 85.0,
+        "16": 77.0,
+        "15": 43.0,
+        "14": 97.0,
+        "13": 80.0,
+        "12": 140.0,
+        "11": 111.0,
+        "10": 97.0,
+        "9": 80.0,
+        "8": 72.0,
+        "7": 28.0,
+        "6": 6.0,
+        "5": 18.0,
+        "3": 12.0,
+        "2": 15.0,
+        "1": 2.0,
+        "0": 30.0
+      },
+      "hourlyByPlan": {
+        "1 hour": {
+          "23": 3,
+          "22": 1,
+          "20": 3,
+          "19": 1,
+          "18": 5,
+          "17": 8,
+          "16": 4,
+          "15": 3,
+          "14": 1,
+          "13": 1,
+          "12": 4,
+          "11": 5,
+          "9": 3,
+          "8": 1,
+          "7": 3,
+          "6": 1,
+          "5": 1
+        },
+        "24 hours": {
+          "22": 1,
+          "21": 3,
+          "17": 1,
+          "16": 1,
+          "14": 2,
+          "13": 1,
+          "12": 1,
+          "11": 1,
+          "10": 1,
+          "9": 1
+        },
+        "7 minutes": {
+          "22": 2,
+          "21": 2,
+          "20": 1,
+          "19": 1,
+          "18": 2,
+          "17": 1,
+          "16": 1,
+          "15": 1,
+          "14": 1,
+          "13": 1,
+          "12": 4,
+          "10": 2,
+          "8": 1,
+          "7": 1,
+          "6": 1,
+          "5": 1,
+          "1": 2
+        },
+        "6 hours": {
+          "18": 1,
+          "17": 2,
+          "16": 3,
+          "15": 1,
+          "14": 3,
+          "13": 2,
+          "12": 8,
+          "11": 3,
+          "10": 5,
+          "8": 3,
+          "7": 1,
+          "5": 1,
+          "3": 1
+        },
+        "12 hours": {
+          "15": 1,
+          "14": 1,
+          "13": 2,
+          "11": 2,
+          "10": 1,
+          "9": 3,
+          "8": 2,
+          "2": 1,
+          "0": 2
+        }
+      },
+      "topSpenders": [
+        {
+          "phone": "5803",
+          "amount": 52
+        },
+        {
+          "phone": "2096",
+          "amount": 35
+        },
+        {
+          "phone": "9782",
+          "amount": 30
+        },
+        {
+          "phone": "0680",
+          "amount": 30
+        },
+        {
+          "phone": "9344",
+          "amount": 30
+        }
+      ],
+      "firstTransaction": "00:33:51",
+      "lastTransaction": "23:28:09",
+      "userPurchaseCounts": {
+        "1_purchase": 81,
+        "2_purchases": 22,
+        "3_purchases": 2,
+        "4plus_purchases": 1
+      }
+    },
+    "jan18": {
+      "date": "2026-01-18",
+      "dateLabel": "January 18, 2026",
+      "totalTransactions": 97,
+      "totalRevenue": 710,
+      "totalRevenueAmortized": 710,
+      "uniqueUsers": 78,
+      "avgDailySpendPerUser": 9.1,
+      "repeatCustomers": 16,
+      "repeatCustomerPercent": 20.5,
+      "plans": [
+        {
+          "name": "7 minutes",
+          "price": 1,
+          "dailyPrice": 1,
+          "count": 25,
+          "revenue": 25,
+          "revenueAmortized": 25.0,
+          "color": "#ef4444"
+        },
+        {
+          "name": "1 hour",
+          "price": 5,
+          "dailyPrice": 5,
+          "count": 40,
+          "revenue": 200,
+          "revenueAmortized": 200.0,
+          "color": "#f97316"
+        },
+        {
+          "name": "6 hours",
+          "price": 12,
+          "dailyPrice": 12,
+          "count": 15,
+          "revenue": 180,
+          "revenueAmortized": 180.0,
+          "color": "#eab308"
+        },
+        {
+          "name": "12 hours",
+          "price": 15,
+          "dailyPrice": 15,
+          "count": 7,
+          "revenue": 105,
+          "revenueAmortized": 105.0,
+          "color": "#22c55e"
+        },
+        {
+          "name": "24 hours",
+          "price": 20,
+          "dailyPrice": 20,
+          "count": 10,
+          "revenue": 200,
+          "revenueAmortized": 200.0,
+          "color": "#3b82f6"
+        },
+        {
+          "name": "7 days",
+          "price": 99,
+          "dailyPrice": 14.14,
+          "count": 0,
+          "revenue": 0,
+          "revenueAmortized": 0,
+          "color": "#a855f7"
+        }
+      ],
+      "hourlyActivity": {
+        "22": 3,
+        "21": 2,
+        "20": 2,
+        "19": 2,
+        "18": 7,
+        "17": 10,
+        "16": 7,
+        "15": 11,
+        "14": 8,
+        "13": 10,
+        "12": 8,
+        "11": 8,
+        "10": 5,
+        "9": 2,
+        "8": 4,
+        "7": 2,
+        "6": 1,
+        "3": 1,
+        "2": 3,
+        "0": 1
+      },
+      "hourlyRevenue": {
+        "22": 45,
+        "21": 25,
+        "20": 6,
+        "19": 6,
+        "18": 27,
+        "17": 75,
+        "16": 19,
+        "15": 79,
+        "14": 75,
+        "13": 114,
+        "12": 66,
+        "11": 34,
+        "10": 42,
+        "9": 17,
+        "8": 26,
+        "7": 32,
+        "6": 5,
+        "3": 5,
+        "2": 7,
+        "0": 5
+      },
+      "hourlyRevenueAmortized": {
+        "22": 45.0,
+        "21": 25.0,
+        "20": 6.0,
+        "19": 6.0,
+        "18": 27.0,
+        "17": 75.0,
+        "16": 19.0,
+        "15": 79.0,
+        "14": 75.0,
+        "13": 114.0,
+        "12": 66.0,
+        "11": 34.0,
+        "10": 42.0,
+        "9": 17.0,
+        "8": 26.0,
+        "7": 32.0,
+        "6": 5.0,
+        "3": 5.0,
+        "2": 7.0,
+        "0": 5.0
+      },
+      "hourlyByPlan": {
+        "1 hour": {
+          "22": 1,
+          "21": 1,
+          "20": 1,
+          "19": 1,
+          "18": 5,
+          "17": 4,
+          "16": 3,
+          "15": 4,
+          "14": 3,
+          "13": 2,
+          "12": 2,
+          "11": 3,
+          "10": 3,
+          "9": 1,
+          "8": 2,
+          "6": 1,
+          "3": 1,
+          "2": 1,
+          "0": 1
+        },
+        "24 hours": {
+          "22": 2,
+          "21": 1,
+          "17": 2,
+          "15": 1,
+          "14": 1,
+          "13": 2,
+          "7": 1
+        },
+        "7 minutes": {
+          "20": 1,
+          "19": 1,
+          "18": 2,
+          "17": 3,
+          "16": 4,
+          "15": 3,
+          "14": 1,
+          "13": 1,
+          "12": 2,
+          "11": 4,
+          "8": 1,
+          "2": 2
+        },
+        "6 hours": {
+          "17": 1,
+          "15": 3,
+          "14": 2,
+          "13": 4,
+          "12": 2,
+          "10": 1,
+          "9": 1,
+          "7": 1
+        },
+        "12 hours": {
+          "14": 1,
+          "13": 1,
+          "12": 2,
+          "11": 1,
+          "10": 1,
+          "8": 1
+        }
+      },
+      "topSpenders": [
+        {
+          "phone": "3836",
+          "amount": 40
+        },
+        {
+          "phone": "1526",
+          "amount": 25
+        },
+        {
+          "phone": "0496",
+          "amount": 22
+        },
+        {
+          "phone": "2096",
+          "amount": 20
+        },
+        {
+          "phone": "0654",
+          "amount": 20
+        }
+      ],
+      "firstTransaction": "00:28:43",
+      "lastTransaction": "22:55:04",
+      "userPurchaseCounts": {
+        "1_purchase": 62,
+        "2_purchases": 13,
+        "3_purchases": 3,
+        "4plus_purchases": 0
+      }
+    },
+    "jan19": {
+      "date": "2026-01-19",
+      "dateLabel": "January 19, 2026",
+      "totalTransactions": 121,
+      "totalRevenue": 1032,
+      "totalRevenueAmortized": 1032,
+      "uniqueUsers": 105,
+      "avgDailySpendPerUser": 9.83,
+      "repeatCustomers": 15,
+      "repeatCustomerPercent": 14.3,
+      "plans": [
+        {
+          "name": "7 minutes",
+          "price": 1,
+          "dailyPrice": 1,
+          "count": 32,
+          "revenue": 32,
+          "revenueAmortized": 32.0,
+          "color": "#ef4444"
+        },
+        {
+          "name": "1 hour",
+          "price": 5,
+          "dailyPrice": 5,
+          "count": 35,
+          "revenue": 175,
+          "revenueAmortized": 175.0,
+          "color": "#f97316"
+        },
+        {
+          "name": "6 hours",
+          "price": 12,
+          "dailyPrice": 12,
+          "count": 20,
+          "revenue": 240,
+          "revenueAmortized": 240.0,
+          "color": "#eab308"
+        },
+        {
+          "name": "12 hours",
+          "price": 15,
+          "dailyPrice": 15,
+          "count": 19,
+          "revenue": 285,
+          "revenueAmortized": 285.0,
+          "color": "#22c55e"
+        },
+        {
+          "name": "24 hours",
+          "price": 20,
+          "dailyPrice": 20,
+          "count": 15,
+          "revenue": 300,
+          "revenueAmortized": 300.0,
+          "color": "#3b82f6"
+        },
+        {
+          "name": "7 days",
+          "price": 99,
+          "dailyPrice": 14.14,
+          "count": 0,
+          "revenue": 0,
+          "revenueAmortized": 0,
+          "color": "#a855f7"
+        }
+      ],
+      "hourlyActivity": {
+        "22": 3,
+        "21": 2,
+        "20": 5,
+        "19": 11,
+        "18": 12,
+        "17": 6,
+        "16": 7,
+        "15": 8,
+        "14": 6,
+        "13": 4,
+        "12": 6,
+        "11": 13,
+        "10": 14,
+        "9": 4,
+        "8": 6,
+        "7": 6,
+        "6": 2,
+        "5": 3,
+        "4": 1,
+        "3": 1,
+        "2": 1
+      },
+      "hourlyRevenue": {
+        "22": 22,
+        "21": 17,
+        "20": 9,
+        "19": 72,
+        "18": 99,
+        "17": 41,
+        "16": 59,
+        "15": 74,
+        "14": 66,
+        "13": 33,
+        "12": 74,
+        "11": 123,
+        "10": 146,
+        "9": 26,
+        "8": 42,
+        "7": 52,
+        "6": 20,
+        "5": 36,
+        "4": 5,
+        "3": 15,
+        "2": 1
+      },
+      "hourlyRevenueAmortized": {
+        "22": 22.0,
+        "21": 17.0,
+        "20": 9.0,
+        "19": 72.0,
+        "18": 99.0,
+        "17": 41.0,
+        "16": 59.0,
+        "15": 74.0,
+        "14": 66.0,
+        "13": 33.0,
+        "12": 74.0,
+        "11": 123.0,
+        "10": 146.0,
+        "9": 26.0,
+        "8": 42.0,
+        "7": 52.0,
+        "6": 20.0,
+        "5": 36.0,
+        "4": 5.0,
+        "3": 15.0,
+        "2": 1.0
+      },
+      "hourlyByPlan": {
+        "24 hours": {
+          "22": 1,
+          "19": 2,
+          "18": 2,
+          "17": 1,
+          "15": 1,
+          "14": 1,
+          "11": 4,
+          "10": 2,
+          "5": 1
+        },
+        "7 minutes": {
+          "22": 2,
+          "20": 4,
+          "19": 5,
+          "18": 3,
+          "17": 1,
+          "16": 1,
+          "15": 2,
+          "13": 1,
+          "11": 3,
+          "10": 2,
+          "9": 2,
+          "8": 2,
+          "7": 2,
+          "5": 1,
+          "2": 1
+        },
+        "6 hours": {
+          "21": 1,
+          "19": 1,
+          "18": 3,
+          "16": 4,
+          "15": 1,
+          "14": 3,
+          "13": 1,
+          "12": 2,
+          "10": 2,
+          "9": 2
+        },
+        "1 hour": {
+          "21": 1,
+          "20": 1,
+          "19": 3,
+          "18": 4,
+          "17": 4,
+          "16": 2,
+          "15": 2,
+          "14": 2,
+          "13": 1,
+          "12": 1,
+          "11": 5,
+          "10": 4,
+          "8": 2,
+          "7": 1,
+          "6": 1,
+          "4": 1
+        },
+        "12 hours": {
+          "15": 2,
+          "13": 1,
+          "12": 3,
+          "11": 1,
+          "10": 4,
+          "8": 2,
+          "7": 3,
+          "6": 1,
+          "5": 1,
+          "3": 1
+        }
+      },
+      "topSpenders": [
+        {
+          "phone": "8777",
+          "amount": 30
+        },
+        {
+          "phone": "0680",
+          "amount": 30
+        },
+        {
+          "phone": "2671",
+          "amount": 25
+        },
+        {
+          "phone": "5429",
+          "amount": 24
+        },
+        {
+          "phone": "2096",
+          "amount": 20
+        }
+      ],
+      "firstTransaction": "02:06:20",
+      "lastTransaction": "22:23:53",
+      "userPurchaseCounts": {
+        "1_purchase": 90,
+        "2_purchases": 14,
+        "3_purchases": 1,
+        "4plus_purchases": 0
+      }
+    },
+    "jan20": {
+      "date": "2026-01-20",
+      "dateLabel": "January 20, 2026",
+      "totalTransactions": 146,
+      "totalRevenue": 1364,
+      "totalRevenueAmortized": 1279.14,
+      "uniqueUsers": 120,
+      "avgDailySpendPerUser": 10.66,
+      "repeatCustomers": 21,
+      "repeatCustomerPercent": 17.5,
+      "plans": [
+        {
+          "name": "7 minutes",
+          "price": 1,
+          "dailyPrice": 1,
+          "count": 35,
+          "revenue": 35,
+          "revenueAmortized": 35.0,
+          "color": "#ef4444"
+        },
+        {
+          "name": "1 hour",
+          "price": 5,
+          "dailyPrice": 5,
+          "count": 41,
+          "revenue": 205,
+          "revenueAmortized": 205.0,
+          "color": "#f97316"
+        },
+        {
+          "name": "6 hours",
+          "price": 12,
+          "dailyPrice": 12,
+          "count": 30,
+          "revenue": 360,
+          "revenueAmortized": 360.0,
+          "color": "#eab308"
+        },
+        {
+          "name": "12 hours",
+          "price": 15,
+          "dailyPrice": 15,
+          "count": 23,
+          "revenue": 345,
+          "revenueAmortized": 345.0,
+          "color": "#22c55e"
+        },
+        {
+          "name": "24 hours",
+          "price": 20,
+          "dailyPrice": 20,
+          "count": 16,
+          "revenue": 320,
+          "revenueAmortized": 320.0,
+          "color": "#3b82f6"
+        },
+        {
+          "name": "7 days",
+          "price": 99,
+          "dailyPrice": 14.14,
+          "count": 1,
+          "revenue": 99,
+          "revenueAmortized": 14.14,
+          "color": "#a855f7"
+        }
+      ],
+      "hourlyActivity": {
+        "23": 2,
+        "21": 3,
+        "20": 8,
+        "19": 3,
+        "18": 11,
+        "17": 11,
+        "16": 13,
+        "15": 9,
+        "14": 9,
+        "13": 5,
+        "12": 16,
+        "11": 14,
+        "10": 12,
+        "9": 3,
+        "8": 9,
+        "7": 6,
+        "6": 9,
+        "5": 2,
+        "4": 1
+      },
+      "hourlyRevenue": {
+        "23": 35,
+        "21": 22,
+        "20": 92,
+        "19": 36,
+        "18": 188,
+        "17": 86,
+        "16": 87,
+        "15": 58,
+        "14": 78,
+        "13": 20,
+        "12": 170,
+        "11": 143,
+        "10": 132,
+        "9": 21,
+        "8": 87,
+        "7": 39,
+        "6": 56,
+        "5": 2,
+        "4": 12
+      },
+      "hourlyRevenueAmortized": {
+        "23": 35.0,
+        "21": 22.0,
+        "20": 92.0,
+        "19": 36.0,
+        "18": 103.14,
+        "17": 86.0,
+        "16": 87.0,
+        "15": 58.0,
+        "14": 78.0,
+        "13": 20.0,
+        "12": 170.0,
+        "11": 143.0,
+        "10": 132.0,
+        "9": 21.0,
+        "8": 87.0,
+        "7": 39.0,
+        "6": 56.0,
+        "5": 2.0,
+        "4": 12.0
+      },
+      "hourlyByPlan": {
+        "24 hours": {
+          "23": 1,
+          "20": 4,
+          "19": 1,
+          "18": 2,
+          "12": 2,
+          "11": 3,
+          "10": 1,
+          "8": 2
+        },
+        "12 hours": {
+          "23": 1,
+          "19": 1,
+          "17": 1,
+          "16": 1,
+          "14": 2,
+          "12": 4,
+          "11": 3,
+          "10": 4,
+          "9": 1,
+          "8": 2,
+          "7": 1,
+          "6": 2
+        },
+        "1 hour": {
+          "21": 2,
+          "20": 2,
+          "18": 2,
+          "17": 7,
+          "16": 4,
+          "15": 4,
+          "14": 2,
+          "13": 1,
+          "12": 4,
+          "11": 2,
+          "10": 3,
+          "9": 1,
+          "8": 3,
+          "7": 2,
+          "6": 2
+        },
+        "6 hours": {
+          "21": 1,
+          "18": 3,
+          "17": 3,
+          "16": 4,
+          "15": 3,
+          "14": 3,
+          "13": 1,
+          "12": 4,
+          "11": 2,
+          "10": 3,
+          "7": 1,
+          "6": 1,
+          "4": 1
+        },
+        "7 minutes": {
+          "20": 2,
+          "19": 1,
+          "18": 3,
+          "16": 4,
+          "15": 2,
+          "14": 2,
+          "13": 3,
+          "12": 2,
+          "11": 4,
+          "10": 1,
+          "9": 1,
+          "8": 2,
+          "7": 2,
+          "6": 4,
+          "5": 2
+        },
+        "7 days": {
+          "18": 1
+        }
+      },
+      "topSpenders": [
+        {
+          "phone": "0175",
+          "amount": 99
+        },
+        {
+          "phone": "5509",
+          "amount": 32
+        },
+        {
+          "phone": "0680",
+          "amount": 30
+        },
+        {
+          "phone": "9009",
+          "amount": 25
+        },
+        {
+          "phone": "0747",
+          "amount": 24
+        }
+      ],
+      "firstTransaction": "04:05:35",
+      "lastTransaction": "23:19:50",
+      "userPurchaseCounts": {
+        "1_purchase": 99,
+        "2_purchases": 17,
+        "3_purchases": 3,
+        "4plus_purchases": 1
+      }
+    },
+    "jan21": {
+      "date": "2026-01-21",
+      "dateLabel": "January 21, 2026",
+      "totalTransactions": 138,
+      "totalRevenue": 1331,
+      "totalRevenueAmortized": 1161.29,
+      "uniqueUsers": 114,
+      "avgDailySpendPerUser": 10.19,
+      "repeatCustomers": 19,
+      "repeatCustomerPercent": 16.7,
+      "plans": [
+        {
+          "name": "7 minutes",
+          "price": 1,
+          "dailyPrice": 1,
+          "count": 31,
+          "revenue": 31,
+          "revenueAmortized": 31.0,
+          "color": "#ef4444"
+        },
+        {
+          "name": "1 hour",
+          "price": 5,
+          "dailyPrice": 5,
+          "count": 43,
+          "revenue": 215,
+          "revenueAmortized": 215.0,
+          "color": "#f97316"
+        },
+        {
+          "name": "6 hours",
+          "price": 12,
+          "dailyPrice": 12,
+          "count": 36,
+          "revenue": 432,
+          "revenueAmortized": 432.0,
+          "color": "#eab308"
+        },
+        {
+          "name": "12 hours",
+          "price": 15,
+          "dailyPrice": 15,
+          "count": 13,
+          "revenue": 195,
+          "revenueAmortized": 195.0,
+          "color": "#22c55e"
+        },
+        {
+          "name": "24 hours",
+          "price": 20,
+          "dailyPrice": 20,
+          "count": 13,
+          "revenue": 260,
+          "revenueAmortized": 260.0,
+          "color": "#3b82f6"
+        },
+        {
+          "name": "7 days",
+          "price": 99,
+          "dailyPrice": 14.14,
+          "count": 2,
+          "revenue": 198,
+          "revenueAmortized": 28.29,
+          "color": "#a855f7"
+        }
+      ],
+      "hourlyActivity": {
+        "21": 6,
+        "20": 8,
+        "19": 6,
+        "18": 9,
+        "17": 8,
+        "16": 8,
+        "15": 4,
+        "14": 9,
+        "13": 13,
+        "12": 12,
+        "11": 10,
+        "10": 18,
+        "9": 6,
+        "8": 9,
+        "7": 7,
+        "6": 2,
+        "5": 2,
+        "3": 1
+      },
+      "hourlyRevenue": {
+        "21": 33,
+        "20": 92,
+        "19": 22,
+        "18": 85,
+        "17": 38,
+        "16": 76,
+        "15": 48,
+        "14": 36,
+        "13": 118,
+        "12": 222,
+        "11": 95,
+        "10": 251,
+        "9": 50,
+        "8": 86,
+        "7": 48,
+        "6": 6,
+        "5": 24,
+        "3": 1
+      },
+      "hourlyRevenueAmortized": {
+        "21": 33.0,
+        "20": 92.0,
+        "19": 22.0,
+        "18": 85.0,
+        "17": 38.0,
+        "16": 76.0,
+        "15": 48.0,
+        "14": 36.0,
+        "13": 118.0,
+        "12": 137.14,
+        "11": 95.0,
+        "10": 166.14,
+        "9": 50.0,
+        "8": 86.0,
+        "7": 48.0,
+        "6": 6.0,
+        "5": 24.0,
+        "3": 1.0
+      },
+      "hourlyByPlan": {
+        "24 hours": {
+          "21": 1,
+          "20": 4,
+          "18": 2,
+          "16": 2,
+          "13": 2,
+          "10": 1,
+          "8": 1
+        },
+        "1 hour": {
+          "21": 2,
+          "20": 2,
+          "19": 4,
+          "18": 4,
+          "17": 2,
+          "16": 2,
+          "14": 4,
+          "13": 5,
+          "12": 1,
+          "11": 4,
+          "10": 4,
+          "9": 2,
+          "8": 4,
+          "7": 2,
+          "6": 1
+        },
+        "7 minutes": {
+          "21": 3,
+          "20": 2,
+          "19": 2,
+          "18": 1,
+          "17": 4,
+          "16": 2,
+          "14": 4,
+          "13": 2,
+          "12": 1,
+          "10": 4,
+          "9": 1,
+          "8": 1,
+          "7": 2,
+          "6": 1,
+          "3": 1
+        },
+        "6 hours": {
+          "18": 2,
+          "17": 2,
+          "16": 2,
+          "15": 4,
+          "14": 1,
+          "13": 3,
+          "12": 6,
+          "11": 5,
+          "10": 4,
+          "9": 2,
+          "7": 3,
+          "5": 2
+        },
+        "12 hours": {
+          "13": 1,
+          "12": 3,
+          "11": 1,
+          "10": 4,
+          "9": 1,
+          "8": 3
+        },
+        "7 days": {
+          "12": 1,
+          "10": 1
+        }
+      },
+      "topSpenders": [
+        {
+          "phone": "4681",
+          "amount": 99
+        },
+        {
+          "phone": "0750",
+          "amount": 99
+        },
+        {
+          "phone": "0680",
+          "amount": 45
+        },
+        {
+          "phone": "3836",
+          "amount": 40
+        },
+        {
+          "phone": "5509",
+          "amount": 29
+        }
+      ],
+      "firstTransaction": "03:33:08",
+      "lastTransaction": "21:46:07",
+      "userPurchaseCounts": {
+        "1_purchase": 95,
+        "2_purchases": 14,
+        "3_purchases": 5,
+        "4plus_purchases": 0
+      }
+    }
+  }
+}

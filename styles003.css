@@ -547,6 +547,26 @@ body::before {
     transform: rotate(45deg);
 }
 
+/* Value message for popular plans - positioned at bottom like offer timer */
+.plan-value-msg {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--primary);
+    padding: 5px 14px;
+    background: rgba(232, 93, 4, 0.15);
+    border-radius: var(--radius-full);
+    white-space: nowrap;
+}
+
+/* Add bottom padding to popular card for the value message */
+.plan-card.popular {
+    padding-bottom: 50px;
+}
+
 .plan-duration {
     font-family: 'Outfit', sans-serif;
     font-size: 1.1rem;
@@ -2339,5 +2359,368 @@ body::before {
 
 .pwa-install-close:hover {
     color: #fff;
+}
+
+/* ========================================
+   UPSELL SYSTEM STYLES
+   Time-based promotional offers
+   ======================================== */
+
+/* Time Zone Banner */
+.time-zone-banner {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    padding: 10px 16px;
+    border-radius: var(--radius-md);
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+    animation: bannerPulse 2s ease-in-out infinite;
+}
+
+@keyframes bannerPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.01); }
+}
+
+/* Featured Upsell Card */
+.plan-card.upsell-featured {
+    position: relative;
+    background: linear-gradient(145deg, #FFF8E8 0%, #FFFFFF 100%);
+    border: 2px solid var(--accent);
+    box-shadow: 0 4px 20px rgba(255, 186, 8, 0.3);
+    animation: upsellGlow 2s ease-in-out infinite;
+}
+
+@keyframes upsellGlow {
+    0%, 100% { 
+        box-shadow: 0 4px 20px rgba(255, 186, 8, 0.3);
+    }
+    50% { 
+        box-shadow: 0 6px 30px rgba(255, 186, 8, 0.5);
+    }
+}
+
+.plan-card.upsell-featured::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, var(--accent), var(--primary), var(--accent));
+    border-radius: inherit;
+    z-index: -1;
+    animation: borderGlow 3s linear infinite;
+    background-size: 200% 200%;
+}
+
+@keyframes borderGlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Upsell Badge */
+.upsell-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-soft) 100%);
+    color: var(--text);
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 4px 8px;
+    border-radius: var(--radius-full);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(255, 186, 8, 0.4);
+    z-index: 10;
+    animation: badgeBounce 1s ease-in-out infinite;
+}
+
+@keyframes badgeBounce {
+    0%, 100% { transform: translateY(0) rotate(-3deg); }
+    50% { transform: translateY(-2px) rotate(3deg); }
+}
+
+/* Value Message */
+.upsell-value-msg {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--success);
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+}
+
+/* Adjust plan card padding for value message */
+.plan-card.upsell-featured {
+    padding-bottom: 35px;
+}
+
+/* Regular upsell cards (not featured) */
+.plan-card[data-upsell="true"] {
+    border-left: 3px solid var(--accent);
+}
+
+/* Upsell section divider */
+.upsell-section-divider {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 16px 0 8px;
+    padding: 0 8px;
+}
+
+.upsell-section-divider::before,
+.upsell-section-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+
+.upsell-section-divider span {
+    color: var(--accent-soft);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .upsell-badge {
+        font-size: 0.6rem;
+        padding: 3px 6px;
+    }
+    
+    .upsell-value-msg {
+        font-size: 0.6rem;
+        padding: 2px 8px;
+    }
+    
+    .time-zone-banner {
+        font-size: 0.85rem;
+        padding: 8px 12px;
+    }
+}
+
+/* High contrast for selected upsell */
+.plan-card.upsell-featured:active,
+.plan-card.upsell-featured:focus {
+    transform: scale(0.98);
+    box-shadow: 0 2px 10px rgba(255, 186, 8, 0.5);
+}
+
+/* ========================================
+   OFFER CARDS (v3 - Dynamic Time-Based Offers)
+   ======================================== */
+
+/* Offer Banner */
+.offer-banner {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    padding: 10px 16px;
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 8px;
+    box-shadow: var(--shadow-md);
+    animation: offer-banner-pulse 2s ease-in-out infinite;
+}
+
+@keyframes offer-banner-pulse {
+    0%, 100% { box-shadow: var(--shadow-md); }
+    50% { box-shadow: 0 4px 20px rgba(232, 93, 4, 0.4); }
+}
+
+/* Offer Card - Stands out from regular plans */
+.plan-card.offer-card {
+    position: relative;
+    background: linear-gradient(145deg, #FFF9E6 0%, #FFF3CC 100%);
+    border: 2px solid var(--accent);
+    box-shadow: 0 4px 15px rgba(255, 186, 8, 0.3);
+    transform: scale(1.02);
+    padding-bottom: 50px; /* Extra padding for timer */
+    overflow: hidden; /* Clip the diagonal ribbon */
+}
+
+.plan-card.offer-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary), var(--accent), var(--primary));
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.plan-card.offer-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 25px rgba(255, 186, 8, 0.4);
+}
+
+.plan-card.offer-card:active {
+    transform: scale(1.01);
+}
+
+/* Countdown Timer - Top of card */
+.offer-countdown {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #DC2F02 0%, #E85D04 100%);
+    color: white;
+    padding: 5px 14px;
+    border-radius: var(--radius-full);
+    font-size: 0.7rem;
+    font-weight: 700;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 2px 8px rgba(220, 47, 2, 0.4);
+    white-space: nowrap;
+    z-index: 10;
+}
+
+.countdown-icon {
+    font-size: 0.8rem;
+    animation: countdown-pulse 1s ease-in-out infinite;
+}
+
+@keyframes countdown-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+.countdown-text {
+    letter-spacing: 0.3px;
+}
+
+/* OFFER Badge - Diagonal ribbon style like Best Value */
+.plan-card.offer-card::after {
+    content: '🔥 Offer';
+    position: absolute;
+    top: 10px;
+    right: -30px;
+    background: linear-gradient(135deg, #DC2F02 0%, #E85D04 100%);
+    color: white;
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 4px 32px;
+    transform: rotate(45deg);
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(220, 47, 2, 0.3);
+}
+
+/* Hide the span ribbon - using CSS ::after instead */
+.offer-ribbon {
+    display: none;
+}
+
+/* Urgent state - less than 5 minutes */
+.plan-card.offer-card.offer-urgent {
+    animation: urgent-pulse 0.5s ease-in-out infinite;
+    border-color: var(--primary-dark);
+}
+
+.plan-card.offer-card.offer-urgent .offer-countdown {
+    background: linear-gradient(135deg, #B91C1C 0%, #DC2626 100%);
+    animation: urgent-flash 0.5s ease-in-out infinite;
+}
+
+@keyframes urgent-pulse {
+    0%, 100% { box-shadow: 0 4px 15px rgba(220, 47, 2, 0.3); }
+    50% { box-shadow: 0 4px 25px rgba(220, 47, 2, 0.6); }
+}
+
+@keyframes urgent-flash {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+}
+
+/* Hide old badge - replaced by countdown */
+.offer-badge {
+    display: none;
+}
+
+/* Offer Value Message */
+.offer-value-msg {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: var(--radius-full);
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+    animation: offer-msg-glow 2s ease-in-out infinite;
+}
+
+@keyframes offer-msg-glow {
+    0%, 100% { box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4); }
+    50% { box-shadow: 0 2px 15px rgba(16, 185, 129, 0.6); }
+}
+
+/* Offer Card Text Styles */
+.plan-card.offer-card .plan-duration {
+    color: var(--primary-dark);
+    font-weight: 800;
+}
+
+.plan-card.offer-card .plan-price {
+    color: var(--primary);
+}
+
+.plan-card.offer-card .currency-code {
+    color: var(--primary-light);
+}
+
+/* Responsive Offer Adjustments */
+@media (max-width: 480px) {
+    .offer-banner {
+        font-size: 0.8rem;
+        padding: 8px 12px;
+    }
+    
+    .offer-badge {
+        font-size: 0.55rem;
+        padding: 3px 8px;
+        top: -6px;
+        right: -6px;
+    }
+    
+    .offer-value-msg {
+        font-size: 0.6rem;
+        padding: 4px 10px;
+    }
+    
+    .plan-card.offer-card {
+        transform: scale(1);
+    }
+    
+    .plan-card.offer-card:hover {
+        transform: scale(1.02);
+    }
 }
 

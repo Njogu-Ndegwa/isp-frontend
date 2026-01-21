@@ -29,64 +29,20 @@ function getProxiedUrl(url) {
 // ========================================
 const HARDCODED_PLANS = [
     {
-        "id": 1,
+        "id": 10,
         "name": "1 Hour Plan",
-        "speed": "1M/2M",
-        "price": 50,
+        "speed": "5M/5M",
+        "price": 5,
         "duration_value": 1,
         "duration_unit": "HOURS",
         "connection_type": "hotspot",
-        "router_profile": null,
+        "router_profile": "default",
         "user_id": 1
     },
     {
-        "id": 2,
-        "name": "5 Minutes Test Plan",
-        "speed": "1M/2M",
-        "price": 10,
-        "duration_value": 5,
-        "duration_unit": "MINUTES",
-        "connection_type": "hotspot",
-        "router_profile": null,
-        "user_id": 1
-    },
-    {
-        "id": 3,
-        "name": "10 Minutes Test Plan",
+        "id": 11,
+        "name": "7 Minute Plan",
         "speed": "5M/5M",
-        "price": 20,
-        "duration_value": 10,
-        "duration_unit": "MINUTES",
-        "connection_type": "hotspot",
-        "router_profile": null,
-        "user_id": 1
-    },
-    {
-        "id": 4,
-        "name": "20 Minutes Test Plan",
-        "speed": "5M/5M",
-        "price": 30,
-        "duration_value": 20,
-        "duration_unit": "MINUTES",
-        "connection_type": "hotspot",
-        "router_profile": null,
-        "user_id": 1
-    },
-    {
-        "id": 5,
-        "name": "24 Hours plan",
-        "speed": "2M/2M",
-        "price": 100,
-        "duration_value": 24,
-        "duration_unit": "HOURS",
-        "connection_type": "hotspot",
-        "router_profile": "",
-        "user_id": 1
-    },
-    {
-        "id": 6,
-        "name": "1 Ksh Plan",
-        "speed": "5M/2M",
         "price": 1,
         "duration_value": 7,
         "duration_unit": "MINUTES",
@@ -95,10 +51,10 @@ const HARDCODED_PLANS = [
         "user_id": 1
     },
     {
-        "id": 7,
-        "name": "2hrs",
-        "speed": "5M/2M",
-        "price": 2,
+        "id": 12,
+        "name": "24 Hour Plan",
+        "speed": "5M/5M",
+        "price": 20,
         "duration_value": 24,
         "duration_unit": "HOURS",
         "connection_type": "hotspot",
@@ -106,23 +62,34 @@ const HARDCODED_PLANS = [
         "user_id": 1
     },
     {
-        "id": 8,
-        "name": "8 minute plan",
-        "speed": "7M/2M",
-        "price": 1,
-        "duration_value": 8,
-        "duration_unit": "MINUTES",
+        "id": 13,
+        "name": "12 Hour Plan",
+        "speed": "5M/5M",
+        "price": 15,
+        "duration_value": 12,
+        "duration_unit": "HOURS",
         "connection_type": "hotspot",
         "router_profile": "default",
         "user_id": 1
     },
     {
-        "id": 9,
-        "name": "Max Bandwith Plan",
-        "speed": "15M/2M",
-        "price": 1,
-        "duration_value": 1,
+        "id": 14,
+        "name": "6 Hr Plan",
+        "speed": "5M/5M",
+        "price": 12,
+        "duration_value": 6,
         "duration_unit": "HOURS",
+        "connection_type": "hotspot",
+        "router_profile": "default",
+        "user_id": 1
+    },
+    {
+        "id": 15,
+        "name": "7 Day Plan",
+        "speed": "5M/5M",
+        "price": 99,
+        "duration_value": 7,
+        "duration_unit": "DAYS",
         "connection_type": "hotspot",
         "router_profile": "default",
         "user_id": 1
@@ -323,12 +290,21 @@ function transformPlansData(apiPlans) {
         // Mark plan as popular if it has the best time-to-price ratio
         const popular = plan.id === bestPlan.id;
         
+        // Calculate value message for popular plan
+        let valueMessage = '';
+        if (popular) {
+            const hours = convertToHours(plan.duration_value, plan.duration_unit);
+            const pricePerDay = (plan.price / (hours / 24)).toFixed(0);
+            valueMessage = `Only KSH ${pricePerDay}/day`;
+        }
+        
         return {
             id: plan.id,
             duration: duration,
             price: price,
             speed: speed,
             popular: popular,
+            valueMessage: valueMessage,
             // Keep original data for API submission
             originalData: plan
         };
@@ -446,6 +422,7 @@ function createPlanCard(plan) {
         <div class="plan-duration">${plan.duration}</div>
         <div class="plan-price">${formattedPrice}</div>
         <div class="plan-speed">${plan.speed}</div>
+        ${plan.valueMessage ? `<div class="plan-value-msg">${plan.valueMessage}</div>` : ''}
     `;
     
     // Add click event to the card
