@@ -1,8 +1,8 @@
 {
   "name": "Bitwave Soko WiFi",
   "short_name": "Bitwave Soko",
-  "description": "Test your internet speed and explore local deals at Bitwave Soko Market WiFi",
-  "start_url": "/pwa.html",
+  "description": "Get fast WiFi and explore local deals at Bitwave Soko Market",
+  "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#FFFCF2",
   "theme_color": "#E85D04",
@@ -25,6 +25,12 @@
     }
   ],
   "shortcuts": [
+    {
+      "name": "Buy WiFi",
+      "short_name": "Buy WiFi",
+      "description": "Purchase internet access plans",
+      "url": "/index.html"
+    },
     {
       "name": "Speed Test",
       "short_name": "Speed Test",

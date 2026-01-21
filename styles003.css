@@ -2252,3 +2252,92 @@ body::before {
     height: 10px;
 }
 
+/* ========================================
+   PWA INSTALL BANNER
+   ======================================== */
+.pwa-install-banner {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    padding: 12px 16px;
+    z-index: 9999;
+    transform: translateY(0);
+    transition: transform 0.3s ease;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.pwa-install-banner.hidden {
+    transform: translateY(100%);
+    pointer-events: none;
+}
+
+.pwa-install-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.pwa-install-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.pwa-install-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.pwa-install-text strong {
+    display: block;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.pwa-install-text span {
+    color: #aaa;
+    font-size: 0.8rem;
+}
+
+.pwa-install-btn {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--radius-full);
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.pwa-install-btn:hover {
+    background: var(--primary-light);
+    transform: scale(1.05);
+}
+
+.pwa-install-btn:active {
+    transform: scale(0.98);
+}
+
+.pwa-install-close {
+    background: none;
+    border: none;
+    color: #666;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 4px;
+    transition: color 0.2s ease;
+    flex-shrink: 0;
+}
+
+.pwa-install-close:hover {
+    color: #fff;
+}
+

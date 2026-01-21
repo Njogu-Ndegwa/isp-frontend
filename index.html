@@ -2,8 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Bitwave Soko Wifi - Get Connected</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#E85D04">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Bitwave Soko">
+    <meta name="description" content="Get fast, reliable WiFi at Bitwave Soko Market">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="icons/icon.svg">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -425,8 +442,92 @@
         </div>
     </div>
 
+    <!-- PWA Install Prompt Banner -->
+    <div class="pwa-install-banner hidden" id="pwaInstallBanner">
+        <div class="pwa-install-content">
+            <span class="pwa-install-icon">📲</span>
+            <div class="pwa-install-text">
+                <strong>Install Bitwave Soko</strong>
+                <span>Add to home screen for quick access</span>
+            </div>
+            <button class="pwa-install-btn" id="pwaInstallBtn">Install</button>
+            <button class="pwa-install-close" id="pwaInstallClose">×</button>
+        </div>
+    </div>
+
     <script src="script.js"></script>
     <script src="script003.js"></script>
     <script src="ads.js"></script>
+    
+    <!-- PWA Service Worker & Install Prompt -->
+    <script>
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(reg => console.log('✅ ServiceWorker registered:', reg.scope))
+                    .catch(err => console.log('⚠️ ServiceWorker registration failed:', err));
+            });
+        }
+        
+        // PWA Install Prompt
+        let deferredPrompt = null;
+        const installBanner = document.getElementById('pwaInstallBanner');
+        const installBtn = document.getElementById('pwaInstallBtn');
+        const installClose = document.getElementById('pwaInstallClose');
+        
+        // Listen for the beforeinstallprompt event
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            console.log('📱 PWA install prompt ready');
+            
+            // Show install banner after 3 seconds (if not already installed)
+            setTimeout(() => {
+                if (!isAppInstalled() && installBanner) {
+                    installBanner.classList.remove('hidden');
+                }
+            }, 3000);
+        });
+        
+        // Install button click
+        if (installBtn) {
+            installBtn.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const result = await deferredPrompt.userChoice;
+                    console.log('📱 Install choice:', result.outcome);
+                    if (result.outcome === 'accepted') {
+                        console.log('✅ App installed!');
+                    }
+                    deferredPrompt = null;
+                }
+                installBanner.classList.add('hidden');
+            });
+        }
+        
+        // Close button click
+        if (installClose) {
+            installClose.addEventListener('click', () => {
+                installBanner.classList.add('hidden');
+                // Don't show again for this session
+                sessionStorage.setItem('pwa_dismissed', 'true');
+            });
+        }
+        
+        // Check if already installed
+        function isAppInstalled() {
+            return window.matchMedia('(display-mode: standalone)').matches ||
+                   window.navigator.standalone === true ||
+                   sessionStorage.getItem('pwa_dismissed') === 'true';
+        }
+        
+        // Handle app installed event
+        window.addEventListener('appinstalled', () => {
+            console.log('✅ PWA was installed');
+            installBanner.classList.add('hidden');
+            deferredPrompt = null;
+        });
+    </script>
 </body>
 </html>
