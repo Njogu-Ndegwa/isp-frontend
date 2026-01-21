@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Bitwave Soko - Speed Test & Deals</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#E85D04">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Bitwave Soko">
+    <meta name="description" content="Test your WiFi speed and discover local marketplace deals at Bitwave Soko">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="icons/icon.svg">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+    
+    <!-- Fonts - Same as captive portal -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="pwa.css">
+</head>
+<body>
+    <div class="pwa-app">
+        <!-- Header -->
+        <header class="pwa-header">
+            <div class="header-content">
+                <div class="brand">
+                    <div class="brand-logo">📡</div>
+                    <div class="brand-info">
+                        <h1>Bitwave Soko</h1>
+                        <span class="brand-tagline">Market WiFi</span>
+                    </div>
+                </div>
+                <div class="connection-indicator" id="connectionIndicator">
+                    <span class="indicator-dot"></span>
+                    <span class="indicator-text">Online</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="pwa-main">
+            
+            <!-- Marketplace Showcase - EXACTLY like captive portal, AT THE TOP -->
+            <div class="marketplace-showcase" id="deals">
+                <div class="showcase-header">
+                    <h3 class="showcase-title">🛒 Soko Deals Today</h3>
+                    <span class="showcase-badge">AD</span>
+                </div>
+                <div class="showcase-scroll" id="showcaseScroll">
+                    <!-- Skeleton loaders shown while loading -->
+                    <div class="product-card ad-skeleton">
+                        <div class="product-image skeleton-shimmer"></div>
+                        <div class="product-info">
+                            <div class="skeleton-text"></div>
+                            <div class="skeleton-text short"></div>
+                        </div>
+                    </div>
+                    <div class="product-card ad-skeleton">
+                        <div class="product-image skeleton-shimmer"></div>
+                        <div class="product-info">
+                            <div class="skeleton-text"></div>
+                            <div class="skeleton-text short"></div>
+                        </div>
+                    </div>
+                    <div class="product-card ad-skeleton">
+                        <div class="product-image skeleton-shimmer"></div>
+                        <div class="product-info">
+                            <div class="skeleton-text"></div>
+                            <div class="skeleton-text short"></div>
+                        </div>
+                    </div>
+
+                    <a href="tel:0795635364" class="product-card ad-cta-card">
+                        <div class="ad-cta-content">
+                            <div class="ad-cta-icon">+</div>
+                            <span class="ad-cta-text">Your Ad Here</span>
+                        </div>
+                    </a>
+                </div>
+                <div class="scroll-hint">
+                    <span>← Swipe for more deals →</span>
+                </div>
+            </div>
+
+            <!-- Speed Test Section -->
+            <section class="speed-test-section" id="speedtest">
+                <div class="section-header">
+                    <h2 class="section-title">⚡ Speed Test</h2>
+                    <span class="section-badge">CHECK CONNECTION</span>
+                </div>
+                
+                <div class="speed-test-card">
+                    <!-- Sophisticated Speedometer Gauge -->
+                    <div class="speedometer" id="speedometer">
+                        <svg class="speedometer-svg" viewBox="0 0 300 200">
+                            <defs>
+                                <!-- Gradient for the arc -->
+                                <linearGradient id="speedGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stop-color="#3B82F6"/>
+                                    <stop offset="30%" stop-color="#06B6D4"/>
+                                    <stop offset="60%" stop-color="#10B981"/>
+                                    <stop offset="80%" stop-color="#F59E0B"/>
+                                    <stop offset="100%" stop-color="#EF4444"/>
+                                </linearGradient>
+                                <!-- Glow filter -->
+                                <filter id="glow">
+                                    <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                                    <feMerge>
+                                        <feMergeNode in="coloredBlur"/>
+                                        <feMergeNode in="SourceGraphic"/>
+                                    </feMerge>
+                                </filter>
+                            </defs>
+                            
+                            <!-- Background track -->
+                            <path class="gauge-track"
+                                  d="M 30 170 A 120 120 0 0 1 270 170"
+                                  fill="none"
+                                  stroke="#E5E7EB"
+                                  stroke-width="20"
+                                  stroke-linecap="round"/>
+                            
+                            <!-- Progress arc -->
+                            <path class="gauge-fill" id="gaugeFill"
+                                  d="M 30 170 A 120 120 0 0 1 270 170"
+                                  fill="none"
+                                  stroke="url(#speedGradient)"
+                                  stroke-width="20"
+                                  stroke-linecap="round"
+                                  stroke-dasharray="377"
+                                  stroke-dashoffset="377"
+                                  filter="url(#glow)"/>
+                            
+                            <!-- Scale numbers -->
+                            <text x="25" y="185" class="scale-text">0</text>
+                            <text x="18" y="135" class="scale-text">1</text>
+                            <text x="30" y="90" class="scale-text">5</text>
+                            <text x="60" y="55" class="scale-text">10</text>
+                            <text x="100" y="35" class="scale-text">15</text>
+                            <text x="145" y="25" class="scale-text">20</text>
+                            <text x="190" y="35" class="scale-text">30</text>
+                            <text x="230" y="55" class="scale-text">40</text>
+                            <text x="260" y="90" class="scale-text">60</text>
+                            <text x="272" y="135" class="scale-text">80</text>
+                            <text x="265" y="185" class="scale-text">100</text>
+                            
+                            <!-- Center circle -->
+                            <circle cx="150" cy="170" r="15" fill="#3B82F6" class="center-circle"/>
+                            <circle cx="150" cy="170" r="8" fill="#1E40AF"/>
+                        </svg>
+                        
+                        <!-- Needle -->
+                        <div class="needle-container">
+                            <div class="needle" id="needle"></div>
+                        </div>
+                        
+                        <!-- Speed Display -->
+                        <div class="speed-display">
+                            <span class="speed-value" id="speedValue">0</span>
+                            <span class="speed-unit">Mbps</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Stats Row -->
+                    <div class="speed-stats">
+                        <div class="stat-box">
+                            <span class="stat-icon">⬇️</span>
+                            <div class="stat-info">
+                                <span class="stat-label">Download</span>
+                                <span class="stat-value" id="downloadSpeed">--</span>
+                            </div>
+                        </div>
+                        <div class="stat-divider"></div>
+                        <div class="stat-box">
+                            <span class="stat-icon">⬆️</span>
+                            <div class="stat-info">
+                                <span class="stat-label">Upload</span>
+                                <span class="stat-value" id="uploadSpeed">--</span>
+                            </div>
+                        </div>
+                        <div class="stat-divider"></div>
+                        <div class="stat-box">
+                            <span class="stat-icon">📶</span>
+                            <div class="stat-info">
+                                <span class="stat-label">Ping</span>
+                                <span class="stat-value" id="pingValue">--</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Test Button -->
+                    <button class="speed-test-btn" id="startSpeedTest">
+                        <span class="btn-icon">🚀</span>
+                        <span class="btn-text">Start Speed Test</span>
+                    </button>
+                    
+                    <p class="speed-test-hint" id="speedTestHint">
+                        Test your connection to see if you're getting the speeds you paid for
+                    </p>
+                </div>
+                
+                <!-- Recent Tests -->
+                <div class="recent-tests" id="recentTests">
+                    <h3 class="section-subtitle">Recent Tests</h3>
+                    <div class="tests-list" id="testsList">
+                        <div class="empty-state">
+                            <span>📊</span>
+                            <p>No tests yet. Run your first speed test!</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Support Section -->
+            <section class="support-section" id="support">
+                <div class="section-header">
+                    <h2 class="section-title">💬 Need Help?</h2>
+                    <span class="section-badge">SUPPORT</span>
+                </div>
+                
+                <div class="support-card">
+                    <p class="support-intro">Having issues? Send us a message via WhatsApp and we'll help you out.</p>
+                    
+                    <form class="support-form" id="supportForm">
+                        <div class="form-group">
+                            <label for="userName">Your Name</label>
+                            <input type="text" id="userName" name="name" placeholder="e.g., John" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="userPhone">Phone Number</label>
+                            <div class="phone-input-wrapper">
+                                <span class="phone-prefix">+254</span>
+                                <input type="tel" id="userPhone" name="phone" placeholder="7XXXXXXXX" maxlength="10" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="issueType">Issue Type</label>
+                            <select id="issueType" name="issue_type" required>
+                                <option value="">Select an issue...</option>
+                                <option value="slow_speed">Slow Internet Speed</option>
+                                <option value="no_connection">Can't Connect</option>
+                                <option value="payment_issue">Payment Problem</option>
+                                <option value="account_help">Account Help</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="messageText">Your Message</label>
+                            <textarea id="messageText" name="message" rows="3" placeholder="Describe your issue..." required></textarea>
+                        </div>
+                        
+                        <button type="submit" class="whatsapp-btn">
+                            <svg class="whatsapp-icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                            </svg>
+                            <span>Send via WhatsApp</span>
+                        </button>
+                    </form>
+                    
+                    <div class="support-alt">
+                        <span>Or call us directly:</span>
+                        <a href="tel:0795635364" class="call-link">
+                            <span>📞</span>
+                            <span>0795 635 364</span>
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-section="deals">
+                <span class="nav-icon">🛒</span>
+                <span class="nav-label">Deals</span>
+            </button>
+            <button class="nav-item" data-section="speedtest">
+                <span class="nav-icon">⚡</span>
+                <span class="nav-label">Speed Test</span>
+            </button>
+            <button class="nav-item" data-section="support">
+                <span class="nav-icon">💬</span>
+                <span class="nav-label">Support</span>
+            </button>
+        </nav>
+
+        <!-- Ad Modal (Same as captive portal) -->
+        <div class="ad-modal-overlay hidden" id="adModalOverlay">
+            <div class="ad-modal">
+                <button class="ad-modal-close" id="adModalClose">×</button>
+                <div class="ad-modal-content" id="adModalContent">
+                    <div class="ad-modal-image">
+                        <img src="" alt="" id="adModalImage">
+                        <span class="ad-modal-badge" id="adModalBadge"></span>
+                    </div>
+                    <div class="ad-modal-info">
+                        <span class="ad-modal-tag" id="adModalTag"></span>
+                        <h2 class="ad-modal-title" id="adModalTitle"></h2>
+                        <p class="ad-modal-description" id="adModalDescription"></p>
+                        <div class="ad-modal-seller">
+                            <span class="seller-icon">🏪</span>
+                            <div class="seller-details">
+                                <span class="seller-name" id="adModalSeller"></span>
+                                <span class="seller-location" id="adModalLocation"></span>
+                            </div>
+                        </div>
+                        <div class="ad-modal-price-section">
+                            <span class="ad-modal-label">Price</span>
+                            <span class="ad-modal-price" id="adModalPrice"></span>
+                        </div>
+                        <div class="ad-modal-contact">
+                            <a href="#" class="ad-call-button" id="adCallButton">
+                                <span class="call-btn-icon">📞</span>
+                                <span>Call Seller</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Install Prompt -->
+        <div class="install-prompt hidden" id="installPrompt">
+            <div class="install-content">
+                <span class="install-icon">📲</span>
+                <div class="install-text">
+                    <strong>Install Bitwave Soko</strong>
+                    <span>Quick access to speed tests & deals</span>
+                </div>
+                <button class="install-btn" id="installBtn">Install</button>
+                <button class="install-close" id="installClose">×</button>
+            </div>
+        </div>
+
+        <!-- Toast Container -->
+        <div class="toast-container" id="toastContainer"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="pwa.js"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(reg => console.log('✅ ServiceWorker registered:', reg.scope))
+                    .catch(err => console.log('❌ ServiceWorker failed:', err));
+            });
+        }
+    </script>
+</body>
+</html>

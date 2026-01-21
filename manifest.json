@@ -1,0 +1,42 @@
+{
+  "name": "Bitwave Soko WiFi",
+  "short_name": "Bitwave Soko",
+  "description": "Test your internet speed and explore local deals at Bitwave Soko Market WiFi",
+  "start_url": "/pwa.html",
+  "display": "standalone",
+  "background_color": "#FFFCF2",
+  "theme_color": "#E85D04",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["utilities", "lifestyle", "shopping"],
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Speed Test",
+      "short_name": "Speed Test",
+      "description": "Test your internet connection speed",
+      "url": "/pwa.html#speedtest"
+    },
+    {
+      "name": "Support",
+      "short_name": "Support",
+      "description": "Contact support for help",
+      "url": "/pwa.html#support"
+    }
+  ]
+}
+
