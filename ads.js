@@ -251,21 +251,128 @@ async function fetchAds() {
         
         if (Array.isArray(apiAds) && apiAds.length > 0) {
             adsData = apiAds;
+            showAdSections();
             renderAds(adsData);
             recordImpression(adsData.map(ad => ad.id));
             return adsData;
         }
         
-        throw new Error('No ads returned from API');
+        // No ads from backend - hide all ad sections
+        console.log('📭 No ads from backend - hiding ad sections');
+        adsData = [];
+        hideAdSections();
+        return [];
         
     } catch (error) {
         console.warn('⚠️ Could not fetch ads from API:', error.message);
-        console.log('📦 Using hardcoded ads as fallback');
-        
-        adsData = HARDCODED_ADS;
-        renderAds(adsData);
-        return adsData;
+        // No fallback to hardcoded - hide ad sections instead
+        console.log('📭 API error - hiding ad sections');
+        adsData = [];
+        hideAdSections();
+        return [];
     }
+}
+
+// ========================================
+// HIDE AD SECTIONS (when no ads available)
+// Keeps the showcase with CTA card visible for advertisers
+// ========================================
+function hideAdSections() {
+    // Keep marketplace showcase visible but show only CTA card
+    const showcaseSection = document.querySelector('.marketplace-showcase');
+    const showcaseScroll = document.getElementById('showcaseScroll');
+    
+    if (showcaseSection && showcaseScroll) {
+        // Show the showcase section
+        showcaseSection.style.display = '';
+        
+        // Remove skeleton loaders and product cards, keep only CTA card
+        const existingCards = showcaseScroll.querySelectorAll('.product-card:not(.ad-cta-card), .ad-skeleton');
+        existingCards.forEach(card => card.remove());
+        
+        // Hide the scroll hint since there's nothing to scroll
+        const scrollHint = showcaseSection.querySelector('.scroll-hint');
+        if (scrollHint) {
+            scrollHint.style.display = 'none';
+        }
+        
+        // Update the showcase title to encourage advertisers
+        const showcaseTitle = showcaseSection.querySelector('.showcase-title');
+        if (showcaseTitle) {
+            showcaseTitle.textContent = '📢 Advertise Here';
+        }
+        
+        console.log('📢 Showing CTA card for advertisers');
+    }
+    
+    // Hide inline promo
+    const inlinePromo = document.querySelector('.inline-promo');
+    if (inlinePromo) {
+        inlinePromo.style.display = 'none';
+    }
+    
+    // Hide payment ad section
+    const paymentAd = document.querySelector('.payment-ad');
+    if (paymentAd) {
+        paymentAd.style.display = 'none';
+    }
+    
+    // Hide success page ads
+    const successAds = document.querySelector('.success-ads');
+    if (successAds) {
+        successAds.style.display = 'none';
+    }
+    
+    // Hide sticky footer ad
+    const stickyAd = document.getElementById('stickyAd');
+    if (stickyAd) {
+        stickyAd.classList.add('hidden');
+    }
+    
+    console.log('🙈 Ad content sections hidden (CTA visible)');
+}
+
+// ========================================
+// SHOW ALL AD SECTIONS (when ads are available)
+// ========================================
+function showAdSections() {
+    // Show marketplace showcase section
+    const showcaseSection = document.querySelector('.marketplace-showcase');
+    if (showcaseSection) {
+        showcaseSection.style.display = '';
+        
+        // Restore original title
+        const showcaseTitle = showcaseSection.querySelector('.showcase-title');
+        if (showcaseTitle) {
+            showcaseTitle.textContent = '🛒 Soko Deals Today';
+        }
+        
+        // Show scroll hint
+        const scrollHint = showcaseSection.querySelector('.scroll-hint');
+        if (scrollHint) {
+            scrollHint.style.display = '';
+        }
+    }
+    
+    // Show inline promo
+    const inlinePromo = document.querySelector('.inline-promo');
+    if (inlinePromo) {
+        inlinePromo.style.display = '';
+    }
+    
+    // Show payment ad section
+    const paymentAd = document.querySelector('.payment-ad');
+    if (paymentAd) {
+        paymentAd.style.display = '';
+    }
+    
+    // Show success page ads
+    const successAds = document.querySelector('.success-ads');
+    if (successAds) {
+        successAds.style.display = '';
+    }
+    
+    console.log('👁️ All ad sections visible');
 }
 
 // ========================================
@@ -273,14 +380,33 @@ async function fetchAds() {
 // ========================================
 function renderAds(ads) {
     const showcaseScroll = document.getElementById('showcaseScroll');
+    const showcaseSection = document.querySelector('.marketplace-showcase');
+    
     if (!showcaseScroll) {
         console.warn('⚠️ Showcase scroll element not found');
         return;
     }
     
     // Remove skeleton loaders and existing product cards (except the CTA card)
-    const existingCards = showcaseScroll.querySelectorAll('.product-card:not(.ad-cta-card)');
+    const existingCards = showcaseScroll.querySelectorAll('.product-card:not(.ad-cta-card), .ad-skeleton');
     existingCards.forEach(card => card.remove());
+    
+    // No ads - keep CTA card visible (handled by hideAdSections)
+    if (!ads || ads.length === 0) {
+        console.log('📭 No ads to render - CTA card remains visible');
+        return;
+    }
+    
+    // Show showcase section with full features
+    if (showcaseSection) {
+        showcaseSection.style.display = '';
+        
+        // Show scroll hint when we have ads
+        const scrollHint = showcaseSection.querySelector('.scroll-hint');
+        if (scrollHint) {
+            scrollHint.style.display = '';
+        }
+    }
     
     // Get the CTA card to insert ads before it
     const ctaCard = showcaseScroll.querySelector('.ad-cta-card');
@@ -402,8 +528,12 @@ function openAdDetails(ad) {
 // OPEN AD DETAILS BY ID - Helper for onclick handlers
 // ========================================
 function openAdDetailsById(adId) {
-    const ads = adsData.length > 0 ? adsData : HARDCODED_ADS;
-    const ad = ads.find(a => a.id === adId);
+    if (adsData.length === 0) {
+        console.warn('⚠️ No ads available');
+        return;
+    }
+    
+    const ad = adsData.find(a => a.id === adId);
     
     if (ad) {
         openAdDetails(ad);
@@ -609,13 +739,26 @@ function setupModalListeners() {
 // ========================================
 function populateSuccessAds() {
     const container = document.getElementById('successAdsScroll');
+    const successAdsSection = document.querySelector('.success-ads');
+    
     if (!container) return;
     
-    // Get ads from the loaded data
-    const ads = adsData.length > 0 ? adsData : HARDCODED_ADS;
+    // No ads available - hide the section
+    if (adsData.length === 0) {
+        if (successAdsSection) {
+            successAdsSection.style.display = 'none';
+        }
+        console.log('📭 No ads - hiding success page ads section');
+        return;
+    }
+    
+    // Show section and populate
+    if (successAdsSection) {
+        successAdsSection.style.display = '';
+    }
     
     // Shuffle and take up to 6 ads
-    const shuffled = [...ads].sort(() => Math.random() - 0.5).slice(0, 6);
+    const shuffled = [...adsData].sort(() => Math.random() - 0.5).slice(0, 6);
     
     container.innerHTML = shuffled.map(ad => `
         <div class="success-ad-card" onclick="openAdDetailsById(${ad.id})" role="button" tabindex="0" 
@@ -650,13 +793,26 @@ window.populateSuccessAds = populateSuccessAds;
 // ========================================
 function populateMiniProducts() {
     const container = document.getElementById('miniProducts');
+    const paymentAdSection = document.querySelector('.payment-ad');
+    
     if (!container) return;
     
-    // Get ads from the loaded data
-    const ads = adsData.length > 0 ? adsData : HARDCODED_ADS;
+    // No ads available - hide the section
+    if (adsData.length === 0) {
+        if (paymentAdSection) {
+            paymentAdSection.style.display = 'none';
+        }
+        console.log('📭 No ads - hiding payment section ads');
+        return;
+    }
+    
+    // Show section and populate
+    if (paymentAdSection) {
+        paymentAdSection.style.display = '';
+    }
     
     // Shuffle and take up to 4 ads
-    const shuffled = [...ads].sort(() => Math.random() - 0.5).slice(0, 4);
+    const shuffled = [...adsData].sort(() => Math.random() - 0.5).slice(0, 4);
     
     container.innerHTML = shuffled.map(ad => `
         <div class="mini-product" onclick="openAdDetailsById(${ad.id})" role="button" tabindex="0"
@@ -696,6 +852,13 @@ function initStickyAd() {
     
     if (!stickyAd || !stickyAdContent) return;
     
+    // No ads available - don't initialize sticky ad
+    if (adsData.length === 0) {
+        stickyAd.classList.add('hidden');
+        console.log('📭 No ads - sticky ad disabled');
+        return;
+    }
+    
     // Close button handler
     if (stickyAdClose) {
         stickyAdClose.addEventListener('click', (e) => {
@@ -709,38 +872,43 @@ function initStickyAd() {
     
     // Click handler to open ad details
     stickyAdContent.addEventListener('click', () => {
-        const ads = adsData.length > 0 ? adsData : HARDCODED_ADS;
-        if (ads.length > 0) {
-            const currentAd = ads[stickyAdIndex % ads.length];
+        if (adsData.length > 0) {
+            const currentAd = adsData[stickyAdIndex % adsData.length];
             openAdDetails(currentAd);
             recordClick(currentAd.id, 'view_details');
         }
     });
     
-    // Show sticky ad after scroll (only if not closed before)
-    if (!sessionStorage.getItem('bitwave_sticky_ad_closed')) {
+    // Show sticky ad after scroll (only if not closed before and ads exist)
+    if (!sessionStorage.getItem('bitwave_sticky_ad_closed') && adsData.length > 0) {
         window.addEventListener('scroll', () => {
-            if (window.scrollY > 200) {
+            if (window.scrollY > 200 && adsData.length > 0) {
                 updateStickyAd();
                 stickyAd.classList.remove('hidden');
             }
         }, { once: true });
     }
     
-    // Rotate ads every 8 seconds
-    stickyAdInterval = setInterval(() => {
-        if (!stickyAd.classList.contains('hidden')) {
-            stickyAdIndex++;
-            updateStickyAd();
-        }
-    }, 8000);
+    // Rotate ads every 8 seconds (only if ads exist)
+    if (adsData.length > 0) {
+        stickyAdInterval = setInterval(() => {
+            if (!stickyAd.classList.contains('hidden') && adsData.length > 0) {
+                stickyAdIndex++;
+                updateStickyAd();
+            }
+        }, 8000);
+    }
 }
 
 function updateStickyAd() {
-    const ads = adsData.length > 0 ? adsData : HARDCODED_ADS;
-    if (ads.length === 0) return;
+    // No ads - hide sticky ad
+    if (adsData.length === 0) {
+        const stickyAd = document.getElementById('stickyAd');
+        if (stickyAd) stickyAd.classList.add('hidden');
+        return;
+    }
     
-    const ad = ads[stickyAdIndex % ads.length];
+    const ad = adsData[stickyAdIndex % adsData.length];
     
     const img = document.getElementById('stickyAdImg');
     const title = document.getElementById('stickyAdTitle');
