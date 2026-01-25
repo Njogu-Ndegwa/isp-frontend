@@ -199,13 +199,70 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ========================================
+// COOKIE HELPERS (for mobile captive portal compatibility)
+// Mobile captive portals use isolated webviews with separate localStorage
+// Cookies sometimes persist better across these contexts
+// ========================================
+function setCookie(name, value, days = 365) {
+    const expires = new Date(Date.now() + days * 864e5).toUTCString();
+    document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
+}
+
+function getCookie(name) {
+    const cookies = document.cookie.split('; ');
+    for (const cookie of cookies) {
+        const [cookieName, cookieValue] = cookie.split('=');
+        if (cookieName === name) {
+            return decodeURIComponent(cookieValue);
+        }
+    }
+    return null;
+}
+
+// ========================================
+// SAVE PHONE NUMBER (to both localStorage and cookies)
+// ========================================
+function savePhoneNumber(phoneNumber) {
+    if (!phoneNumber || phoneNumber.length < 9) return;
+    
+    // Save to localStorage (works on desktop browsers)
+    try {
+        localStorage.setItem('bitwave_phone_number', phoneNumber);
+    } catch (e) {
+        console.warn('⚠️ localStorage not available:', e);
+    }
+    
+    // Also save to cookie (better for mobile captive portals)
+    setCookie('bitwave_phone', phoneNumber, 365);
+    
+    console.log('💾 Phone number saved for returning user');
+}
+
+// ========================================
 // LOAD SAVED PHONE NUMBER (for returning users)
+// Tries localStorage first, then falls back to cookies
 // ========================================
 function loadSavedPhoneNumber() {
-    const savedPhone = localStorage.getItem('bitwave_phone_number');
+    let savedPhone = null;
+    
+    // Try localStorage first
+    try {
+        savedPhone = localStorage.getItem('bitwave_phone_number');
+    } catch (e) {
+        console.warn('⚠️ localStorage not available:', e);
+    }
+    
+    // Fall back to cookies (better for mobile captive portals)
+    if (!savedPhone) {
+        savedPhone = getCookie('bitwave_phone');
+        if (savedPhone) {
+            console.log('🍪 Phone loaded from cookie (mobile captive portal mode)');
+        }
+    }
+    
     if (savedPhone && phoneNumberInput) {
         phoneNumberInput.value = savedPhone;
-        console.log('📱 Pre-populated phone number for returning user');
+        console.log('📱 Pre-populated phone number for returning user:', savedPhone.slice(0, 3) + '***');
     }
 }
 
@@ -550,9 +607,9 @@ function setupEventListeners() {
         
         e.target.value = value;
         
-        // Save to localStorage for returning users
+        // Save phone number for returning users (localStorage + cookies)
         if (value.length >= 9) {
-            localStorage.setItem('bitwave_phone_number', value);
+            savePhoneNumber(value);
         }
     });
     
@@ -596,8 +653,8 @@ async function handlePayment(e) {
         return;
     }
     
-    // Save valid phone number to localStorage
-    localStorage.setItem('bitwave_phone_number', phoneNumber);
+    // Save valid phone number for returning users (localStorage + cookies)
+    savePhoneNumber(phoneNumber);
     
     if (!selectedPlan) {
         alert('Please select a plan first');
