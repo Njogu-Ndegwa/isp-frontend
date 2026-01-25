@@ -93,6 +93,39 @@ const HARDCODED_PLANS = [
         "connection_type": "hotspot",
         "router_profile": "default",
         "user_id": 1
+    },
+    {
+        "id": 16,
+        "name": "2 Hour Plan",
+        "speed": "5M/5M",
+        "price": 8,
+        "duration_value": 2,
+        "duration_unit": "HOURS",
+        "connection_type": "hotspot",
+        "router_profile": "default",
+        "user_id": 1
+    },
+    {
+        "id": 17,
+        "name": "15 Minute Boost",
+        "speed": "5M/5M",
+        "price": 2,
+        "duration_value": 15,
+        "duration_unit": "MINUTES",
+        "connection_type": "hotspot",
+        "router_profile": "default",
+        "user_id": 1
+    },
+    {
+        "id": 18,
+        "name": "Full Day Deal",
+        "speed": "5M/5M",
+        "price": 18,
+        "duration_value": 1,
+        "duration_unit": "DAYS",
+        "connection_type": "hotspot",
+        "router_profile": "default",
+        "user_id": 1
     }
 ];
 

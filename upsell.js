@@ -12,24 +12,11 @@
 // OFFER PLANS (These are the dynamic upsells)
 // Create these on your backend with these IDs
 // ========================================
+// OFFER_PLANS: Special time-limited offers shown alongside base plans
+// All IDs are real backend IDs
 const OFFER_PLANS = [
     {
-        id: 101,
-        name: "15 Minute Boost",
-        speed: "5M/5M",
-        price: 2,
-        duration_value: 15,
-        duration_unit: "MINUTES",
-        connection_type: "hotspot",
-        router_profile: "default",
-        user_id: 1,
-        isOffer: true,
-        badge: "⏰ LIMITED",
-        value_message: "+1 KSH = 2x time!",
-        targets: "7-min buyers (ID 11)"
-    },
-    {
-        id: 102,
+        id: 16,  // Backend ID for 2 Hour Plan
         name: "2 Hour Session",
         speed: "5M/5M",
         price: 8,
@@ -44,27 +31,27 @@ const OFFER_PLANS = [
         targets: "1-hr buyers (ID 10)"
     },
     {
-        id: 103,
-        name: "Half Day Deal",
+        id: 17,  // Backend ID for 15 Minute Boost
+        name: "15 Minute Boost",
         speed: "5M/5M",
-        price: 13,
-        duration_value: 12,
-        duration_unit: "HOURS",
+        price: 2,
+        duration_value: 15,
+        duration_unit: "MINUTES",
         connection_type: "hotspot",
         router_profile: "default",
         user_id: 1,
         isOffer: true,
         badge: "⏰ LIMITED",
         value_message: "+1 KSH = 2x time!",
-        targets: "6-hr buyers (ID 14)"
+        targets: "7-min buyers (ID 11)"
     },
     {
-        id: 104,
+        id: 18,  // Backend ID for Full Day Deal
         name: "Full Day Deal",
         speed: "5M/5M",
         price: 18,
-        duration_value: 24,
-        duration_unit: "HOURS",
+        duration_value: 1,
+        duration_unit: "DAYS",
         connection_type: "hotspot",
         router_profile: "default",
         user_id: 1,
@@ -72,21 +59,6 @@ const OFFER_PLANS = [
         badge: "⏰ LIMITED",
         value_message: "+3 KSH = all day!",
         targets: "12-hr buyers (ID 13)"
-    },
-    {
-        id: 105,
-        name: "3 Day Pass",
-        speed: "5M/5M",
-        price: 50,
-        duration_value: 3,
-        duration_unit: "DAYS",
-        connection_type: "hotspot",
-        router_profile: "default",
-        user_id: 1,
-        isOffer: true,
-        badge: "⏰ LIMITED",
-        value_message: "KSH 17/day!",
-        targets: "24-hr buyers (ID 12)"
     }
 ];
 
@@ -100,7 +72,7 @@ const TIME_OFFER_STRATEGY = {
     // Show: 2-Hr offer to convert 1-hr buyers
     night: {
         hours: [21, 22, 23, 0, 1, 2, 3, 4],
-        offers: [102], // Just the 2-Hour Session
+        offers: [16], // 2-Hour Plan (ID 16)
         reason: "Convert 1-hr (KSH 5) → 2-hr (KSH 8)"
     },
     
@@ -108,7 +80,7 @@ const TIME_OFFER_STRATEGY = {
     // Show: 15-min and 2-hr offers
     early_morning: {
         hours: [5, 6, 7],
-        offers: [101, 102], // 15-min Boost + 2-Hour Session
+        offers: [17, 16], // 15-min Boost (ID 17) + 2-Hour Plan (ID 16)
         reason: "Convert quick testers to longer sessions"
     },
     
@@ -116,7 +88,7 @@ const TIME_OFFER_STRATEGY = {
     // Show: 2-hr and Full Day offers
     morning_peak: {
         hours: [8, 9, 10, 11],
-        offers: [102, 104], // 2-Hour + Full Day Deal
+        offers: [16, 18], // 2-Hour Plan (ID 16) + Full Day Deal (ID 18)
         reason: "Push towards full day plans"
     },
     
@@ -124,7 +96,7 @@ const TIME_OFFER_STRATEGY = {
     // Show: 2-hr offer (lunch session)
     midday: {
         hours: [12, 13, 14],
-        offers: [102], // 2-Hour Session
+        offers: [16], // 2-Hour Plan (ID 16)
         reason: "Convert 1-hr lunch break to 2-hr"
     },
     
@@ -132,7 +104,7 @@ const TIME_OFFER_STRATEGY = {
     // Show: 2-hr offer only (focused)
     afternoon: {
         hours: [15, 16, 17],
-        offers: [102], // 2-Hour Session ONLY
+        offers: [16], // 2-Hour Plan (ID 16)
         reason: "Heavy 1-hr buying - focus on 2-hr conversion"
     },
     
@@ -140,7 +112,7 @@ const TIME_OFFER_STRATEGY = {
     // Show: 15-min and 2-hr offers
     evening: {
         hours: [18, 19, 20],
-        offers: [101, 102], // 15-min Boost + 2-Hour Session
+        offers: [17, 16], // 15-min Boost (ID 17) + 2-Hour Plan (ID 16)
         reason: "Critical: Convert cheap evening buyers"
     }
 };
