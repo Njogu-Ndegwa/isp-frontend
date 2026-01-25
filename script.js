@@ -27,6 +27,9 @@ function getProxiedUrl(url) {
 // HARDCODED PLANS - For instant loading (zero latency)
 // Update these manually when plans change in the backend
 // ========================================
+// Offer plan IDs - these are shown strategically by upsell.js, NOT in base list
+const OFFER_PLAN_IDS = [16, 17, 18];
+
 const HARDCODED_PLANS = [
     {
         "id": 10,
@@ -212,8 +215,12 @@ function loadSavedPhoneNumber() {
 function loadPlans() {
     console.log('⚡ Loading hardcoded plans (instant)...');
     
+    // Filter out offer plans - they're shown strategically by upsell.js
+    const basePlans = HARDCODED_PLANS.filter(plan => !OFFER_PLAN_IDS.includes(plan.id));
+    console.log(`📋 Base plans: ${basePlans.length} (excluded ${OFFER_PLAN_IDS.length} offer plans)`);
+    
     // Use hardcoded plans immediately - no network latency!
-    const plans = transformPlansData(HARDCODED_PLANS);
+    const plans = transformPlansData(basePlans);
     allPlans = plans; // Store for later use
     
     renderPlans(plans);
@@ -264,8 +271,12 @@ async function forceRefreshPlans() {
             throw new Error('No plans available from API');
         }
         
+        // Filter out offer plans - they're shown strategically by upsell.js
+        const basePlans = apiPlans.filter(plan => !OFFER_PLAN_IDS.includes(plan.id));
+        console.log(`📋 Base plans: ${basePlans.length} (excluded ${OFFER_PLAN_IDS.length} offer plans)`);
+        
         // Transform and render
-        const plans = transformPlansData(apiPlans);
+        const plans = transformPlansData(basePlans);
         allPlans = plans;
         renderPlans(plans);
         
