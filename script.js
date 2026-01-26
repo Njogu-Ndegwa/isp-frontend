@@ -200,7 +200,32 @@ document.addEventListener('DOMContentLoaded', () => {
     loadPlans();
     setupEventListeners();
     loadSavedPhoneNumber(); // Works on desktop; mobile captive portals wipe storage
+    setupBrandLink(); // Preserve MikroTik params when clicking logo
 });
+
+// ========================================
+// SETUP BRAND LINK - Preserve URL Parameters
+// ========================================
+function setupBrandLink() {
+    const brandLink = document.getElementById('brandLink');
+    if (!brandLink) return;
+    
+    brandLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        
+        // Get current query string (preserves all MikroTik params)
+        const queryString = window.location.search;
+        
+        // Navigate to home with preserved parameters
+        if (queryString) {
+            window.location.href = '/' + queryString;
+        } else {
+            window.location.href = '/';
+        }
+    });
+    
+    console.log('🔗 Brand link configured to preserve URL parameters');
+}
 
 // ========================================
 // COOKIE HELPERS (backup storage for desktop browsers)
