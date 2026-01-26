@@ -122,6 +122,13 @@ body::before {
     display: flex;
     align-items: center;
     gap: var(--space-sm);
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.brand:hover {
+    opacity: 0.9;
 }
 
 .brand-icon {
