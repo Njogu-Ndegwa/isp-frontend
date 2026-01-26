@@ -184,15 +184,35 @@ let sessionId = generateSessionId();
 let deviceId = getOrCreateDeviceId();
 
 // ========================================
+// LOCAL PRIMARY IMAGES
+// These ads use local images as the primary source (not CDN)
+// ========================================
+const AD_LOCAL_IMAGES = {
+    8: 'images/Advertise-Here.png',      // Buy Ad Space — Get Seen
+    9: 'images/Internet-Technician.png'  // Fast Home Wi-Fi Installation
+};
+
+/**
+ * Process ads to use local images where configured
+ * Call this after fetching ads from API
+ */
+function applyLocalImages(ads) {
+    return ads.map(ad => {
+        if (AD_LOCAL_IMAGES[ad.id]) {
+            console.log(`🖼️ Using local image for ad #${ad.id}: ${AD_LOCAL_IMAGES[ad.id]}`);
+            return { ...ad, image_url: AD_LOCAL_IMAGES[ad.id] };
+        }
+        return ad;
+    });
+}
+
+// ========================================
 // LOCAL FALLBACK IMAGES
 // Used when CDN images fail to load (walled garden restrictions)
 // ========================================
 
-// Specific fallback images for known ads (by ID)
-const AD_SPECIFIC_FALLBACKS = {
-    8: 'images/Advertise-Here.png',      // Buy Ad Space — Get Seen
-    9: 'images/Internet-Technician.png'  // Fast Home Wi-Fi Installation
-};
+// Specific fallback images for known ads (by ID) - same as primary for consistency
+const AD_SPECIFIC_FALLBACKS = AD_LOCAL_IMAGES;
 
 // Category-based fallbacks for other ads
 const LOCAL_FALLBACK_IMAGES = {
@@ -332,7 +352,8 @@ async function fetchAds() {
         console.log('📊 Pagination:', apiResponse.pagination);
         
         if (Array.isArray(apiAds) && apiAds.length > 0) {
-            adsData = apiAds;
+            // Apply local images for configured ads (use frontend as primary storage)
+            adsData = applyLocalImages(apiAds);
             showAdSections();
             renderAds(adsData);
             recordImpression(adsData.map(ad => ad.id));
