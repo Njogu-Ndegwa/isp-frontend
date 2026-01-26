@@ -2774,3 +2774,227 @@ body::before {
     }
 }
 
+/* ========================================
+   7-MINUTE UPSELL MODAL
+   Shows when user selects 7-min plan
+   ======================================== */
+.upsell-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: var(--space-md);
+    animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.upsell-modal {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 360px;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.upsell-modal-header {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-soft) 100%);
+    padding: var(--space-md);
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.upsell-icon {
+    font-size: 1.5rem;
+}
+
+.upsell-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.upsell-modal-body {
+    padding: var(--space-lg);
+}
+
+.upsell-comparison {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+}
+
+.upsell-option {
+    flex: 1;
+    text-align: center;
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    position: relative;
+}
+
+.upsell-option.current {
+    background: var(--bg);
+    border: 2px solid var(--text-light);
+    opacity: 0.8;
+}
+
+.upsell-option.better {
+    background: linear-gradient(180deg, #FEF3C7 0%, var(--surface) 100%);
+    border: 2px solid var(--accent);
+    box-shadow: 0 4px 15px rgba(255, 186, 8, 0.3);
+}
+
+.option-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--text-light);
+    margin-bottom: var(--space-xs);
+}
+
+.upsell-option.better .option-label {
+    color: var(--primary);
+}
+
+.option-duration {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: var(--space-xs);
+}
+
+.option-price {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--primary);
+}
+
+.upsell-option.current .option-price {
+    color: var(--text-secondary);
+}
+
+.option-note {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: var(--space-xs);
+}
+
+.option-badge {
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--success);
+    color: white;
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    white-space: nowrap;
+}
+
+.upsell-arrow {
+    font-size: 1.5rem;
+    color: var(--accent);
+    font-weight: bold;
+}
+
+.upsell-message {
+    text-align: center;
+    padding: var(--space-md);
+    background: var(--bg-warm);
+    border-radius: var(--radius-md);
+    font-size: 0.95rem;
+    color: var(--text);
+}
+
+.upsell-message strong {
+    color: var(--primary);
+}
+
+.upsell-modal-actions {
+    padding: var(--space-md) var(--space-lg) var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.upsell-btn {
+    width: 100%;
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.upsell-btn.primary {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(232, 93, 4, 0.3);
+}
+
+.upsell-btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(232, 93, 4, 0.4);
+}
+
+.upsell-btn.secondary {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--text-light);
+}
+
+.upsell-btn.secondary:hover {
+    background: var(--bg);
+    color: var(--text);
+}
+
+/* Responsive Upsell Modal */
+@media (max-width: 380px) {
+    .upsell-modal {
+        max-width: 100%;
+    }
+    
+    .upsell-comparison {
+        flex-direction: column;
+        gap: var(--space-md);
+    }
+    
+    .upsell-arrow {
+        transform: rotate(90deg);
+    }
+    
+    .upsell-option {
+        width: 100%;
+    }
+}
+

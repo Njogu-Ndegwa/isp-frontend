@@ -581,6 +581,20 @@ function formatPrice(price) {
 // SELECT PLAN
 // ========================================
 function selectPlan(plan) {
+    // Check if this is the 7-minute plan (ID 11) - show upsell prompt
+    if (plan.id === 11 || (plan.originalData && plan.originalData.id === 11)) {
+        showSevenMinuteUpsellPrompt(plan);
+        return; // Don't proceed until user makes a choice
+    }
+    
+    // Proceed with plan selection
+    proceedWithPlanSelection(plan);
+}
+
+// ========================================
+// PROCEED WITH PLAN SELECTION (after upsell decision)
+// ========================================
+function proceedWithPlanSelection(plan) {
     selectedPlan = plan;
     
     // Update selected plan display
@@ -601,6 +615,91 @@ function selectPlan(plan) {
     setTimeout(() => {
         phoneNumberInput.focus();
     }, 300);
+}
+
+// ========================================
+// 7-MINUTE UPSELL PROMPT
+// Shows when user selects 7-min plan, suggesting 1-hour instead
+// ========================================
+function showSevenMinuteUpsellPrompt(sevenMinPlan) {
+    // Find the 1-hour plan from allPlans
+    const oneHourPlan = allPlans.find(p => p.id === 10 || (p.originalData && p.originalData.id === 10));
+    
+    if (!oneHourPlan) {
+        // If 1-hour plan not found, just proceed with 7-min
+        proceedWithPlanSelection(sevenMinPlan);
+        return;
+    }
+    
+    // Create modal overlay
+    const modal = document.createElement('div');
+    modal.className = 'upsell-modal-overlay';
+    modal.innerHTML = `
+        <div class="upsell-modal">
+            <div class="upsell-modal-header">
+                <span class="upsell-icon">💡</span>
+                <span class="upsell-title">Did you know?</span>
+            </div>
+            <div class="upsell-modal-body">
+                <div class="upsell-comparison">
+                    <div class="upsell-option current">
+                        <div class="option-label">You selected</div>
+                        <div class="option-duration">7 Minutes</div>
+                        <div class="option-price">KSH 1</div>
+                        <div class="option-note">1 quick task</div>
+                    </div>
+                    <div class="upsell-arrow">→</div>
+                    <div class="upsell-option better">
+                        <div class="option-label">Better value</div>
+                        <div class="option-duration">1 Hour</div>
+                        <div class="option-price">KSH 5</div>
+                        <div class="option-note">Browse freely!</div>
+                        <div class="option-badge">12x more time</div>
+                    </div>
+                </div>
+                <div class="upsell-message">
+                    ⚡ Just <strong>KSH 4 more</strong> for <strong>12x the time!</strong>
+                </div>
+            </div>
+            <div class="upsell-modal-actions">
+                <button class="upsell-btn primary" id="upsellAccept">
+                    Get 1 Hour - KSH 5
+                </button>
+                <button class="upsell-btn secondary" id="upsellDecline">
+                    Keep 7 Minutes
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Add click handlers
+    const acceptBtn = modal.querySelector('#upsellAccept');
+    const declineBtn = modal.querySelector('#upsellDecline');
+    
+    acceptBtn.addEventListener('click', () => {
+        modal.remove();
+        console.log('✅ User upgraded from 7-min to 1-hour');
+        proceedWithPlanSelection(oneHourPlan);
+    });
+    
+    declineBtn.addEventListener('click', () => {
+        modal.remove();
+        console.log('⏭️ User kept 7-min plan');
+        proceedWithPlanSelection(sevenMinPlan);
+    });
+    
+    // Close on overlay click (outside modal)
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
+            // Don't select anything - let them choose again
+        }
+    });
+    
+    // Focus on the primary button
+    setTimeout(() => acceptBtn.focus(), 100);
 }
 
 // ========================================

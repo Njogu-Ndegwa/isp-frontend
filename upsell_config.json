@@ -1,65 +1,149 @@
 {
   "upsell_plans": [
     {
-      "id": 16,
-      "name": "2 Hour Plan",
-      "price": 8,
-      "duration_value": 2,
-      "duration_unit": "HOURS",
-      "badge": "⭐ POPULAR",
-      "upsell_from": [10],
-      "value_message": "2x the time, better value!"
-    },
-    {
-      "id": 17,
+      "id": 101,
       "name": "15 Minute Boost",
       "price": 2,
       "duration_value": 15,
       "duration_unit": "MINUTES",
-      "badge": "🔥 DEAL",
-      "upsell_from": [11],
-      "value_message": "+1 KSH = 2x time!"
+      "badge": "\ud83d\udd25 DEAL",
+      "upsell_from": [
+        11
+      ],
+      "value_message": "Double your time for just 1 KSH more!"
     },
     {
-      "id": 18,
+      "id": 102,
+      "name": "2 Hour Session",
+      "price": 8,
+      "duration_value": 2,
+      "duration_unit": "HOURS",
+      "badge": "\u2b50 POPULAR",
+      "upsell_from": [
+        10
+      ],
+      "value_message": "2x the time, better value!"
+    },
+    {
+      "id": 103,
+      "name": "Half Day Special",
+      "price": 13,
+      "duration_value": 12,
+      "duration_unit": "HOURS",
+      "badge": "\ud83d\udc8e DEAL",
+      "upsell_from": [
+        14
+      ],
+      "value_message": "Just 1 KSH more for double time!"
+    },
+    {
+      "id": 104,
       "name": "Full Day Deal",
       "price": 18,
-      "duration_value": 1,
+      "duration_value": 24,
+      "duration_unit": "HOURS",
+      "badge": "\ud83c\udfaf BEST VALUE",
+      "upsell_from": [
+        13
+      ],
+      "value_message": "Only 3 KSH more for all day!"
+    },
+    {
+      "id": 105,
+      "name": "3 Day Pass",
+      "price": 50,
+      "duration_value": 3,
       "duration_unit": "DAYS",
-      "badge": "🎯 BEST VALUE",
-      "upsell_from": [13],
-      "value_message": "+3 KSH = all day!"
+      "badge": "\ud83c\udfc6 SAVER",
+      "upsell_from": [
+        12
+      ],
+      "value_message": "KSH 17/day - best daily rate!"
     }
   ],
   "time_zones": {
     "early_morning": {
-      "hours": [5, 6, 7],
-      "featured_offers": [17, 16],
+      "hours": [
+        5,
+        6,
+        7
+      ],
+      "featured_offers": [
+        101,
+        102,
+        103
+      ],
       "show_upsell_banner": true
     },
     "morning_peak": {
-      "hours": [8, 9, 10, 11],
-      "featured_offers": [16, 18],
+      "hours": [
+        8,
+        9,
+        10,
+        11
+      ],
+      "featured_offers": [
+        102,
+        104,
+        103
+      ],
       "show_upsell_banner": true
     },
     "midday": {
-      "hours": [12, 13, 14],
-      "featured_offers": [16],
+      "hours": [
+        12,
+        13,
+        14
+      ],
+      "featured_offers": [
+        102,
+        103,
+        101
+      ],
       "show_upsell_banner": true
     },
     "afternoon": {
-      "hours": [15, 16, 17],
-      "featured_offers": [16],
+      "hours": [
+        15,
+        16,
+        17
+      ],
+      "featured_offers": [
+        102,
+        101,
+        103
+      ],
       "show_upsell_banner": true
     },
     "evening": {
-      "hours": [18, 19, 20],
-      "featured_offers": [17, 16],
+      "hours": [
+        18,
+        19,
+        20
+      ],
+      "featured_offers": [
+        102,
+        101,
+        105
+      ],
       "show_upsell_banner": true
     },
     "night": {
-      "hours": [21, 22, 23, 0, 1, 2, 3, 4],
-      "featured_offers": [16],
+      "hours": [
+        21,
+        22,
+        23,
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "featured_offers": [
+        102,
+        101,
+        105
+      ],
       "show_upsell_banner": true
     }
   }

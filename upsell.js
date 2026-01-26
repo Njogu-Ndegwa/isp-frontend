@@ -63,57 +63,62 @@ const OFFER_PLANS = [
 ];
 
 // ========================================
-// TIME-BASED OFFER STRATEGY
-// Which OFFERS to show at each time of day
-// Base plans are ALWAYS shown (all 6)
+// TIME-BASED OFFER STRATEGY (Data-Driven)
+// Based on analysis of purchase patterns from bitwave_data.json
+// 
+// KEY INSIGHTS:
+// - Morning Peak (8-11am): Already avg KSH 10.56 - NO offers needed
+// - Evening (6-8pm): WORST time - 79% buy cheap - needs MOST help
+// - 7-min buyers: 34-38% in evening/night/early morning
+// - 1-hr buyers: 40-41% in afternoon/evening
 // ========================================
 const TIME_OFFER_STRATEGY = {
-    // Night (9pm-4am): 68% buy cheap plans (7-min, 1-hr)
-    // Show: 2-Hr offer to convert 1-hr buyers
-    night: {
-        hours: [21, 22, 23, 0, 1, 2, 3, 4],
-        offers: [16], // 2-Hour Plan (ID 16)
-        reason: "Convert 1-hr (KSH 5) → 2-hr (KSH 8)"
-    },
-    
-    // Early Morning (5-7am): Workers arriving, quick sessions
-    // Show: 15-min and 2-hr offers
+    // Early Morning (5-7am): 36% buy 7-min, 65% low-value
+    // Show: 15-min Boost to convert 7-min buyers
     early_morning: {
         hours: [5, 6, 7],
-        offers: [17, 16], // 15-min Boost (ID 17) + 2-Hour Plan (ID 16)
-        reason: "Convert quick testers to longer sessions"
+        offers: [17], // 15-min Boost (ID 17)
+        reason: "36% buy 7-min → convert with 15-min boost"
     },
     
-    // Morning Peak (8-11am): Best spending time
-    // Show: 2-hr and Full Day offers
+    // Morning Peak (8-11am): Already avg KSH 10.56 (BEST time)
+    // NO OFFERS - Let Bestseller (12Hr) and Best Value (7 Day) work
     morning_peak: {
         hours: [8, 9, 10, 11],
-        offers: [16, 18], // 2-Hour Plan (ID 16) + Full Day Deal (ID 18)
-        reason: "Push towards full day plans"
+        offers: [], // No offers - already performing well!
+        reason: "Avg KSH 10.56 - Bestseller & Best Value do the work"
     },
     
-    // Midday (12-2pm): Lunch break users
-    // Show: 2-hr offer (lunch session)
+    // Midday (12-2pm): 14% buy 12-hr, avg KSH 9.48
+    // Show: Full Day Deal to upsell 12-hr buyers
     midday: {
         hours: [12, 13, 14],
-        offers: [16], // 2-Hour Plan (ID 16)
-        reason: "Convert 1-hr lunch break to 2-hr"
+        offers: [18], // Full Day Deal (ID 18)
+        reason: "Upsell 12-hr buyers → Full Day (+KSH 3)"
     },
     
-    // Afternoon (3-5pm): Lots of 1-hr buyers
-    // Show: 2-hr offer only (focused)
+    // Afternoon (3-5pm): 40% buy 1-hr, 64% low-value
+    // Show: 2-Hour Session to convert 1-hr buyers
     afternoon: {
         hours: [15, 16, 17],
-        offers: [16], // 2-Hour Plan (ID 16)
-        reason: "Heavy 1-hr buying - focus on 2-hr conversion"
+        offers: [16], // 2-Hour Session (ID 16)
+        reason: "40% buy 1-hr → convert with 2-hr session"
     },
     
-    // Evening (6-8pm): WORST time - 79% buy cheap!
-    // Show: 15-min and 2-hr offers
+    // Evening (6-8pm): WORST TIME - 79% buy cheap!
+    // Show: BOTH offers - 38% buy 7-min, 41% buy 1-hr
     evening: {
         hours: [18, 19, 20],
-        offers: [17, 16], // 15-min Boost (ID 17) + 2-Hour Plan (ID 16)
-        reason: "Critical: Convert cheap evening buyers"
+        offers: [17, 16], // 15-min Boost (ID 17) + 2-Hour Session (ID 16)
+        reason: "CRITICAL: 79% buy cheap - double offer attack!"
+    },
+    
+    // Night (9pm-4am): 34% buy 7-min, 35% buy 1-hr
+    // Show: 15-min Boost for late night cheapies
+    night: {
+        hours: [21, 22, 23, 0, 1, 2, 3, 4],
+        offers: [17], // 15-min Boost (ID 17)
+        reason: "34% buy 7-min → late night value seekers"
     }
 };
 
