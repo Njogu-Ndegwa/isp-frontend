@@ -192,77 +192,245 @@ const processingStep3 = document.getElementById('step3');
 // ========================================
 // INITIALIZATION
 // ========================================
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     loadPlans();
     setupEventListeners();
-    loadSavedPhoneNumber();
+    
+    // Load saved phone number (async due to IndexedDB)
+    try {
+        await loadSavedPhoneNumber();
+    } catch (e) {
+        console.warn('⚠️ Error loading saved phone:', e);
+    }
+    
+    // Debug: Log storage availability for mobile captive portal debugging
+    console.log('📊 Storage availability check:');
+    console.log('  - localStorage:', typeof localStorage !== 'undefined' ? '✅' : '❌');
+    console.log('  - sessionStorage:', typeof sessionStorage !== 'undefined' ? '✅' : '❌');
+    console.log('  - cookies:', navigator.cookieEnabled ? '✅' : '❌');
+    console.log('  - IndexedDB:', typeof indexedDB !== 'undefined' ? '✅' : '❌');
 });
 
 // ========================================
 // COOKIE HELPERS (for mobile captive portal compatibility)
 // Mobile captive portals use isolated webviews with separate localStorage
-// Cookies sometimes persist better across these contexts
+// We use multiple storage strategies for maximum compatibility
 // ========================================
 function setCookie(name, value, days = 365) {
     const expires = new Date(Date.now() + days * 864e5).toUTCString();
-    document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
+    
+    // Try multiple cookie configurations for maximum compatibility
+    // Mobile captive portals can be restrictive about SameSite
+    const isSecure = window.location.protocol === 'https:';
+    
+    // Strategy 1: Basic cookie without SameSite (most compatible with captive portals)
+    document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
+    
+    // Strategy 2: With SameSite=None for cross-context (requires Secure on HTTPS)
+    if (isSecure) {
+        document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=None; Secure`;
+    }
+    
+    console.log(`🍪 Cookie set: ${name} (${isSecure ? 'HTTPS' : 'HTTP'} mode)`);
 }
 
 function getCookie(name) {
-    const cookies = document.cookie.split('; ');
-    for (const cookie of cookies) {
-        const [cookieName, cookieValue] = cookie.split('=');
-        if (cookieName === name) {
-            return decodeURIComponent(cookieValue);
+    try {
+        const cookies = document.cookie.split('; ');
+        for (const cookie of cookies) {
+            const [cookieName, ...cookieValueParts] = cookie.split('=');
+            if (cookieName === name) {
+                return decodeURIComponent(cookieValueParts.join('='));
+            }
         }
+    } catch (e) {
+        console.warn('⚠️ Error reading cookie:', e);
     }
     return null;
 }
 
 // ========================================
-// SAVE PHONE NUMBER (to both localStorage and cookies)
+// SAVE PHONE NUMBER (using multiple storage strategies for captive portal compatibility)
+// Mobile captive portals have isolated storage - we try everything
 // ========================================
 function savePhoneNumber(phoneNumber) {
     if (!phoneNumber || phoneNumber.length < 9) return;
     
-    // Save to localStorage (works on desktop browsers)
+    let savedCount = 0;
+    
+    // Strategy 1: localStorage (works on desktop, may not persist on mobile captive portal)
     try {
         localStorage.setItem('bitwave_phone_number', phoneNumber);
+        savedCount++;
+        console.log('📱 Phone saved to localStorage');
     } catch (e) {
         console.warn('⚠️ localStorage not available:', e);
     }
     
-    // Also save to cookie (better for mobile captive portals)
-    setCookie('bitwave_phone', phoneNumber, 365);
+    // Strategy 2: sessionStorage (backup for same-session persistence)
+    try {
+        sessionStorage.setItem('bitwave_phone_number', phoneNumber);
+        savedCount++;
+        console.log('📱 Phone saved to sessionStorage');
+    } catch (e) {
+        console.warn('⚠️ sessionStorage not available:', e);
+    }
     
-    console.log('💾 Phone number saved for returning user');
+    // Strategy 3: Cookies (often work better in mobile captive portals)
+    try {
+        setCookie('bitwave_phone', phoneNumber, 365);
+        savedCount++;
+        console.log('🍪 Phone saved to cookie');
+    } catch (e) {
+        console.warn('⚠️ Cookie not available:', e);
+    }
+    
+    // Strategy 4: IndexedDB (most persistent, available in most mobile browsers)
+    try {
+        saveToIndexedDB('bitwave_phone_number', phoneNumber);
+        savedCount++;
+    } catch (e) {
+        console.warn('⚠️ IndexedDB not available:', e);
+    }
+    
+    console.log(`💾 Phone number saved using ${savedCount} storage methods`);
 }
 
 // ========================================
 // LOAD SAVED PHONE NUMBER (for returning users)
-// Tries localStorage first, then falls back to cookies
+// Tries multiple storage methods for maximum mobile captive portal compatibility
 // ========================================
-function loadSavedPhoneNumber() {
+async function loadSavedPhoneNumber() {
     let savedPhone = null;
+    let source = '';
     
-    // Try localStorage first
+    // Strategy 1: Try cookies first (most reliable for mobile captive portals)
     try {
-        savedPhone = localStorage.getItem('bitwave_phone_number');
-    } catch (e) {
-        console.warn('⚠️ localStorage not available:', e);
-    }
-    
-    // Fall back to cookies (better for mobile captive portals)
-    if (!savedPhone) {
         savedPhone = getCookie('bitwave_phone');
         if (savedPhone) {
-            console.log('🍪 Phone loaded from cookie (mobile captive portal mode)');
+            source = 'cookie';
+            console.log('🍪 Phone found in cookie');
+        }
+    } catch (e) {
+        console.warn('⚠️ Cookie read failed:', e);
+    }
+    
+    // Strategy 2: Try localStorage
+    if (!savedPhone) {
+        try {
+            savedPhone = localStorage.getItem('bitwave_phone_number');
+            if (savedPhone) {
+                source = 'localStorage';
+                console.log('📦 Phone found in localStorage');
+            }
+        } catch (e) {
+            console.warn('⚠️ localStorage read failed:', e);
         }
     }
     
+    // Strategy 3: Try sessionStorage
+    if (!savedPhone) {
+        try {
+            savedPhone = sessionStorage.getItem('bitwave_phone_number');
+            if (savedPhone) {
+                source = 'sessionStorage';
+                console.log('📋 Phone found in sessionStorage');
+            }
+        } catch (e) {
+            console.warn('⚠️ sessionStorage read failed:', e);
+        }
+    }
+    
+    // Strategy 4: Try IndexedDB (most persistent)
+    if (!savedPhone) {
+        try {
+            savedPhone = await loadFromIndexedDB('bitwave_phone_number');
+            if (savedPhone) {
+                source = 'IndexedDB';
+                console.log('🗄️ Phone found in IndexedDB');
+            }
+        } catch (e) {
+            console.warn('⚠️ IndexedDB read failed:', e);
+        }
+    }
+    
+    // Apply saved phone number to input
     if (savedPhone && phoneNumberInput) {
         phoneNumberInput.value = savedPhone;
-        console.log('📱 Pre-populated phone number for returning user:', savedPhone.slice(0, 3) + '***');
+        console.log(`📱 Pre-populated phone from ${source}: ${savedPhone.slice(0, 3)}***${savedPhone.slice(-2)}`);
+        
+        // Cross-save to other storage methods for redundancy
+        savePhoneNumber(savedPhone);
+    } else {
+        console.log('📱 No saved phone number found (new user or cleared storage)');
+    }
+}
+
+// ========================================
+// INDEXEDDB HELPERS (most persistent storage for mobile captive portals)
+// IndexedDB often survives when localStorage and cookies are cleared
+// ========================================
+const DB_NAME = 'BitwaveWiFiDB';
+const DB_VERSION = 1;
+const STORE_NAME = 'userData';
+
+function openDatabase() {
+    return new Promise((resolve, reject) => {
+        if (!window.indexedDB) {
+            reject(new Error('IndexedDB not supported'));
+            return;
+        }
+        
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+        
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME, { keyPath: 'key' });
+            }
+        };
+    });
+}
+
+async function saveToIndexedDB(key, value) {
+    try {
+        const db = await openDatabase();
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction(STORE_NAME, 'readwrite');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.put({ key, value, timestamp: Date.now() });
+            
+            request.onsuccess = () => {
+                console.log('🗄️ Phone saved to IndexedDB');
+                resolve();
+            };
+            request.onerror = () => reject(request.error);
+        });
+    } catch (e) {
+        console.warn('⚠️ IndexedDB save failed:', e);
+    }
+}
+
+async function loadFromIndexedDB(key) {
+    try {
+        const db = await openDatabase();
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction(STORE_NAME, 'readonly');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.get(key);
+            
+            request.onsuccess = () => {
+                const result = request.result;
+                resolve(result ? result.value : null);
+            };
+            request.onerror = () => reject(request.error);
+        });
+    } catch (e) {
+        console.warn('⚠️ IndexedDB load failed:', e);
+        return null;
     }
 }
 
@@ -1089,10 +1257,12 @@ console.log('🌐 WiFi Portal Initialized');
 console.log('⚡ Plans: Using HARDCODED data (instant load)');
 console.log('🔗 API Endpoints:');
 console.log('  - Payment:', PAYMENT_ENDPOINT);
+console.log('📱 Mobile Captive Portal: Multi-storage enabled (localStorage, sessionStorage, cookies, IndexedDB)');
 console.log('💡 Ready to connect!');
 console.log('');
-console.log('🔧 To update plans from backend, run in console:');
-console.log('   forceRefreshPlans().then(plans => console.log(plans))');
+console.log('🔧 Debug commands:');
+console.log('   forceRefreshPlans() - Refresh plans from API');
+console.log('   testStorage() - Test all storage methods');
 
 // Validate MikroTik parameters on load
 if (!mikrotikParams.mac) {
@@ -1105,4 +1275,111 @@ if (USE_CORS_PROXY) {
     console.warn('⚠️ CORS PROXY MODE ENABLED - FOR TESTING ONLY!');
     console.log('🔧 Make sure backend adds proper CORS headers for production.');
 }
+
+// ========================================
+// DEBUG: Test all storage methods
+// Call from console: testStorage()
+// ========================================
+window.testStorage = async function() {
+    const testValue = 'test_' + Date.now();
+    const results = {
+        localStorage: { write: false, read: false },
+        sessionStorage: { write: false, read: false },
+        cookies: { write: false, read: false },
+        indexedDB: { write: false, read: false }
+    };
+    
+    // Test localStorage
+    try {
+        localStorage.setItem('bitwave_test', testValue);
+        results.localStorage.write = true;
+        if (localStorage.getItem('bitwave_test') === testValue) {
+            results.localStorage.read = true;
+        }
+        localStorage.removeItem('bitwave_test');
+    } catch (e) {
+        console.warn('localStorage test failed:', e);
+    }
+    
+    // Test sessionStorage
+    try {
+        sessionStorage.setItem('bitwave_test', testValue);
+        results.sessionStorage.write = true;
+        if (sessionStorage.getItem('bitwave_test') === testValue) {
+            results.sessionStorage.read = true;
+        }
+        sessionStorage.removeItem('bitwave_test');
+    } catch (e) {
+        console.warn('sessionStorage test failed:', e);
+    }
+    
+    // Test cookies
+    try {
+        document.cookie = `bitwave_test=${testValue}; path=/`;
+        results.cookies.write = true;
+        if (document.cookie.includes('bitwave_test')) {
+            results.cookies.read = true;
+        }
+        document.cookie = 'bitwave_test=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+    } catch (e) {
+        console.warn('Cookie test failed:', e);
+    }
+    
+    // Test IndexedDB
+    try {
+        await saveToIndexedDB('bitwave_test', testValue);
+        results.indexedDB.write = true;
+        const readValue = await loadFromIndexedDB('bitwave_test');
+        if (readValue === testValue) {
+            results.indexedDB.read = true;
+        }
+    } catch (e) {
+        console.warn('IndexedDB test failed:', e);
+    }
+    
+    console.log('📊 Storage Test Results:');
+    console.table(results);
+    
+    // Summary
+    const working = Object.entries(results)
+        .filter(([_, v]) => v.write && v.read)
+        .map(([k, _]) => k);
+    
+    if (working.length > 0) {
+        console.log('✅ Working storage methods:', working.join(', '));
+    } else {
+        console.error('❌ No storage methods working! Phone number will not be remembered.');
+    }
+    
+    return results;
+};
+
+// ========================================
+// DEBUG: Show saved phone number from all storage
+// Call from console: showSavedPhone()
+// ========================================
+window.showSavedPhone = async function() {
+    console.log('📱 Checking all storage for saved phone number:');
+    
+    // Cookie
+    const cookiePhone = getCookie('bitwave_phone');
+    console.log('  🍪 Cookie:', cookiePhone || '(not found)');
+    
+    // localStorage
+    let lsPhone = null;
+    try { lsPhone = localStorage.getItem('bitwave_phone_number'); } catch(e) {}
+    console.log('  📦 localStorage:', lsPhone || '(not found)');
+    
+    // sessionStorage
+    let ssPhone = null;
+    try { ssPhone = sessionStorage.getItem('bitwave_phone_number'); } catch(e) {}
+    console.log('  📋 sessionStorage:', ssPhone || '(not found)');
+    
+    // IndexedDB
+    let idbPhone = null;
+    try { idbPhone = await loadFromIndexedDB('bitwave_phone_number'); } catch(e) {}
+    console.log('  🗄️ IndexedDB:', idbPhone || '(not found)');
+    
+    return { cookie: cookiePhone, localStorage: lsPhone, sessionStorage: ssPhone, indexedDB: idbPhone };
+};
 
