@@ -184,6 +184,88 @@ let sessionId = generateSessionId();
 let deviceId = getOrCreateDeviceId();
 
 // ========================================
+// LOCAL FALLBACK IMAGES
+// Used when CDN images fail to load (walled garden restrictions)
+// ========================================
+
+// Specific fallback images for known ads (by ID)
+const AD_SPECIFIC_FALLBACKS = {
+    8: 'images/Advertise-Here.png',      // Buy Ad Space — Get Seen
+    9: 'images/Internet-Technician.png'  // Fast Home Wi-Fi Installation
+};
+
+// Category-based fallbacks for other ads
+const LOCAL_FALLBACK_IMAGES = {
+    // Category-based fallbacks
+    produce: ['images/tomatoes.jpg', 'images/sukuma-wiki.jpg', 'images/bananas.jpg'],
+    electronics: ['images/phone-cases.jpg', 'images/watches.jpg'],
+    fashion: ['images/watches.jpg', 'images/phone-cases.jpg'],
+    food: ['images/tomatoes.jpg', 'images/bananas.jpg', 'images/sukuma-wiki.jpg'],
+    services: ['images/Internet-Technician.png', 'images/Advertise-Here.png'],
+    // Default fallback (cycles through all available images)
+    default: [
+        'images/tomatoes.jpg',
+        'images/phone-cases.jpg', 
+        'images/sukuma-wiki.jpg',
+        'images/watches.jpg',
+        'images/bananas.jpg'
+    ]
+};
+
+// Track which fallback index to use (to vary images)
+let fallbackImageIndex = 0;
+
+/**
+ * Get a local fallback image based on ad ID or category
+ * @param {number} adId - The ad ID (for specific fallbacks)
+ * @param {string} category - The ad category (produce, electronics, fashion, etc.)
+ * @returns {string} - Local image path
+ */
+function getLocalFallbackImage(adId, category) {
+    // First check if there's a specific fallback for this ad ID
+    if (adId && AD_SPECIFIC_FALLBACKS[adId]) {
+        console.log(`🖼️ Using specific fallback for ad #${adId}`);
+        return AD_SPECIFIC_FALLBACKS[adId];
+    }
+    
+    // Fall back to category-based images
+    const categoryLower = (category || '').toLowerCase();
+    const images = LOCAL_FALLBACK_IMAGES[categoryLower] || LOCAL_FALLBACK_IMAGES.default;
+    
+    // Cycle through available images to add variety
+    const image = images[fallbackImageIndex % images.length];
+    fallbackImageIndex++;
+    
+    return image;
+}
+
+/**
+ * Setup image error handling with local fallback
+ * @param {HTMLImageElement} imgElement - The image element
+ * @param {string} category - Ad category for fallback selection
+ * @param {number} adId - Ad ID for specific fallback images
+ */
+function setupImageFallback(imgElement, category, adId) {
+    if (!imgElement) return;
+    
+    // Store original src for logging
+    const originalSrc = imgElement.src;
+    
+    imgElement.onerror = function() {
+        // Prevent infinite loop if fallback also fails
+        if (this.dataset.fallbackAttempted) {
+            console.warn('⚠️ Both remote and local image failed:', originalSrc);
+            return;
+        }
+        
+        this.dataset.fallbackAttempted = 'true';
+        const fallbackSrc = getLocalFallbackImage(adId, category);
+        console.log(`🖼️ Image failed to load, using local fallback: ${fallbackSrc}`);
+        this.src = fallbackSrc;
+    };
+}
+
+// ========================================
 // UTILITY FUNCTIONS
 // ========================================
 function generateSessionId() {
@@ -453,6 +535,10 @@ function createAdCard(ad, index) {
         </div>
     `;
     
+    // Setup image fallback for walled garden restrictions
+    const imgElement = card.querySelector('img');
+    setupImageFallback(imgElement, ad.category, ad.id);
+    
     // Click handler
     card.addEventListener('click', () => {
         openAdDetails(ad);
@@ -487,8 +573,13 @@ function openAdDetails(ad) {
     }
     
     // Populate modal content
-    document.getElementById('adModalImg').src = ad.image_url;
-    document.getElementById('adModalImg').alt = ad.title;
+    const modalImg = document.getElementById('adModalImg');
+    modalImg.src = ad.image_url;
+    modalImg.alt = ad.title;
+    // Reset fallback flag and setup fallback for modal image
+    modalImg.dataset.fallbackAttempted = '';
+    setupImageFallback(modalImg, ad.category, ad.id);
+    
     document.getElementById('adModalTitle').textContent = ad.title;
     document.getElementById('adModalDescription').textContent = ad.description;
     document.getElementById('adModalSeller').textContent = ad.seller_name;
@@ -762,9 +853,8 @@ function populateSuccessAds() {
     
     container.innerHTML = shuffled.map(ad => `
         <div class="success-ad-card" onclick="openAdDetailsById(${ad.id})" role="button" tabindex="0" 
-             aria-label="View details for ${ad.title}">
-            <img src="${ad.image_url}" alt="${ad.title}" class="success-ad-img" loading="lazy" 
-                 onerror="this.src='images/placeholder.jpg'">
+             aria-label="View details for ${ad.title}" data-category="${ad.category || ''}" data-ad-id="${ad.id}">
+            <img src="${ad.image_url}" alt="${ad.title}" class="success-ad-img" loading="lazy">
             <div class="success-ad-info">
                 <div class="success-ad-title">${ad.title}</div>
                 <div class="success-ad-price">${ad.price}</div>
@@ -772,8 +862,14 @@ function populateSuccessAds() {
         </div>
     `).join('');
     
-    // Add keyboard accessibility
+    // Setup image fallbacks for walled garden restrictions
     container.querySelectorAll('.success-ad-card').forEach(card => {
+        const img = card.querySelector('img');
+        const category = card.dataset.category;
+        const adId = parseInt(card.dataset.adId, 10);
+        setupImageFallback(img, category, adId);
+        
+        // Add keyboard accessibility
         card.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
@@ -816,15 +912,19 @@ function populateMiniProducts() {
     
     container.innerHTML = shuffled.map(ad => `
         <div class="mini-product" onclick="openAdDetailsById(${ad.id})" role="button" tabindex="0"
-             aria-label="View details for ${ad.title}" style="cursor: pointer;">
-            <img src="${ad.image_url}" alt="${ad.title}" loading="lazy"
-                 onerror="this.src='images/placeholder.jpg'">
+             aria-label="View details for ${ad.title}" style="cursor: pointer;" data-category="${ad.category || ''}" data-ad-id="${ad.id}">
+            <img src="${ad.image_url}" alt="${ad.title}" loading="lazy">
             <span>${ad.price}</span>
         </div>
     `).join('');
     
-    // Add keyboard accessibility
+    // Setup image fallbacks and keyboard accessibility
     container.querySelectorAll('.mini-product').forEach(product => {
+        const img = product.querySelector('img');
+        const category = product.dataset.category;
+        const adId = parseInt(product.dataset.adId, 10);
+        setupImageFallback(img, category, adId);
+        
         product.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
@@ -917,7 +1017,9 @@ function updateStickyAd() {
     if (img) {
         img.src = ad.image_url;
         img.alt = ad.title;
-        img.onerror = () => { img.src = 'images/placeholder.jpg'; };
+        // Reset fallback flag and setup fallback with ad ID
+        img.dataset.fallbackAttempted = '';
+        setupImageFallback(img, ad.category, ad.id);
     }
     if (title) title.textContent = ad.title;
     if (subtitle) subtitle.textContent = `${ad.seller_name} - ${ad.price}`;
