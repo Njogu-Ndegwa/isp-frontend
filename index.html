@@ -23,8 +23,11 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles003.css?v=7">
+    <!-- Reduced font weights: 400(regular), 600(semi-bold), 700(bold) only -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Outfit:wght@600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <!-- Fallback for no-JS -->
+    <noscript><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Outfit:wght@600;700&display=swap" rel="stylesheet"></noscript>
+    <link rel="stylesheet" href="styles003.css?v=8">
 </head>
 <body>
     <div class="app">
@@ -455,10 +458,11 @@
         </div>
     </div>
 
-    <script src="script.js?v=2"></script>
-    <script src="upsell.js?v=6"></script>
-    <script src="script003.js"></script>
-    <script src="ads.js"></script>
+    <!-- Defer scripts to prevent render blocking -->
+    <script src="script.js?v=3" defer></script>
+    <script src="upsell.js?v=6" defer></script>
+    <script src="script003.js" defer></script>
+    <script src="ads.js" defer></script>
     
     <!-- PWA Service Worker & Install Prompt -->
     <script>

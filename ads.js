@@ -186,21 +186,33 @@ let deviceId = getOrCreateDeviceId();
 // ========================================
 // LOCAL PRIMARY IMAGES
 // These ads use local images as the primary source (not CDN)
+// Using WebP for better performance (80% smaller than PNG)
 // ========================================
 const AD_LOCAL_IMAGES = {
-    8: 'images/Advertise-Here.png',      // Buy Ad Space — Get Seen
-    9: 'images/Internet-Technician.png'  // Fast Home Wi-Fi Installation
+    8: 'images/Advertise-Here.webp',      // Buy Ad Space — Get Seen
+    9: 'images/Internet-Technician.webp'  // Fast Home Wi-Fi Installation
+};
+
+// Fallback to PNG if WebP not created yet
+const AD_LOCAL_IMAGES_FALLBACK = {
+    8: 'images/Advertise-Here.png',
+    9: 'images/Internet-Technician.png'
 };
 
 /**
  * Process ads to use local images where configured
  * Call this after fetching ads from API
+ * Tries WebP first for better performance, falls back to PNG
  */
 function applyLocalImages(ads) {
     return ads.map(ad => {
         if (AD_LOCAL_IMAGES[ad.id]) {
             console.log(`🖼️ Using local image for ad #${ad.id}: ${AD_LOCAL_IMAGES[ad.id]}`);
-            return { ...ad, image_url: AD_LOCAL_IMAGES[ad.id] };
+            return { 
+                ...ad, 
+                image_url: AD_LOCAL_IMAGES[ad.id],
+                image_fallback: AD_LOCAL_IMAGES_FALLBACK[ad.id] // PNG fallback
+            };
         }
         return ad;
     });
@@ -272,16 +284,24 @@ function setupImageFallback(imgElement, category, adId) {
     const originalSrc = imgElement.src;
     
     imgElement.onerror = function() {
-        // Prevent infinite loop if fallback also fails
-        if (this.dataset.fallbackAttempted) {
-            console.warn('⚠️ Both remote and local image failed:', originalSrc);
+        // First try: WebP failed, try PNG fallback for this specific ad
+        if (!this.dataset.pngAttempted && AD_LOCAL_IMAGES_FALLBACK[adId]) {
+            this.dataset.pngAttempted = 'true';
+            console.log(`🖼️ WebP failed, trying PNG for ad #${adId}`);
+            this.src = AD_LOCAL_IMAGES_FALLBACK[adId];
             return;
         }
         
-        this.dataset.fallbackAttempted = 'true';
-        const fallbackSrc = getLocalFallbackImage(adId, category);
-        console.log(`🖼️ Image failed to load, using local fallback: ${fallbackSrc}`);
-        this.src = fallbackSrc;
+        // Second try: Use category-based fallback
+        if (!this.dataset.fallbackAttempted) {
+            this.dataset.fallbackAttempted = 'true';
+            const fallbackSrc = getLocalFallbackImage(adId, category);
+            console.log(`🖼️ Image failed to load, using local fallback: ${fallbackSrc}`);
+            this.src = fallbackSrc;
+            return;
+        }
+        
+        console.warn('⚠️ All image fallbacks failed:', originalSrc);
     };
 }
 
