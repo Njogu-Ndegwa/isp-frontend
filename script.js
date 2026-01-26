@@ -422,7 +422,7 @@ function transformPlansData(apiPlans) {
         };
     });
     
-    // Sort plans: Bestseller first → Popular (best value) → Others
+    // Sort plans: Bestseller first → Popular (best value) → Others by price (high to low)
     transformedPlans.sort((a, b) => {
         // Bestseller always comes first
         if (a.bestseller && !b.bestseller) return -1;
@@ -430,8 +430,10 @@ function transformPlansData(apiPlans) {
         // Then popular (best value)
         if (a.popular && !b.popular) return -1;
         if (!a.popular && b.popular) return 1;
-        // Keep original order for others
-        return 0;
+        // Sort remaining plans by price (highest first)
+        const priceA = a.originalData.price;
+        const priceB = b.originalData.price;
+        return priceB - priceA; // Descending order (high to low)
     });
     
     return transformedPlans;
