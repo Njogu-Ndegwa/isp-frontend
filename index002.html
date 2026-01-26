@@ -1954,7 +1954,7 @@
                     <div style="background: #f0fdf4; padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1rem; border: 1px solid #bbf7d0;">
                         <strong style="color: var(--success);">${data.plan_name || plan.duration}</strong><br>
                         <span style="color: var(--text-muted); font-size: 0.9rem;">${formatted}</span>
-                        ${data.expiry ? `<br><span style="font-size: 0.85rem; color: var(--text-muted);">Valid until ${new Date(data.expiry).toLocaleDateString()}</span>` : ''}
+                        ${data.expiry ? `<br><span style="font-size: 0.85rem; color: var(--text-muted);">Valid until ${new Date(data.expiry).toLocaleDateString('en-KE', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Nairobi' })}</span>` : ''}
                     </div>
                     <div style="background: #fef3c7; padding: 0.875rem; border-radius: var(--radius-md); margin-bottom: 1rem;">
                         <strong style="color: #92400e;">📶 Refresh WiFi</strong><br>

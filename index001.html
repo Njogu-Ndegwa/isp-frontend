@@ -1825,7 +1825,7 @@
             successMessage.innerHTML = `
                 <div style="background: #E8F5E9; padding: 16px; border-radius: 10px; margin-bottom: 1rem;">
                     <p style="font-weight: 700; color: #2E7D32; margin-bottom: 6px;">${data.plan_name || plan.duration}</p>
-                    <p style="font-size: 0.9rem; color: #1B5E20;">${data.expiry ? `Valid until ${new Date(data.expiry).toLocaleDateString()}` : 'Active'}</p>
+                    <p style="font-size: 0.9rem; color: #1B5E20;">${data.expiry ? `Valid until ${new Date(data.expiry).toLocaleDateString('en-KE', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Nairobi' })}` : 'Active'}</p>
                 </div>
                 <div style="background: #FFF8E1; padding: 12px; border-radius: 8px; margin-bottom: 1rem;">
                     <p style="font-size: 0.85rem; color: #5D4037;">
