@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Bitwave Soko Wifi - Get Connected</title>
     
     <!-- PWA Meta Tags -->
@@ -21,13 +21,17 @@
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
     
+    <!-- Preload LCP images for faster rendering -->
+    <link rel="preload" href="images/Advertise-Here.webp" as="image" type="image/webp">
+    <link rel="preload" href="images/Internet-Technician.webp" as="image" type="image/webp">
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <!-- Reduced font weights: 400(regular), 600(semi-bold), 700(bold) only -->
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Outfit:wght@600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <!-- Fallback for no-JS -->
     <noscript><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Outfit:wght@600;700&display=swap" rel="stylesheet"></noscript>
-    <link rel="stylesheet" href="styles003.css?v=8">
+    <link rel="stylesheet" href="styles003.css?v=9">
 </head>
 <body>
     <div class="app">
@@ -57,7 +61,7 @@
                 <!-- Featured Marketplace Ads - Horizontal Scroll -->
                 <div class="marketplace-showcase">
                     <div class="showcase-header">
-                        <h3 class="showcase-title">🛒 Soko Deals Today</h3>
+                        <span class="showcase-title" role="heading" aria-level="2">🛒 Soko Deals Today</span>
                         <span class="showcase-badge">AD</span>
                     </div>
                     <div class="showcase-scroll" id="showcaseScroll">

@@ -564,9 +564,13 @@ function createAdCard(ad, index) {
         badgeHtml = `<span class="product-badge ${ad.badge_type}">${ad.badge_text}</span>`;
     }
     
+    // First 2 images are above the fold - don't lazy load, prioritize first one
+    const loadingAttr = index < 2 ? '' : 'loading="lazy"';
+    const priorityAttr = index === 0 ? 'fetchpriority="high"' : '';
+    
     card.innerHTML = `
         <div class="product-image">
-            <img src="${ad.image_url}" alt="${ad.title}" loading="lazy">
+            <img src="${ad.image_url}" alt="${ad.title}" ${loadingAttr} ${priorityAttr}>
             ${badgeHtml}
         </div>
         <div class="product-info">

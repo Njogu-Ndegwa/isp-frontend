@@ -160,7 +160,7 @@ body::before {
 
 .tagline {
     font-size: 0.7rem;
-    color: var(--text-light);
+    color: var(--text-secondary); /* Improved contrast for accessibility */
     text-transform: uppercase;
     letter-spacing: 1px;
     font-weight: 600;
@@ -329,7 +329,7 @@ body::before {
 
 .product-seller {
     font-size: 0.65rem;
-    color: var(--text-light);
+    color: var(--text-secondary); /* Improved contrast for accessibility */
     margin-bottom: 4px;
     white-space: nowrap;
     overflow: hidden;
@@ -477,7 +477,10 @@ body::before {
 .skeleton-card {
     background: var(--surface);
     border-radius: var(--radius-lg);
+    /* Match exact height of plan-card to prevent CLS */
     min-height: 140px;
+    padding: var(--space-lg) var(--space-md);
+    box-sizing: border-box;
     position: relative;
     overflow: hidden;
 }
