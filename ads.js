@@ -190,7 +190,8 @@ let deviceId = getOrCreateDeviceId();
 // ========================================
 const AD_LOCAL_IMAGES = {
     8: 'images/Advertise-Here.webp',      // Buy Ad Space — Get Seen
-    9: 'images/Internet-Technician.webp'  // Fast Home Wi-Fi Installation
+    9: 'images/Internet-Technician.webp', // Fast Home Wi-Fi Installation
+    10: 'images/Onions.webp'              // Fresh Onions
 };
 
 // Fallback to PNG if WebP not created yet
