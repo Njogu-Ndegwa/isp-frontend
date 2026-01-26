@@ -566,6 +566,35 @@ body::before {
     transform: rotate(45deg);
 }
 
+/* Bestseller plan - high revenue generator, shown first */
+.plan-card.bestseller {
+    border-color: #E53935;
+    background: linear-gradient(180deg, #FFEBEE 0%, var(--surface) 100%);
+}
+
+.plan-card.bestseller::after {
+    content: '🔥 Hot';
+    position: absolute;
+    top: 8px;
+    right: -32px;
+    background: linear-gradient(135deg, #E53935 0%, #FF5722 100%);
+    color: var(--text-inverse);
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 4px 36px;
+    transform: rotate(45deg);
+}
+
+.plan-card.bestseller:hover {
+    border-color: #C62828;
+    box-shadow: 0 8px 25px rgba(229, 57, 53, 0.25);
+}
+
+/* Ensure bestseller also has extra padding for badge */
+.plan-card.bestseller {
+    padding-bottom: 50px;
+}
+
 /* Value message for popular plans - positioned at bottom like offer timer */
 .plan-value-msg {
     position: absolute;

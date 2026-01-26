@@ -30,6 +30,10 @@ function getProxiedUrl(url) {
 // Offer plan IDs - these are shown strategically by upsell.js, NOT in base list
 const OFFER_PLAN_IDS = [16, 17, 18];
 
+// Bestseller plan ID - this plan gets highlighted and shown first
+// 12 Hour Plan (id: 13) - high revenue generator
+const BESTSELLER_PLAN_ID = 13;
+
 const HARDCODED_PLANS = [
     {
         "id": 10,
@@ -378,7 +382,7 @@ function transformPlansData(apiPlans) {
         return current.timeToPrice > best.timeToPrice ? current : best;
     });
     
-    // Transform plans with popularity marking
+    // Transform plans with popularity/bestseller marking
     const transformedPlans = plansWithRatio.map((plan) => {
         // Parse duration
         const duration = formatDuration(plan.duration_value, plan.duration_unit);
@@ -389,12 +393,17 @@ function transformPlansData(apiPlans) {
         // Format speed
         const speed = formatSpeed(plan.speed);
         
-        // Mark plan as popular if it has the best time-to-price ratio
-        const popular = plan.id === bestPlan.id;
+        // Mark plan as bestseller (high revenue generator)
+        const bestseller = plan.id === BESTSELLER_PLAN_ID;
         
-        // Calculate value message for popular plan
+        // Mark plan as popular if it has the best time-to-price ratio (and not bestseller)
+        const popular = plan.id === bestPlan.id && !bestseller;
+        
+        // Calculate value message
         let valueMessage = '';
-        if (popular) {
+        if (bestseller) {
+            valueMessage = '🔥 Bestseller';
+        } else if (popular) {
             const hours = convertToHours(plan.duration_value, plan.duration_unit);
             const pricePerDay = (plan.price / (hours / 24)).toFixed(0);
             valueMessage = `Only KSH ${pricePerDay}/day`;
@@ -406,17 +415,23 @@ function transformPlansData(apiPlans) {
             price: price,
             speed: speed,
             popular: popular,
+            bestseller: bestseller,
             valueMessage: valueMessage,
             // Keep original data for API submission
             originalData: plan
         };
     });
     
-    // Sort plans: popular plan first, then the rest
+    // Sort plans: Bestseller first → Popular (best value) → Others
     transformedPlans.sort((a, b) => {
-        if (a.popular && !b.popular) return -1; // a comes first
-        if (!a.popular && b.popular) return 1;  // b comes first
-        return 0; // keep original order for non-popular plans
+        // Bestseller always comes first
+        if (a.bestseller && !b.bestseller) return -1;
+        if (!a.bestseller && b.bestseller) return 1;
+        // Then popular (best value)
+        if (a.popular && !b.popular) return -1;
+        if (!a.popular && b.popular) return 1;
+        // Keep original order for others
+        return 0;
     });
     
     return transformedPlans;
@@ -512,7 +527,12 @@ function renderPlans(plans) {
 // ========================================
 function createPlanCard(plan) {
     const card = document.createElement('div');
-    card.className = `plan-card${plan.popular ? ' popular' : ''}`;
+    // Add appropriate class: bestseller, popular, or regular
+    let cardClass = 'plan-card';
+    if (plan.bestseller) cardClass += ' bestseller';
+    else if (plan.popular) cardClass += ' popular';
+    card.className = cardClass;
+    
     card.setAttribute('role', 'button');
     card.setAttribute('tabindex', '0');
     card.setAttribute('aria-label', `Select ${plan.duration} plan for ${plan.price}, ${plan.speed}`);
