@@ -1,3 +1,8 @@
+console.log('═══════════════════════════════════════════════════════');
+console.log('🚀 [ROUTER DEBUG] SCRIPT.JS LOADING...');
+console.log('═══════════════════════════════════════════════════════');
+console.log('📅 Timestamp:', new Date().toISOString());
+
 // ========================================
 // 🚨 MAINTENANCE MODE CONFIGURATION 🚨
 // ========================================
@@ -48,8 +53,18 @@ function getProxiedUrl(url) {
 // ROUTER IDENTITY LOOKUP
 // ========================================
 async function getRouterId(identity) {
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('🔍 [ROUTER DEBUG] STEP 2: ROUTER LOOKUP FUNCTION CALLED');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('📥 Identity received:', `"${identity}"`);
+    console.log('📥 Identity type:', typeof identity);
+    console.log('📥 Identity is falsy:', !identity);
+    console.log('📥 Identity length:', identity ? identity.length : 'N/A');
+    
     if (!identity) {
-        console.warn('⚠️ No router identity provided, using fallback');
+        console.warn('⚠️ [ROUTER DEBUG] No router identity provided!');
+        console.warn('⚠️ [ROUTER DEBUG] Returning FALLBACK_ROUTER_ID:', FALLBACK_ROUTER_ID);
+        console.log('═══════════════════════════════════════════════════════');
         return FALLBACK_ROUTER_ID;
     }
     
@@ -57,6 +72,9 @@ async function getRouterId(identity) {
     
     try {
         const url = `${ROUTER_LOOKUP_ENDPOINT}/${encodeURIComponent(identity)}`;
+        console.log('📡 [ROUTER DEBUG] API URL:', url);
+        console.log('📡 [ROUTER DEBUG] Encoded identity:', encodeURIComponent(identity));
+        
         const response = await fetch(getProxiedUrl(url), {
             method: 'GET',
             headers: {
@@ -66,20 +84,29 @@ async function getRouterId(identity) {
             mode: 'cors'
         });
         
+        console.log('📡 [ROUTER DEBUG] Response status:', response.status);
+        console.log('📡 [ROUTER DEBUG] Response ok:', response.ok);
+        
         if (!response.ok) {
             if (response.status === 404) {
-                console.error(`❌ Router "${identity}" not found in database`);
+                console.error(`❌ [ROUTER DEBUG] Router "${identity}" not found in database (404)`);
                 throw new Error(`Router "${identity}" not found. Please contact support.`);
             }
+            console.error(`❌ [ROUTER DEBUG] API error: ${response.status} ${response.statusText}`);
             throw new Error('Failed to lookup router');
         }
         
         const data = await response.json();
-        console.log('✅ Router lookup successful:', data);
+        console.log('✅ [ROUTER DEBUG] API Response data:', JSON.stringify(data, null, 2));
+        console.log('✅ [ROUTER DEBUG] Extracted router_id from response:', data.router_id);
+        console.log('✅ [ROUTER DEBUG] router_id type:', typeof data.router_id);
+        console.log('═══════════════════════════════════════════════════════');
         return data.router_id;
         
     } catch (error) {
-        console.error('❌ Router lookup failed:', error);
+        console.error('❌ [ROUTER DEBUG] Router lookup FAILED:', error.message);
+        console.error('❌ [ROUTER DEBUG] Full error:', error);
+        console.log('═══════════════════════════════════════════════════════');
         throw error;
     }
 }
@@ -202,13 +229,36 @@ const HARDCODED_PLANS = [
 // ========================================
 function getUrlParams() {
     const params = new URLSearchParams(window.location.search);
-    return {
+    
+    // DEBUG: Log raw URL and all parameters
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('🔍 [ROUTER DEBUG] STEP 1: EXTRACTING URL PARAMETERS');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('📍 Full URL:', window.location.href);
+    console.log('📍 Search string:', window.location.search);
+    console.log('📍 All URL params:');
+    for (const [key, value] of params.entries()) {
+        console.log(`   - ${key}: "${value}"`);
+    }
+    
+    const routerParam = params.get('router');
+    console.log('📍 Raw router param from URL:', routerParam);
+    console.log('📍 Router param type:', typeof routerParam);
+    console.log('📍 Router param is null:', routerParam === null);
+    console.log('📍 Router param is empty string:', routerParam === '');
+    
+    const result = {
         mac: params.get('mac') || '',
         ip: params.get('ip') || '',
         dst: params.get('dst') || '',
         gw: params.get('gw') || '',
         router: params.get('router') || ''
     };
+    
+    console.log('📍 Final router value after || fallback:', `"${result.router}"`);
+    console.log('═══════════════════════════════════════════════════════');
+    
+    return result;
 }
 
 // Store MikroTik parameters globally
@@ -216,6 +266,7 @@ const mikrotikParams = getUrlParams();
 
 // Log extracted parameters for debugging
 console.log('🔧 MikroTik Parameters:', mikrotikParams);
+console.log('🔧 mikrotikParams.router value:', `"${mikrotikParams.router}"`);
 
 // ========================================
 // STATE MANAGEMENT
@@ -260,6 +311,10 @@ const processingStep3 = document.getElementById('step3');
 // INITIALIZATION
 // ========================================
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('🚀 [ROUTER DEBUG] DOM CONTENT LOADED - INITIALIZATION');
+    console.log('═══════════════════════════════════════════════════════');
+    
     // Validate required parameters
     if (!mikrotikParams.mac) {
         console.warn('⚠️ Warning: Missing MAC address from MikroTik.');
@@ -269,30 +324,71 @@ document.addEventListener('DOMContentLoaded', () => {
     // Disable pay button until router_id is resolved
     if (submitButton) {
         submitButton.disabled = true;
+        console.log('🔒 [ROUTER DEBUG] Pay button DISABLED until router_id resolves');
     }
     
     // Lookup router_id from identity (non-blocking - runs in background)
     // Router ID is only needed at payment time, not for displaying content
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('🔍 [ROUTER DEBUG] STEP 1.5: PREPARING ROUTER IDENTITY');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('📍 mikrotikParams.router value:', `"${mikrotikParams.router}"`);
+    console.log('📍 mikrotikParams.router is truthy:', !!mikrotikParams.router);
+    console.log('📍 mikrotikParams.router is empty string:', mikrotikParams.router === '');
+    
     const routerIdentity = mikrotikParams.router || 'MikroTik';
-    console.log('🔍 Router identity from URL:', routerIdentity);
+    
+    console.log('📍 After fallback logic (|| "MikroTik"):');
+    console.log('📍 Final routerIdentity:', `"${routerIdentity}"`);
+    console.log('📍 Will use fallback "MikroTik":', routerIdentity === 'MikroTik' && !mikrotikParams.router);
     console.log('🌐 Lookup URL:', `${ROUTER_LOOKUP_ENDPOINT}/${encodeURIComponent(routerIdentity)}`);
+    console.log('═══════════════════════════════════════════════════════');
+    
+    console.log('🔄 [ROUTER DEBUG] Calling getRouterId() with identity:', `"${routerIdentity}"`);
     
     getRouterId(routerIdentity)
         .then(id => {
+            console.log('═══════════════════════════════════════════════════════');
+            console.log('✅ [ROUTER DEBUG] STEP 3: ROUTER LOOKUP SUCCESS');
+            console.log('═══════════════════════════════════════════════════════');
+            console.log('📥 Received router_id from API:', id);
+            console.log('📥 router_id type:', typeof id);
+            console.log('📍 Global routerId BEFORE assignment:', routerId);
+            
             routerId = id;
-            console.log('🆔 Router ID resolved:', routerId, '(from lookup)');
+            
+            console.log('📍 Global routerId AFTER assignment:', routerId);
+            console.log('✅ Router ID resolved:', routerId, '(from lookup)');
+            console.log('═══════════════════════════════════════════════════════');
         })
         .catch(error => {
-            console.error('❌ Router lookup failed:', error.message);
+            console.log('═══════════════════════════════════════════════════════');
+            console.error('❌ [ROUTER DEBUG] STEP 3: ROUTER LOOKUP FAILED');
+            console.log('═══════════════════════════════════════════════════════');
+            console.error('❌ Error message:', error.message);
+            console.error('❌ Full error:', error);
             console.warn('⚠️ Using fallback router_id:', FALLBACK_ROUTER_ID);
+            console.log('📍 Global routerId BEFORE fallback assignment:', routerId);
+            
             routerId = FALLBACK_ROUTER_ID;
+            
+            console.log('📍 Global routerId AFTER fallback assignment:', routerId);
+            console.log('═══════════════════════════════════════════════════════');
         })
         .finally(() => {
+            console.log('═══════════════════════════════════════════════════════');
+            console.log('🏁 [ROUTER DEBUG] STEP 4: ROUTER LOOKUP COMPLETE');
+            console.log('═══════════════════════════════════════════════════════');
+            console.log('📍 FINAL Global routerId value:', routerId);
+            console.log('📍 FINAL routerId type:', typeof routerId);
+            
             // Enable pay button once router_id is ready (success or fallback)
             if (submitButton) {
                 submitButton.disabled = false;
+                console.log('🔓 [ROUTER DEBUG] Pay button ENABLED');
                 console.log('✅ Pay button enabled, router_id =', routerId);
             }
+            console.log('═══════════════════════════════════════════════════════');
         });
     
     // Check maintenance mode - show banner and special offer if active
@@ -1030,6 +1126,9 @@ async function handlePayment(e) {
 // PROCESS PAYMENT - Backend API Call
 // ========================================
 async function processPayment(phoneNumber, plan) {
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('💳 [ROUTER DEBUG] STEP 5: PROCESS PAYMENT CALLED');
+    console.log('═══════════════════════════════════════════════════════');
     console.log('💳 Processing payment...');
     console.log('📞 Phone (original):', phoneNumber);
     
@@ -1038,11 +1137,25 @@ async function processPayment(phoneNumber, plan) {
     console.log('📞 Phone (formatted):', formattedPhone);
     
     console.log('📦 Plan:', plan);
+    console.log('📦 Plan ID:', plan.id);
     console.log('🔧 MAC:', mikrotikParams.mac);
-    console.log('🆔 Router ID:', routerId);
+    
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('🆔 [ROUTER DEBUG] ROUTER_ID CHECK AT PAYMENT TIME');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('🆔 Global routerId variable:', routerId);
+    console.log('🆔 routerId type:', typeof routerId);
+    console.log('🆔 routerId is null:', routerId === null);
+    console.log('🆔 routerId is undefined:', routerId === undefined);
+    console.log('🆔 routerId is falsy:', !routerId);
+    console.log('🆔 FALLBACK_ROUTER_ID constant:', FALLBACK_ROUTER_ID);
+    console.log('🆔 Would use fallback:', !routerId);
+    console.log('═══════════════════════════════════════════════════════');
     
     // Ensure router_id is available
     if (!routerId) {
+        console.error('❌ [ROUTER DEBUG] router_id is NOT available at payment time!');
+        console.error('❌ [ROUTER DEBUG] This should not happen - button should be disabled');
         throw new Error('Router not configured. Please refresh the page or contact support.');
     }
     
@@ -1059,6 +1172,13 @@ async function processPayment(phoneNumber, plan) {
             payment_method: "mobile_money"
         };
         
+        console.log('═══════════════════════════════════════════════════════');
+        console.log('📤 [ROUTER DEBUG] PAYMENT REQUEST BODY');
+        console.log('═══════════════════════════════════════════════════════');
+        console.log('📤 Full request body:', JSON.stringify(requestBody, null, 2));
+        console.log('📤 router_id in request:', requestBody.router_id);
+        console.log('📤 router_id type in request:', typeof requestBody.router_id);
+        console.log('═══════════════════════════════════════════════════════');
         console.log('📤 Sending payment request:', requestBody);
         
         const response = await fetch(getProxiedUrl(PAYMENT_ENDPOINT), {
@@ -1075,7 +1195,19 @@ async function processPayment(phoneNumber, plan) {
         clearTimeout(timeoutId);
         
         const responseData = await response.json();
-        console.log('📨 API Response:', responseData);
+        console.log('═══════════════════════════════════════════════════════');
+        console.log('📨 [ROUTER DEBUG] PAYMENT API RESPONSE');
+        console.log('═══════════════════════════════════════════════════════');
+        console.log('📨 Response status:', response.status);
+        console.log('📨 Response ok:', response.ok);
+        console.log('📨 Full response data:', JSON.stringify(responseData, null, 2));
+        console.log('📨 router_id in RESPONSE:', responseData.router_id);
+        console.log('📨 COMPARE: Sent router_id:', routerId, '| Received router_id:', responseData.router_id);
+        if (routerId !== responseData.router_id) {
+            console.error('🚨 [ROUTER DEBUG] MISMATCH! Sent router_id differs from response router_id!');
+            console.error('🚨 This indicates the backend might be overriding the router_id');
+        }
+        console.log('═══════════════════════════════════════════════════════');
     
     if (!response.ok) {
             throw new Error(responseData.message || responseData.error || 'Payment failed. Please try again.');
@@ -1430,5 +1562,28 @@ if (USE_CORS_PROXY) {
     console.warn('⚠️ CORS PROXY MODE ENABLED - FOR TESTING ONLY!');
     console.log('🔧 Make sure backend adds proper CORS headers for production.');
 }
+
+// ========================================
+// DEBUG HELPER: Check current router state
+// ========================================
+window.debugRouterState = function() {
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('🔍 [ROUTER DEBUG] CURRENT STATE SUMMARY');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('📍 URL:', window.location.href);
+    console.log('📍 mikrotikParams.router:', `"${mikrotikParams.router}"`);
+    console.log('📍 Global routerId:', routerId);
+    console.log('📍 FALLBACK_ROUTER_ID:', FALLBACK_ROUTER_ID);
+    console.log('📍 Submit button disabled:', submitButton ? submitButton.disabled : 'N/A');
+    console.log('═══════════════════════════════════════════════════════');
+    return { 
+        url: window.location.href,
+        routerParam: mikrotikParams.router, 
+        routerId: routerId, 
+        fallback: FALLBACK_ROUTER_ID 
+    };
+};
+
+console.log('💡 [ROUTER DEBUG] Call debugRouterState() in console anytime to check router state');
 
 
