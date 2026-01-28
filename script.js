@@ -1,14 +1,35 @@
 // ========================================
+// 🚨 MAINTENANCE MODE CONFIGURATION 🚨
+// ========================================
+// Set to TRUE to show maintenance page with special offer
+// Set to FALSE for normal operation
+const MAINTENANCE_MODE = false;
+
+// Special plan for maintenance mode
+// IMPORTANT: Create this plan in your backend first!
+const MAINTENANCE_PLAN = {
+    id: 19,              // Backend plan ID - UPDATE THIS after creating the plan
+    name: 'Special Transition',
+    duration: '24 Hours',
+    price: 1,
+    priceDisplay: 'KSH 1/-',
+    speed: '5Mbps',
+    speedRaw: '5M/5M'
+};
+
+// ========================================
 // API CONFIGURATION
 // ========================================
 const API_BASE_URL = 'https://isp.bitwavetechnologies.com/api';
 const PLANS_ENDPOINT = `${API_BASE_URL}/plans?user_id=1`;
 const PAYMENT_ENDPOINT = `${API_BASE_URL}/hotspot/register-and-pay`;
-const PAYMENT_STATUS_ENDPOINT = `${API_BASE_URL}/hotspot/payment-status`; // New endpoint
+const PAYMENT_STATUS_ENDPOINT = `${API_BASE_URL}/hotspot/payment-status`;
+const ROUTER_LOOKUP_ENDPOINT = `${API_BASE_URL}/routers/by-identity`;
 
-// Router ID - Replace with your actual router ID from backend
-// This is the database ID of the router, not the MikroTik identity string
-const ROUTER_ID = 2; // TODO: Update this with your actual router ID from backend
+// Router ID - Will be looked up dynamically from router identity
+// Fallback used only if lookup fails
+const FALLBACK_ROUTER_ID = 2;
+let routerId = null; // Will be set after lookup
 
 // Payment polling configuration
 const PAYMENT_POLL_INTERVAL = 3000; // Poll every 3 seconds
@@ -21,6 +42,46 @@ const CORS_PROXY = 'https://corsproxy.io/?';
 
 function getProxiedUrl(url) {
     return USE_CORS_PROXY ? CORS_PROXY + encodeURIComponent(url) : url;
+}
+
+// ========================================
+// ROUTER IDENTITY LOOKUP
+// ========================================
+async function getRouterId(identity) {
+    if (!identity) {
+        console.warn('⚠️ No router identity provided, using fallback');
+        return FALLBACK_ROUTER_ID;
+    }
+    
+    console.log('🔍 Looking up router by identity:', identity);
+    
+    try {
+        const url = `${ROUTER_LOOKUP_ENDPOINT}/${encodeURIComponent(identity)}`;
+        const response = await fetch(getProxiedUrl(url), {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            mode: 'cors'
+        });
+        
+        if (!response.ok) {
+            if (response.status === 404) {
+                console.error(`❌ Router "${identity}" not found in database`);
+                throw new Error(`Router "${identity}" not found. Please contact support.`);
+            }
+            throw new Error('Failed to lookup router');
+        }
+        
+        const data = await response.json();
+        console.log('✅ Router lookup successful:', data);
+        return data.router_id;
+        
+    } catch (error) {
+        console.error('❌ Router lookup failed:', error);
+        throw error;
+    }
 }
 
 // ========================================
@@ -166,6 +227,8 @@ let allPlans = [];
 // DOM ELEMENTS
 // ========================================
 const plansSection = document.getElementById('plansSection');
+const maintenanceBanner = document.getElementById('maintenanceBanner');
+const specialOfferCard = document.getElementById('specialOfferCard');
 const paymentSection = document.getElementById('paymentSection');
 const processingSection = document.getElementById('processingSection');
 const successSection = document.getElementById('successSection');
@@ -197,11 +260,123 @@ const processingStep3 = document.getElementById('step3');
 // INITIALIZATION
 // ========================================
 document.addEventListener('DOMContentLoaded', () => {
+    // Validate required parameters
+    if (!mikrotikParams.mac) {
+        console.warn('⚠️ Warning: Missing MAC address from MikroTik.');
+        console.log('💡 This page should be accessed via MikroTik hotspot redirect.');
+    }
+    
+    // Disable pay button until router_id is resolved
+    if (submitButton) {
+        submitButton.disabled = true;
+    }
+    
+    // Lookup router_id from identity (non-blocking - runs in background)
+    // Router ID is only needed at payment time, not for displaying content
+    const routerIdentity = mikrotikParams.router || 'MikroTik';
+    getRouterId(routerIdentity)
+        .then(id => {
+            routerId = id;
+            console.log('🆔 Router ID resolved:', routerId);
+        })
+        .catch(error => {
+            console.error('❌ Router lookup failed, using fallback:', error.message);
+            routerId = FALLBACK_ROUTER_ID;
+        })
+        .finally(() => {
+            // Enable pay button once router_id is ready (success or fallback)
+            if (submitButton) {
+                submitButton.disabled = false;
+                console.log('✅ Pay button enabled');
+            }
+        });
+    
+    // Check maintenance mode - show banner and special offer if active
+    if (MAINTENANCE_MODE) {
+        console.log('🔧 MAINTENANCE MODE ACTIVE');
+        console.log('📦 Special Plan:', MAINTENANCE_PLAN);
+        initMaintenanceMode();
+    }
+    
+    // Always load plans (they show alongside maintenance banner)
     loadPlans();
+    
     setupEventListeners();
     loadSavedPhoneNumber(); // Works on desktop; mobile captive portals wipe storage
     setupBrandLink(); // Preserve MikroTik params when clicking logo
 });
+
+// ========================================
+// MAINTENANCE MODE INITIALIZATION
+// ========================================
+function initMaintenanceMode() {
+    // Show maintenance banner and special offer card
+    if (maintenanceBanner) maintenanceBanner.classList.remove('hidden');
+    if (specialOfferCard) specialOfferCard.classList.remove('hidden');
+    
+    // Update special offer display with configured values
+    const priceEl = document.getElementById('specialOfferPrice');
+    const titleEl = document.getElementById('specialOfferTitle');
+    
+    if (priceEl) priceEl.textContent = `${MAINTENANCE_PLAN.price}/-`;
+    if (titleEl) titleEl.textContent = `${MAINTENANCE_PLAN.duration} Access`;
+    
+    // Setup special offer card click handler
+    if (specialOfferCard) {
+        specialOfferCard.addEventListener('click', selectMaintenancePlan);
+        specialOfferCard.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                selectMaintenancePlan();
+            }
+        });
+    }
+}
+
+// ========================================
+// SELECT MAINTENANCE PLAN
+// ========================================
+function selectMaintenancePlan() {
+    // Create a plan object compatible with existing payment flow
+    selectedPlan = {
+        id: MAINTENANCE_PLAN.id,
+        duration: MAINTENANCE_PLAN.duration,
+        price: MAINTENANCE_PLAN.priceDisplay,
+        speed: MAINTENANCE_PLAN.speed,
+        popular: false,
+        bestseller: false,
+        valueMessage: '',
+        originalData: {
+            id: MAINTENANCE_PLAN.id,
+            name: MAINTENANCE_PLAN.name,
+            speed: MAINTENANCE_PLAN.speedRaw,
+            price: MAINTENANCE_PLAN.price,
+            duration_value: 24,
+            duration_unit: 'HOURS'
+        }
+    };
+    
+    // Update selected plan display
+    selectedPlanInfo.innerHTML = `
+        <div class="selected-plan-name">${MAINTENANCE_PLAN.name}</div>
+        <div class="selected-plan-price"><span class="currency-code">KSH</span> ${MAINTENANCE_PLAN.price}/-</div>
+        <div class="selected-plan-speed">${MAINTENANCE_PLAN.duration} • ${MAINTENANCE_PLAN.speed}</div>
+    `;
+    
+    // Show payment section, hide plans section
+    showSection(paymentSection);
+    hideSection(plansSection);
+    
+    // Scroll to top smoothly
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Focus on phone input
+    setTimeout(() => {
+        phoneNumberInput.focus();
+    }, 300);
+    
+    console.log('✅ Selected maintenance plan:', selectedPlan);
+}
 
 // ========================================
 // SETUP BRAND LINK - Preserve URL Parameters
@@ -213,18 +388,18 @@ function setupBrandLink() {
     brandLink.addEventListener('click', (e) => {
         e.preventDefault();
         
-        // Get current query string (preserves all MikroTik params)
-        const queryString = window.location.search;
+        // Reset to home section (plans section with maintenance banner if active)
+        hideSection(paymentSection);
+        hideSection(processingSection);
+        hideSection(successSection);
+        hideSection(errorSection);
+        showSection(plansSection);
         
-        // Navigate to home with preserved parameters
-        if (queryString) {
-            window.location.href = '/' + queryString;
-        } else {
-            window.location.href = '/';
-        }
+        resetForm();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     });
     
-    console.log('🔗 Brand link configured to preserve URL parameters');
+    console.log('🔗 Brand link configured');
 }
 
 // ========================================
@@ -731,7 +906,7 @@ function showSevenMinuteUpsellPrompt(sevenMinPlan) {
 // SETUP EVENT LISTENERS
 // ========================================
 function setupEventListeners() {
-    // Back button
+    // Back button - always goes to plans section (which has maintenance banner if active)
     backButton.addEventListener('click', () => {
         showSection(plansSection);
         hideSection(paymentSection);
@@ -760,7 +935,7 @@ function setupEventListeners() {
         }
     });
     
-    // New purchase button
+    // New purchase button - always goes to plans section
     newPurchaseButton.addEventListener('click', () => {
         showSection(plansSection);
         hideSection(successSection);
@@ -769,7 +944,7 @@ function setupEventListeners() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
     
-    // Retry button
+    // Retry button - go back to payment section to try again
     retryButton.addEventListener('click', () => {
         showSection(paymentSection);
         hideSection(errorSection);
@@ -860,7 +1035,12 @@ async function processPayment(phoneNumber, plan) {
     
     console.log('📦 Plan:', plan);
     console.log('🔧 MAC:', mikrotikParams.mac);
-    console.log('🆔 Router ID:', ROUTER_ID);
+    console.log('🆔 Router ID:', routerId);
+    
+    // Ensure router_id is available
+    if (!routerId) {
+        throw new Error('Router not configured. Please refresh the page or contact support.');
+    }
     
     try {
         // Add timeout to payment request (60 seconds for M-Pesa processing)
@@ -871,7 +1051,7 @@ async function processPayment(phoneNumber, plan) {
             phone: formattedPhone,
             plan_id: plan.id,
             mac_address: mikrotikParams.mac,
-            router_id: ROUTER_ID,  // Database ID of router (number)
+            router_id: routerId,  // Database ID of router (looked up from identity)
             payment_method: "mobile_money"
         };
         
@@ -1238,13 +1418,8 @@ console.log('🌐 WiFi Portal Initialized');
 console.log('⚡ Plans: Using HARDCODED data (instant load)');
 console.log('🔗 API Endpoints:');
 console.log('  - Payment:', PAYMENT_ENDPOINT);
+console.log('  - Router Lookup:', ROUTER_LOOKUP_ENDPOINT);
 console.log('💡 Ready to connect!');
-
-// Validate MikroTik parameters on load
-if (!mikrotikParams.mac) {
-    console.warn('⚠️ Warning: Missing MAC address from MikroTik. Payment may fail.');
-    console.log('💡 This page should be accessed via MikroTik hotspot redirect.');
-}
 
 // Display CORS proxy status
 if (USE_CORS_PROXY) {
