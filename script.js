@@ -274,20 +274,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // Lookup router_id from identity (non-blocking - runs in background)
     // Router ID is only needed at payment time, not for displaying content
     const routerIdentity = mikrotikParams.router || 'MikroTik';
+    console.log('🔍 Router identity from URL:', routerIdentity);
+    console.log('🌐 Lookup URL:', `${ROUTER_LOOKUP_ENDPOINT}/${encodeURIComponent(routerIdentity)}`);
+    
     getRouterId(routerIdentity)
         .then(id => {
             routerId = id;
-            console.log('🆔 Router ID resolved:', routerId);
+            console.log('🆔 Router ID resolved:', routerId, '(from lookup)');
         })
         .catch(error => {
-            console.error('❌ Router lookup failed, using fallback:', error.message);
+            console.error('❌ Router lookup failed:', error.message);
+            console.warn('⚠️ Using fallback router_id:', FALLBACK_ROUTER_ID);
             routerId = FALLBACK_ROUTER_ID;
         })
         .finally(() => {
             // Enable pay button once router_id is ready (success or fallback)
             if (submitButton) {
                 submitButton.disabled = false;
-                console.log('✅ Pay button enabled');
+                console.log('✅ Pay button enabled, router_id =', routerId);
             }
         });
     
