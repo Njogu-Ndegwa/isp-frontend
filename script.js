@@ -8,13 +8,13 @@ console.log('📅 Timestamp:', new Date().toISOString());
 // ========================================
 // Set to TRUE to show maintenance page with special offer
 // Set to FALSE for normal operation
-const MAINTENANCE_MODE = false;
+const MAINTENANCE_MODE = true;
 
 // Special plan for maintenance mode
 // IMPORTANT: Create this plan in your backend first!
 const MAINTENANCE_PLAN = {
     id: 19,              // Backend plan ID - UPDATE THIS after creating the plan
-    name: 'Special Transition',
+    name: '24 Hour Free',
     duration: '24 Hours',
     price: 1,
     priceDisplay: 'KSH 1/-',
