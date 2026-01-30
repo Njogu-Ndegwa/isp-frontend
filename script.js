@@ -8,7 +8,7 @@ console.log('📅 Timestamp:', new Date().toISOString());
 // ========================================
 // Set to TRUE to show maintenance page with special offer
 // Set to FALSE for normal operation
-const MAINTENANCE_MODE = true;
+const MAINTENANCE_MODE = false;
 
 // Special plan for maintenance mode
 // IMPORTANT: Create this plan in your backend first!
