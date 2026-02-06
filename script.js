@@ -31,10 +31,15 @@ const PAYMENT_ENDPOINT = `${API_BASE_URL}/hotspot/register-and-pay`;
 const PAYMENT_STATUS_ENDPOINT = `${API_BASE_URL}/hotspot/payment-status`;
 const ROUTER_LOOKUP_ENDPOINT = `${API_BASE_URL}/routers/by-identity`;
 
+// RADIUS-specific endpoints (used when router auth_method is "RADIUS")
+const RADIUS_PAYMENT_ENDPOINT = `${API_BASE_URL}/radius/hotspot/register-and-pay`;
+const RADIUS_PAYMENT_STATUS_ENDPOINT = `${API_BASE_URL}/radius/hotspot/payment-status`;
+
 // Router ID - Will be looked up dynamically from router identity
 // Fallback used only if lookup fails
 const FALLBACK_ROUTER_ID = 2;
 let routerId = null; // Will be set after lookup
+let routerAuthMethod = 'DIRECT_API'; // Will be set after lookup ('DIRECT_API' or 'RADIUS')
 
 // Payment polling configuration
 const PAYMENT_POLL_INTERVAL = 3000; // Poll every 3 seconds
@@ -64,6 +69,9 @@ async function getRouterId(identity) {
     if (!identity) {
         console.warn('⚠️ [ROUTER DEBUG] No router identity provided!');
         console.warn('⚠️ [ROUTER DEBUG] Returning FALLBACK_ROUTER_ID:', FALLBACK_ROUTER_ID);
+        // Keep routerAuthMethod as default 'DIRECT_API' when no identity provided
+        routerAuthMethod = 'DIRECT_API';
+        console.log('🔐 [ROUTER DEBUG] routerAuthMethod set to DIRECT_API (no identity)');
         console.log('═══════════════════════════════════════════════════════');
         return FALLBACK_ROUTER_ID;
     }
@@ -100,7 +108,13 @@ async function getRouterId(identity) {
         console.log('✅ [ROUTER DEBUG] API Response data:', JSON.stringify(data, null, 2));
         console.log('✅ [ROUTER DEBUG] Extracted router_id from response:', data.router_id);
         console.log('✅ [ROUTER DEBUG] router_id type:', typeof data.router_id);
+        console.log('✅ [ROUTER DEBUG] auth_method from response:', data.auth_method);
         console.log('═══════════════════════════════════════════════════════');
+        
+        // Store auth_method globally for use in payment flow
+        routerAuthMethod = data.auth_method || 'DIRECT_API';
+        console.log('🔐 [ROUTER DEBUG] Router auth_method set to:', routerAuthMethod);
+        
         return data.router_id;
         
     } catch (error) {
@@ -371,8 +385,11 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('📍 Global routerId BEFORE fallback assignment:', routerId);
             
             routerId = FALLBACK_ROUTER_ID;
+            // Keep routerAuthMethod as default 'DIRECT_API' for safety when lookup fails
+            routerAuthMethod = 'DIRECT_API';
             
             console.log('📍 Global routerId AFTER fallback assignment:', routerId);
+            console.log('🔐 [ROUTER DEBUG] routerAuthMethod reset to DIRECT_API (fallback mode)');
             console.log('═══════════════════════════════════════════════════════');
         })
         .finally(() => {
@@ -1172,16 +1189,23 @@ async function processPayment(phoneNumber, plan) {
             payment_method: "mobile_money"
         };
         
+        // Determine which endpoint to use based on router auth_method
+        const isRadiusRouter = routerAuthMethod === 'RADIUS';
+        const paymentEndpoint = isRadiusRouter ? RADIUS_PAYMENT_ENDPOINT : PAYMENT_ENDPOINT;
+        
         console.log('═══════════════════════════════════════════════════════');
         console.log('📤 [ROUTER DEBUG] PAYMENT REQUEST BODY');
         console.log('═══════════════════════════════════════════════════════');
         console.log('📤 Full request body:', JSON.stringify(requestBody, null, 2));
         console.log('📤 router_id in request:', requestBody.router_id);
         console.log('📤 router_id type in request:', typeof requestBody.router_id);
+        console.log('🔐 [ROUTER DEBUG] Router auth_method:', routerAuthMethod);
+        console.log('🔐 [ROUTER DEBUG] Using RADIUS endpoint:', isRadiusRouter);
+        console.log('🔐 [ROUTER DEBUG] Payment endpoint:', paymentEndpoint);
         console.log('═══════════════════════════════════════════════════════');
         console.log('📤 Sending payment request:', requestBody);
         
-        const response = await fetch(getProxiedUrl(PAYMENT_ENDPOINT), {
+        const response = await fetch(getProxiedUrl(paymentEndpoint), {
         method: 'POST',
         headers: {
                 'Accept': 'application/json',
@@ -1239,6 +1263,12 @@ async function pollPaymentStatusAndLogin(customerId, phoneNumber, plan) {
     console.log('🔄 Checking payment status and internet access...');
     console.log('📋 Customer ID:', customerId);
     
+    // Determine which endpoint to use based on router auth_method
+    const isRadiusRouter = routerAuthMethod === 'RADIUS';
+    const statusEndpoint = isRadiusRouter ? RADIUS_PAYMENT_STATUS_ENDPOINT : PAYMENT_STATUS_ENDPOINT;
+    console.log('🔐 [ROUTER DEBUG] Using RADIUS status endpoint:', isRadiusRouter);
+    console.log('🔐 [ROUTER DEBUG] Status endpoint:', statusEndpoint);
+    
     let attempts = 0;
     
     return new Promise((resolve, reject) => {
@@ -1247,7 +1277,7 @@ async function pollPaymentStatusAndLogin(customerId, phoneNumber, plan) {
             console.log(`🔍 Polling attempt ${attempts}/${PAYMENT_POLL_MAX_ATTEMPTS}...`);
             
             try {
-                const statusUrl = `${PAYMENT_STATUS_ENDPOINT}/${customerId}`;
+                const statusUrl = `${statusEndpoint}/${customerId}`;
                 const response = await fetch(getProxiedUrl(statusUrl), {
                     method: 'GET',
                     headers: {
@@ -1272,7 +1302,36 @@ async function pollPaymentStatusAndLogin(customerId, phoneNumber, plan) {
                     console.log('📡 Plan:', data.plan_name);
                     console.log('⏰ Expiry:', data.expiry);
                     
-                    // Show final success message
+                    // RADIUS auto-login: redirect to MikroTik login with credentials
+                    if (isRadiusRouter && data.radius_username && data.radius_password) {
+                        console.log('🔐 [RADIUS] Credentials received for auto-login');
+                        console.log('🔐 [RADIUS] Username:', data.radius_username);
+                        console.log('🔐 [RADIUS] Gateway (gw):', mikrotikParams.gw);
+                        
+                        // Build MikroTik auto-login URL
+                        const gatewayIp = mikrotikParams.gw;
+                        if (gatewayIp) {
+                            const loginUrl = `http://${gatewayIp}/login?username=${encodeURIComponent(data.radius_username)}&password=${encodeURIComponent(data.radius_password)}`;
+                            console.log('🔐 [RADIUS] Auto-login URL:', loginUrl);
+                            
+                            // Show success message briefly, then redirect
+                            showAuthenticatedMessage(phoneNumber, plan, data, true); // true = isRadius
+                            
+                            // Redirect to MikroTik login after a short delay
+                            setTimeout(() => {
+                                console.log('🔐 [RADIUS] Redirecting to MikroTik login...');
+                                window.location.href = loginUrl;
+                            }, 2000); // 2 second delay to show success message
+                            
+                            resolve(data);
+                            return;
+                        } else {
+                            console.warn('⚠️ [RADIUS] No gateway IP available, cannot auto-login');
+                            console.warn('⚠️ [RADIUS] User will need to login manually');
+                        }
+                    }
+                    
+                    // Show final success message (for non-RADIUS or if auto-login not possible)
                     showAuthenticatedMessage(phoneNumber, plan, data);
                     
                     resolve(data);
@@ -1326,7 +1385,7 @@ function showProcessingPaymentMessage(phoneNumber, plan) {
 // ========================================
 // SHOW SUCCESS MESSAGE (PAYMENT CONFIRMED & INTERNET ACCESS GRANTED)
 // ========================================
-function showAuthenticatedMessage(phoneNumber, plan, data) {
+function showAuthenticatedMessage(phoneNumber, plan, data, isRadiusAutoLogin = false) {
     const formattedPhone = formatPhoneForMpesa(phoneNumber);
     
     // Hide processing, show success
@@ -1348,7 +1407,8 @@ function showAuthenticatedMessage(phoneNumber, plan, data) {
             timeZone: 'Africa/Nairobi'
         }) : 'N/A';
         
-        connectionDetails.innerHTML = `
+        // Build connection details HTML
+        let detailsHtml = `
             <div class="detail-row">
                 <span class="detail-label">Plan</span>
                 <span class="detail-value">${data.plan_name || plan.duration}</span>
@@ -1366,6 +1426,21 @@ function showAuthenticatedMessage(phoneNumber, plan, data) {
                 <span class="detail-value">${expiryText}</span>
             </div>
         `;
+        
+        // Add RADIUS auto-login notice if applicable
+        if (isRadiusAutoLogin) {
+            detailsHtml += `
+            <div class="detail-row radius-notice" style="margin-top: 16px; padding: 12px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 8px; color: white;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 20px;">🔐</span>
+                    <span style="font-weight: 600;">Connecting you automatically...</span>
+                </div>
+                <div style="font-size: 13px; opacity: 0.9; margin-top: 4px;">You will be redirected to login in 2 seconds</div>
+            </div>
+            `;
+        }
+        
+        connectionDetails.innerHTML = detailsHtml;
     }
     
     // Populate success page ads from the global ads data
