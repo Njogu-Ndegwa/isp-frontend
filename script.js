@@ -4,6 +4,66 @@ console.log('══════════════════════�
 console.log('📅 Timestamp:', new Date().toISOString());
 
 // ========================================
+// DUMP SAVED RADIUS LOGIN DATA ON EVERY PAGE LOAD
+// This survives redirects and page refreshes via localStorage
+// ========================================
+(function dumpSavedRadiusLogin() {
+    try {
+        const saved = localStorage.getItem('bitwave_last_radius_login');
+        if (saved) {
+            const data = JSON.parse(saved);
+            console.log('═══════════════════════════════════════════════════════');
+            console.log('🔐 [RADIUS] SAVED LOGIN DATA (from localStorage)');
+            console.log('═══════════════════════════════════════════════════════');
+            console.log('🔗 Login URL:', data.loginUrl);
+            console.log('👤 Username:', data.username);
+            console.log('🔑 Password:', data.password);
+            console.log('🌐 Gateway:', data.gateway);
+            console.log('📱 Phone:', data.phone);
+            console.log('📦 Plan:', data.planName);
+            console.log('⏰ Expiry:', data.expiry);
+            console.log('🕐 Saved at:', data.savedAt);
+            console.log('📋 Full status response:', JSON.stringify(data.fullResponse, null, 2));
+            console.log('═══════════════════════════════════════════════════════');
+            console.log('💡 To clear: localStorage.removeItem("bitwave_last_radius_login")');
+            console.log('💡 To view again: dumpRadiusLogin()');
+            console.log('═══════════════════════════════════════════════════════');
+        }
+    } catch (e) {
+        // Silently ignore if localStorage is unavailable
+    }
+})();
+
+// Helper to view saved RADIUS login data anytime from console
+window.dumpRadiusLogin = function() {
+    try {
+        const saved = localStorage.getItem('bitwave_last_radius_login');
+        if (!saved) {
+            console.log('ℹ️ No saved RADIUS login data found.');
+            return null;
+        }
+        const data = JSON.parse(saved);
+        console.log('═══════════════════════════════════════════════════════');
+        console.log('🔐 [RADIUS] SAVED LOGIN DATA');
+        console.log('═══════════════════════════════════════════════════════');
+        console.log('🔗 Login URL:', data.loginUrl);
+        console.log('👤 Username:', data.username);
+        console.log('🔑 Password:', data.password);
+        console.log('🌐 Gateway:', data.gateway);
+        console.log('📱 Phone:', data.phone);
+        console.log('📦 Plan:', data.planName);
+        console.log('⏰ Expiry:', data.expiry);
+        console.log('🕐 Saved at:', data.savedAt);
+        console.log('📋 Full status response:', JSON.stringify(data.fullResponse, null, 2));
+        console.log('═══════════════════════════════════════════════════════');
+        return data;
+    } catch (e) {
+        console.error('❌ Error reading saved RADIUS data:', e);
+        return null;
+    }
+};
+
+// ========================================
 // 🚨 MAINTENANCE MODE CONFIGURATION 🚨
 // ========================================
 // Set to TRUE to show maintenance page with special offer
@@ -273,6 +333,20 @@ function getUrlParams() {
     console.log('═══════════════════════════════════════════════════════');
     
     return result;
+}
+
+function normalizeGateway(gw) {
+    if (!gw) return '';
+    let value = String(gw).trim();
+    value = value.replace(/^https?:\/\//i, '');
+    value = value.split('/')[0];
+    return value;
+}
+
+function buildRadiusLoginUrl(gw, username, password) {
+    const gateway = normalizeGateway(gw);
+    if (!gateway || !username || !password) return '';
+    return `http://${gateway}/login?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
 }
 
 // Store MikroTik parameters globally
@@ -1309,10 +1383,32 @@ async function pollPaymentStatusAndLogin(customerId, phoneNumber, plan) {
                         console.log('🔐 [RADIUS] Gateway (gw):', mikrotikParams.gw);
                         
                         // Build MikroTik auto-login URL
-                        const gatewayIp = mikrotikParams.gw;
-                        if (gatewayIp) {
-                            const loginUrl = `http://${gatewayIp}/login?username=${encodeURIComponent(data.radius_username)}&password=${encodeURIComponent(data.radius_password)}`;
+                        const loginUrl = buildRadiusLoginUrl(mikrotikParams.gw, data.radius_username, data.radius_password);
+                        if (loginUrl) {
                             console.log('🔐 [RADIUS] Auto-login URL:', loginUrl);
+                            
+                            // PERSIST to localStorage before redirect (survives navigation & refresh)
+                            try {
+                                localStorage.removeItem('bitwave_last_radius_login');
+                                const radiusLoginData = {
+                                    loginUrl: loginUrl,
+                                    username: data.radius_username,
+                                    password: data.radius_password,
+                                    gateway: mikrotikParams.gw,
+                                    mac: mikrotikParams.mac,
+                                    phone: phoneNumber,
+                                    planName: data.plan_name || plan.duration,
+                                    expiry: data.expiry,
+                                    customerId: customerId,
+                                    savedAt: new Date().toISOString(),
+                                    fullResponse: data
+                                };
+                                localStorage.setItem('bitwave_last_radius_login', JSON.stringify(radiusLoginData));
+                                console.log('💾 [RADIUS] Login data saved to localStorage (survives redirect)');
+                                console.log('💾 [RADIUS] View anytime with: dumpRadiusLogin()');
+                            } catch (e) {
+                                console.warn('⚠️ [RADIUS] Could not save to localStorage:', e);
+                            }
                             
                             // Show success message briefly, then redirect
                             showAuthenticatedMessage(phoneNumber, plan, data, true); // true = isRadius
@@ -1427,6 +1523,11 @@ function showAuthenticatedMessage(phoneNumber, plan, data, isRadiusAutoLogin = f
             </div>
         `;
         
+        const hasRadiusCreds = data && data.radius_username && data.radius_password;
+        const radiusLoginUrl = hasRadiusCreds
+            ? buildRadiusLoginUrl(mikrotikParams.gw, data.radius_username, data.radius_password)
+            : '';
+
         // Add RADIUS auto-login notice if applicable
         if (isRadiusAutoLogin) {
             detailsHtml += `
@@ -1439,7 +1540,29 @@ function showAuthenticatedMessage(phoneNumber, plan, data, isRadiusAutoLogin = f
             </div>
             `;
         }
-        
+
+        if (hasRadiusCreds) {
+            detailsHtml += `
+            <div class="detail-row" style="margin-top: 14px; padding: 12px; background: #111827; border-radius: 8px; color: #fff;">
+                <div style="font-weight: 600; margin-bottom: 6px;">RADIUS Login Details</div>
+                <div style="font-size: 13px; opacity: 0.85;">Username: <strong>${data.radius_username}</strong></div>
+                <div style="font-size: 13px; opacity: 0.85;">Password: <strong>${data.radius_password}</strong></div>
+                ${radiusLoginUrl ? `
+                <div style="margin-top: 10px;">
+                    <a href="${radiusLoginUrl}" style="display: inline-block; padding: 8px 12px; background: #10b981; color: #fff; border-radius: 6px; text-decoration: none; font-weight: 600;">Tap to Connect</a>
+                </div>
+                ` : `
+                <div style="margin-top: 8px; font-size: 12px; opacity: 0.75;">
+                    Open the login page and enter the credentials above.
+                </div>
+                `}
+                <div style="margin-top: 8px; font-size: 12px; opacity: 0.7;">
+                    Tip: Disable Private/Randomized MAC for this Wi‑Fi to avoid repeat payments.
+                </div>
+            </div>
+            `;
+        }
+
         connectionDetails.innerHTML = detailsHtml;
     }
     
