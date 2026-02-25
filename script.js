@@ -343,10 +343,14 @@ function normalizeGateway(gw) {
     return value;
 }
 
-function buildRadiusLoginUrl(gw, username, password) {
+function buildRadiusLoginUrl(gw, username, password, dst) {
     const gateway = normalizeGateway(gw);
     if (!gateway || !username || !password) return '';
-    return `http://${gateway}/login?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
+    let url = `http://${gateway}/login?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
+    if (dst) {
+        url += `&dst=${encodeURIComponent(dst)}`;
+    }
+    return url;
 }
 
 // Store MikroTik parameters globally
@@ -395,6 +399,76 @@ const processingStep1 = document.getElementById('step1');
 const processingStep2 = document.getElementById('step2');
 const processingStep3 = document.getElementById('step3');
 
+
+// ========================================
+// SAVED RADIUS LOGIN CHECK (handles redirect loop after payment)
+// ========================================
+function checkSavedRadiusLogin() {
+    try {
+        var saved = localStorage.getItem('bitwave_last_radius_login');
+        if (!saved) return;
+        var data = JSON.parse(saved);
+        if (!data || !data.username || !data.password) return;
+        var savedAt = new Date(data.savedAt);
+        var ageMs = Date.now() - savedAt.getTime();
+        if (ageMs > 5 * 60 * 1000) {
+            localStorage.removeItem('bitwave_last_radius_login');
+            return;
+        }
+        console.log('[RADIUS] Found recent saved login, attempting auto-login');
+        var gw = mikrotikParams.gw || data.gateway;
+        var dst = mikrotikParams.dst || data.dst || '';
+        var loginUrl = buildRadiusLoginUrl(gw, data.username, data.password, dst);
+        localStorage.removeItem('bitwave_last_radius_login');
+        if (!loginUrl) {
+            showSavedRadiusScreen(data);
+            return;
+        }
+        hideSection(plansSection);
+        hideSection(paymentSection);
+        hideSection(errorSection);
+        showSection(successSection);
+        var sd = document.getElementById('successDetails');
+        if (sd) {
+            sd.innerHTML = '<div style="text-align:center;padding:20px;">' +
+                '<div style="font-size:18px;font-weight:600;margin-bottom:8px;">Connecting you to the internet...</div>' +
+                '<div style="font-size:14px;opacity:0.8;">Redirecting to login automatically</div>' +
+                '<div style="margin-top:16px;font-size:13px;opacity:0.7;">Username: <strong>' + data.username + '</strong></div>' +
+                '<div style="margin-top:16px;"><a href="' + loginUrl + '" style="display:inline-block;padding:10px 20px;background:#10b981;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Tap here if not redirected</a></div></div>';
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setTimeout(function() { window.location.href = loginUrl; }, 1500);
+    } catch (e) {
+        console.warn('[RADIUS] Error checking saved login:', e);
+    }
+}
+
+function showSavedRadiusScreen(data) {
+    hideSection(plansSection);
+    hideSection(paymentSection);
+    hideSection(processingSection);
+    hideSection(errorSection);
+    showSection(successSection);
+    var sd = document.getElementById('successDetails');
+    if (sd) {
+        var gw = mikrotikParams.gw || data.gateway;
+        var dst = mikrotikParams.dst || data.dst || '';
+        var loginUrl = buildRadiusLoginUrl(gw, data.username, data.password, dst);
+        var html = '<div style="text-align:center;padding:20px;">' +
+            '<div style="font-size:18px;font-weight:600;margin-bottom:8px;">Your plan is active!</div>' +
+            '<div style="font-size:14px;opacity:0.8;margin-bottom:16px;">Use the credentials below to connect</div>' +
+            '<div style="padding:12px;background:#111827;border-radius:8px;color:#fff;text-align:left;">' +
+            '<div style="font-weight:600;margin-bottom:6px;">Login Details</div>' +
+            '<div style="font-size:13px;opacity:0.85;">Username: <strong>' + data.username + '</strong></div>' +
+            '<div style="font-size:13px;opacity:0.85;">Password: <strong>' + data.password + '</strong></div></div>';
+        if (loginUrl) {
+            html += '<div style="margin-top:16px;"><a href="' + loginUrl + '" style="display:inline-block;padding:10px 20px;background:#10b981;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Tap to Connect</a></div>';
+        }
+        html += '</div>';
+        sd.innerHTML = html;
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 // ========================================
 // INITIALIZATION
 // ========================================
@@ -402,6 +476,9 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('═══════════════════════════════════════════════════════');
     console.log('🚀 [ROUTER DEBUG] DOM CONTENT LOADED - INITIALIZATION');
     console.log('═══════════════════════════════════════════════════════');
+
+    // Check for saved RADIUS credentials from a previous payment session
+    checkSavedRadiusLogin();
     
     // Validate required parameters
     if (!mikrotikParams.mac) {
@@ -1182,7 +1259,28 @@ async function handlePayment(e) {
         const paymentResponse = await processPayment(phoneNumber, selectedPlan);
         console.log('✅ Payment initiated:', paymentResponse);
         
-        // Update UI to show waiting for payment confirmation
+        
+        // If backend returned RADIUS credentials immediately (already-active customer),
+        // skip polling and go straight to auto-login
+        if (paymentResponse.radius_username && paymentResponse.radius_password && paymentResponse.status === 'active') {
+            console.log('[RADIUS] Already-active customer, redirecting to login');
+            var loginUrl = buildRadiusLoginUrl(mikrotikParams.gw, paymentResponse.radius_username, paymentResponse.radius_password, mikrotikParams.dst);
+            if (loginUrl) {
+                try { localStorage.setItem('bitwave_last_radius_login', JSON.stringify({
+                    loginUrl: loginUrl, username: paymentResponse.radius_username,
+                    password: paymentResponse.radius_password, gateway: mikrotikParams.gw,
+                    dst: mikrotikParams.dst, mac: mikrotikParams.mac, phone: phoneNumber,
+                    planName: selectedPlan.name || selectedPlan.duration,
+                    savedAt: new Date().toISOString()
+                })); } catch(e) {}
+                hideSection(paymentSection);
+                showSection(successSection);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                setTimeout(function() { window.location.href = loginUrl; }, 1500);
+                return;
+            }
+        }
+// Update UI to show waiting for payment confirmation
         showPaymentPendingMessage(phoneNumber, selectedPlan);
         hideSection(paymentSection);
         showSection(processingSection);
@@ -1383,7 +1481,7 @@ async function pollPaymentStatusAndLogin(customerId, phoneNumber, plan) {
                         console.log('🔐 [RADIUS] Gateway (gw):', mikrotikParams.gw);
                         
                         // Build MikroTik auto-login URL
-                        const loginUrl = buildRadiusLoginUrl(mikrotikParams.gw, data.radius_username, data.radius_password);
+                        const loginUrl = buildRadiusLoginUrl(mikrotikParams.gw, data.radius_username, data.radius_password, mikrotikParams.dst);
                         if (loginUrl) {
                             console.log('🔐 [RADIUS] Auto-login URL:', loginUrl);
                             
@@ -1395,6 +1493,7 @@ async function pollPaymentStatusAndLogin(customerId, phoneNumber, plan) {
                                     username: data.radius_username,
                                     password: data.radius_password,
                                     gateway: mikrotikParams.gw,
+                                    dst: mikrotikParams.dst,
                                     mac: mikrotikParams.mac,
                                     phone: phoneNumber,
                                     planName: data.plan_name || plan.duration,
@@ -1525,7 +1624,7 @@ function showAuthenticatedMessage(phoneNumber, plan, data, isRadiusAutoLogin = f
         
         const hasRadiusCreds = data && data.radius_username && data.radius_password;
         const radiusLoginUrl = hasRadiusCreds
-            ? buildRadiusLoginUrl(mikrotikParams.gw, data.radius_username, data.radius_password)
+            ? buildRadiusLoginUrl(mikrotikParams.gw, data.radius_username, data.radius_password, mikrotikParams.dst)
             : '';
 
         // Add RADIUS auto-login notice if applicable

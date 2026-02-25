@@ -630,12 +630,29 @@
     
     <!-- PWA Service Worker & Install Prompt -->
     <script>
-        // Register Service Worker
+        // Disable Service Worker to avoid stale cached JS/HTML delaying updates.
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js')
-                    .then(reg => console.log('✅ ServiceWorker registered:', reg.scope))
-                    .catch(err => console.log('⚠️ ServiceWorker registration failed:', err));
+            window.addEventListener('load', async () => {
+                try {
+                    const regs = await navigator.serviceWorker.getRegistrations();
+                    await Promise.all(regs.map((reg) => reg.unregister()));
+
+                    if ('caches' in window) {
+                        const cacheNames = await caches.keys();
+                        await Promise.all(cacheNames.map((name) => caches.delete(name)));
+                    }
+
+                    // If this tab was still controlled by an old SW, reload once.
+                    if (navigator.serviceWorker.controller && !sessionStorage.getItem('sw_cleanup_reloaded')) {
+                        sessionStorage.setItem('sw_cleanup_reloaded', '1');
+                        window.location.reload();
+                        return;
+                    }
+
+                    console.log('✅ ServiceWorker disabled and caches cleared');
+                } catch (err) {
+                    console.log('⚠️ ServiceWorker cleanup failed:', err);
+                }
             });
         }
         
