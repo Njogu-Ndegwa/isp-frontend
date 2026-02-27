@@ -86,7 +86,10 @@ const MAINTENANCE_PLAN = {
 // API CONFIGURATION
 // ========================================
 const API_BASE_URL = 'https://isp.bitwavetechnologies.com/api';
-const PLANS_ENDPOINT = `${API_BASE_URL}/plans?user_id=1`;
+// Plans endpoint - built dynamically after router lookup
+function getPlansUrl(rId) {
+    return `${API_BASE_URL}/public/plans/${rId || FALLBACK_ROUTER_ID}`;
+}
 const PAYMENT_ENDPOINT = `${API_BASE_URL}/hotspot/register-and-pay`;
 const PAYMENT_STATUS_ENDPOINT = `${API_BASE_URL}/hotspot/payment-status`;
 const ROUTER_LOOKUP_ENDPOINT = `${API_BASE_URL}/routers/by-identity`;
@@ -186,117 +189,32 @@ async function getRouterId(identity) {
 }
 
 // ========================================
-// HARDCODED PLANS - For instant loading (zero latency)
-// Update these manually when plans change in the backend
+// PLAN CACHING (localStorage)
 // ========================================
-// Offer plan IDs - these are shown strategically by upsell.js, NOT in base list
-const OFFER_PLAN_IDS = [16, 17, 18];
+const PLANS_CACHE_KEY = 'isp_cached_plans';
+const PLANS_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
-// Bestseller plan ID - this plan gets highlighted and shown first
-// 12 Hour Plan (id: 13) - high revenue generator
-const BESTSELLER_PLAN_ID = 13;
+function getCachedPlans() {
+    try {
+        const raw = localStorage.getItem(PLANS_CACHE_KEY);
+        if (!raw) return null;
+        const { plans, ts } = JSON.parse(raw);
+        if (Date.now() - ts > PLANS_CACHE_TTL) {
+            localStorage.removeItem(PLANS_CACHE_KEY);
+            return null;
+        }
+        return plans;
+    } catch { return null; }
+}
 
-const HARDCODED_PLANS = [
-    {
-        "id": 10,
-        "name": "1 Hour Plan",
-        "speed": "5M/5M",
-        "price": 5,
-        "duration_value": 1,
-        "duration_unit": "HOURS",
-        "connection_type": "hotspot",
-        "router_profile": "default",
-        "user_id": 1
-    },
-    {
-        "id": 11,
-        "name": "7 Minute Plan",
-        "speed": "5M/5M",
-        "price": 1,
-        "duration_value": 7,
-        "duration_unit": "MINUTES",
-        "connection_type": "hotspot",
-        "router_profile": "default",
-        "user_id": 1
-    },
-    {
-        "id": 12,
-        "name": "24 Hour Plan",
-        "speed": "5M/5M",
-        "price": 20,
-        "duration_value": 24,
-        "duration_unit": "HOURS",
-        "connection_type": "hotspot",
-        "router_profile": "default",
-        "user_id": 1
-    },
-    {
-        "id": 13,
-        "name": "12 Hour Plan",
-        "speed": "5M/5M",
-        "price": 15,
-        "duration_value": 12,
-        "duration_unit": "HOURS",
-        "connection_type": "hotspot",
-        "router_profile": "default",
-        "user_id": 1
-    },
-    {
-        "id": 14,
-        "name": "6 Hr Plan",
-        "speed": "5M/5M",
-        "price": 12,
-        "duration_value": 6,
-        "duration_unit": "HOURS",
-        "connection_type": "hotspot",
-        "router_profile": "default",
-        "user_id": 1
-    },
-    {
-        "id": 15,
-        "name": "7 Day Plan",
-        "speed": "5M/5M",
-        "price": 99,
-        "duration_value": 7,
-        "duration_unit": "DAYS",
-        "connection_type": "hotspot",
-        "router_profile": "default",
-        "user_id": 1
-    },
-    {
-        "id": 16,
-        "name": "2 Hour Plan",
-        "speed": "5M/5M",
-        "price": 8,
-        "duration_value": 2,
-        "duration_unit": "HOURS",
-        "connection_type": "hotspot",
-        "router_profile": "default",
-        "user_id": 1
-    },
-    {
-        "id": 17,
-        "name": "15 Minute Boost",
-        "speed": "5M/5M",
-        "price": 2,
-        "duration_value": 15,
-        "duration_unit": "MINUTES",
-        "connection_type": "hotspot",
-        "router_profile": "default",
-        "user_id": 1
-    },
-    {
-        "id": 18,
-        "name": "Full Day Deal",
-        "speed": "5M/5M",
-        "price": 18,
-        "duration_value": 1,
-        "duration_unit": "DAYS",
-        "connection_type": "hotspot",
-        "router_profile": "default",
-        "user_id": 1
-    }
-];
+function cachePlans(plans) {
+    try {
+        localStorage.setItem(PLANS_CACHE_KEY, JSON.stringify({ plans, ts: Date.now() }));
+    } catch { /* quota exceeded - ignore */ }
+}
+
+// Bestseller plan ID - highlighted and shown first (updated from API if is_bestseller flag present)
+let BESTSELLER_PLAN_ID = 13;
 
 // ========================================
 // EXTRACT MIKROTIK URL PARAMETERS
@@ -343,12 +261,53 @@ function normalizeGateway(gw) {
     return value;
 }
 
+function normalizeDestination(dst, gw) {
+    if (!dst) return '';
+
+    let value = String(dst).trim();
+    if (!value) return '';
+
+    // `dst` must be an absolute URL for MikroTik post-login redirect.
+    if (!/^https?:\/\//i.test(value)) {
+        return '';
+    }
+
+    const gatewayHost = normalizeGateway(gw).toLowerCase();
+
+    try {
+        const parsed = new URL(value);
+        const dstHost = (parsed.hostname || '').toLowerCase();
+        const dstPath = (parsed.pathname || '/').toLowerCase();
+
+        // Prevent redirecting back to hotspot control pages, which often show 404/loop.
+        const isGatewayHost = gatewayHost && dstHost === gatewayHost;
+        const isRouterMgmtHost = dstHost === '192.168.88.1';
+        const isHotspotControlPath =
+            dstPath === '/' ||
+            dstPath.startsWith('/login') ||
+            dstPath.startsWith('/logout') ||
+            dstPath.startsWith('/status') ||
+            dstPath.startsWith('/error');
+
+        if ((isGatewayHost || isRouterMgmtHost) && isHotspotControlPath) {
+            console.warn('[RADIUS] Ignoring unsafe dst redirect target:', value);
+            return '';
+        }
+
+        return value;
+    } catch (e) {
+        console.warn('[RADIUS] Invalid dst URL, ignoring:', value);
+        return '';
+    }
+}
+
 function buildRadiusLoginUrl(gw, username, password, dst) {
     const gateway = normalizeGateway(gw);
     if (!gateway || !username || !password) return '';
     let url = `http://${gateway}/login?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
-    if (dst) {
-        url += `&dst=${encodeURIComponent(dst)}`;
+    const safeDst = normalizeDestination(dst, gateway);
+    if (safeDst) {
+        url += `&dst=${encodeURIComponent(safeDst)}`;
     }
     return url;
 }
@@ -511,52 +470,44 @@ document.addEventListener('DOMContentLoaded', () => {
     
     console.log('🔄 [ROUTER DEBUG] Calling getRouterId() with identity:', `"${routerIdentity}"`);
     
+    // Show cached plans instantly so users see something while router resolves
+    const cachedPlans = getCachedPlans();
+    if (cachedPlans) {
+        console.log('⚡ Showing cached plans while router resolves...');
+        displayPlans(cachedPlans);
+    }
+
     getRouterId(routerIdentity)
         .then(id => {
-            console.log('═══════════════════════════════════════════════════════');
-            console.log('✅ [ROUTER DEBUG] STEP 3: ROUTER LOOKUP SUCCESS');
-            console.log('═══════════════════════════════════════════════════════');
-            console.log('📥 Received router_id from API:', id);
-            console.log('📥 router_id type:', typeof id);
-            console.log('📍 Global routerId BEFORE assignment:', routerId);
-            
+            console.log('✅ Router lookup SUCCESS, id:', id);
             routerId = id;
-            
-            console.log('📍 Global routerId AFTER assignment:', routerId);
-            console.log('✅ Router ID resolved:', routerId, '(from lookup)');
-            console.log('═══════════════════════════════════════════════════════');
         })
         .catch(error => {
-            console.log('═══════════════════════════════════════════════════════');
-            console.error('❌ [ROUTER DEBUG] STEP 3: ROUTER LOOKUP FAILED');
-            console.log('═══════════════════════════════════════════════════════');
-            console.error('❌ Error message:', error.message);
-            console.error('❌ Full error:', error);
-            console.warn('⚠️ Using fallback router_id:', FALLBACK_ROUTER_ID);
-            console.log('📍 Global routerId BEFORE fallback assignment:', routerId);
-            
+            console.error('❌ Router lookup FAILED:', error.message);
             routerId = FALLBACK_ROUTER_ID;
-            // Keep routerAuthMethod as default 'DIRECT_API' for safety when lookup fails
             routerAuthMethod = 'DIRECT_API';
-            
-            console.log('📍 Global routerId AFTER fallback assignment:', routerId);
-            console.log('🔐 [ROUTER DEBUG] routerAuthMethod reset to DIRECT_API (fallback mode)');
-            console.log('═══════════════════════════════════════════════════════');
+        })
+        .then(async () => {
+            // Fetch fresh plans from API using the resolved routerId
+            console.log('📡 Fetching plans for router_id:', routerId);
+            try {
+                const freshPlans = await fetchPlansFromAPI(routerId);
+                cachePlans(freshPlans);
+                displayPlans(freshPlans);
+                console.log('✅ Plans loaded from API:', freshPlans.length);
+            } catch (error) {
+                console.warn('⚠️ API plan fetch failed:', error.message);
+                if (!cachedPlans) {
+                    showPlansError();
+                }
+            }
         })
         .finally(() => {
-            console.log('═══════════════════════════════════════════════════════');
-            console.log('🏁 [ROUTER DEBUG] STEP 4: ROUTER LOOKUP COMPLETE');
-            console.log('═══════════════════════════════════════════════════════');
-            console.log('📍 FINAL Global routerId value:', routerId);
-            console.log('📍 FINAL routerId type:', typeof routerId);
-            
-            // Enable pay button once router_id is ready (success or fallback)
+            console.log('🏁 Router + plans resolved. routerId:', routerId);
             if (submitButton) {
                 submitButton.disabled = false;
-                console.log('🔓 [ROUTER DEBUG] Pay button ENABLED');
-                console.log('✅ Pay button enabled, router_id =', routerId);
+                console.log('🔓 Pay button ENABLED');
             }
-            console.log('═══════════════════════════════════════════════════════');
         });
     
     // Check maintenance mode - show banner and special offer if active
@@ -565,9 +516,6 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('📦 Special Plan:', MAINTENANCE_PLAN);
         initMaintenanceMode();
     }
-    
-    // Always load plans (they show alongside maintenance banner)
-    loadPlans();
     
     setupEventListeners();
     loadSavedPhoneNumber(); // Works on desktop; mobile captive portals wipe storage
@@ -740,90 +688,101 @@ function loadSavedPhoneNumber() {
 }
 
 // ========================================
-// LOAD PLANS - Uses hardcoded plans for instant loading
+// LOAD PLANS - Fetches from API with cache + retry UI
 // ========================================
-function loadPlans() {
-    console.log('⚡ Loading hardcoded plans (instant)...');
-    
-    // Filter out offer plans - they're shown strategically by upsell.js
-    const basePlans = HARDCODED_PLANS.filter(plan => !OFFER_PLAN_IDS.includes(plan.id));
-    console.log(`📋 Base plans: ${basePlans.length} (excluded ${OFFER_PLAN_IDS.length} offer plans)`);
-    
-    // Use hardcoded plans immediately - no network latency!
-    const plans = transformPlansData(basePlans);
-    allPlans = plans; // Store for later use
-    
+function displayPlans(rawPlans) {
+    console.log(`📋 Displaying ${rawPlans.length} plans from API`);
+    const plans = transformPlansData(rawPlans);
+    allPlans = plans;
     renderPlans(plans);
-    console.log('✅ Plans rendered instantly:', plans.length, 'plans');
 }
 
-// ========================================
-// FORCE REFRESH PLANS FROM API (Optional - call manually)
-// Use this when you need to sync with backend changes
-// Call from console: forceRefreshPlans()
-// ========================================
-async function forceRefreshPlans() {
-    try {
-        console.log('📡 Force refreshing plans from API...');
-        
-        // Show loading state
-        plansGrid.innerHTML = `
-            <div class="skeleton-card"></div>
-            <div class="skeleton-card"></div>
-            <div class="skeleton-card"></div>
-            <div class="skeleton-card"></div>
-        `;
-        
-        // Add timeout to fetch request (30 seconds)
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000);
-        
-        const response = await fetch(getProxiedUrl(PLANS_ENDPOINT), {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            mode: 'cors',
-            signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-            throw new Error(`API Error: ${response.status} ${response.statusText}`);
-        }
-        
-        const apiPlans = await response.json();
-        console.log('✅ Plans refreshed from API:', apiPlans);
-        
-        if (!Array.isArray(apiPlans) || apiPlans.length === 0) {
-            throw new Error('No plans available from API');
-        }
-        
-        // Filter out offer plans - they're shown strategically by upsell.js
-        const basePlans = apiPlans.filter(plan => !OFFER_PLAN_IDS.includes(plan.id));
-        console.log(`📋 Base plans: ${basePlans.length} (excluded ${OFFER_PLAN_IDS.length} offer plans)`);
-        
-        // Transform and render
-        const plans = transformPlansData(basePlans);
-        allPlans = plans;
-        renderPlans(plans);
-        
-        // Log the JSON for updating HARDCODED_PLANS
-        console.log('📋 Copy this to update HARDCODED_PLANS:');
-        console.log(JSON.stringify(apiPlans, null, 4));
-        
-        return apiPlans;
-    } catch (error) {
-        console.error('❌ Error refreshing plans:', error);
-        
-        // Fall back to hardcoded plans
-        console.log('🔄 Falling back to hardcoded plans...');
-        loadPlans();
-        
-        throw error;
+function showPlansError() {
+    plansGrid.innerHTML = `
+        <div style="grid-column:1/-1;text-align:center;padding:2rem 1rem;">
+            <div style="font-size:2rem;margin-bottom:.5rem;">📡</div>
+            <p style="font-weight:600;margin:0 0 .25rem;">Couldn't load plans</p>
+            <p style="opacity:.65;font-size:.85rem;margin:0 0 1rem;">Check your connection and try again</p>
+            <button id="retryPlansBtn"
+                style="padding:.6rem 1.5rem;border:none;border-radius:8px;
+                       background:var(--primary,#2563eb);color:#fff;font-weight:600;
+                       cursor:pointer;font-size:.9rem;">
+                🔄 Retry
+            </button>
+        </div>
+    `;
+    document.getElementById('retryPlansBtn')
+        .addEventListener('click', () => forceRefreshPlans());
+}
+
+async function fetchPlansFromAPI(rId) {
+    const url = getPlansUrl(rId);
+    console.log('📡 Fetching plans from:', url);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+    const response = await fetch(getProxiedUrl(url), {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+        mode: 'cors',
+        signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+        throw new Error(`API ${response.status} ${response.statusText}`);
     }
+
+    const apiPlans = await response.json();
+
+    if (!Array.isArray(apiPlans) || apiPlans.length === 0) {
+        throw new Error('Empty plans response');
+    }
+
+    // If the API returns a bestseller flag, use it
+    const apiBestseller = apiPlans.find(p => p.is_bestseller);
+    if (apiBestseller) {
+        BESTSELLER_PLAN_ID = apiBestseller.id;
+        console.log('🏷️ Bestseller ID from API:', BESTSELLER_PLAN_ID);
+    }
+
+    return apiPlans;
+}
+
+async function loadPlans(rId) {
+    // 1. Instant display from cache (zero latency for returning users)
+    const cached = getCachedPlans();
+    if (cached) {
+        console.log('⚡ Rendering cached plans instantly');
+        displayPlans(cached);
+    }
+
+    // 2. Fetch fresh plans from API
+    try {
+        const freshPlans = await fetchPlansFromAPI(rId);
+        cachePlans(freshPlans);
+        displayPlans(freshPlans);
+        console.log('✅ Plans loaded from API:', freshPlans.length);
+    } catch (error) {
+        console.warn('⚠️ API plan fetch failed:', error.message);
+
+        if (!cached) {
+            showPlansError();
+        }
+    }
+}
+
+async function forceRefreshPlans() {
+    plansGrid.innerHTML = `
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+    `;
+    localStorage.removeItem(PLANS_CACHE_KEY);
+    return loadPlans(routerId);
 }
 
 // ========================================
@@ -1049,20 +1008,6 @@ function formatPrice(price) {
 // SELECT PLAN
 // ========================================
 function selectPlan(plan) {
-    // Check if this is the 7-minute plan (ID 11) - show upsell prompt
-    if (plan.id === 11 || (plan.originalData && plan.originalData.id === 11)) {
-        showSevenMinuteUpsellPrompt(plan);
-        return; // Don't proceed until user makes a choice
-    }
-    
-    // Proceed with plan selection
-    proceedWithPlanSelection(plan);
-}
-
-// ========================================
-// PROCEED WITH PLAN SELECTION (after upsell decision)
-// ========================================
-function proceedWithPlanSelection(plan) {
     selectedPlan = plan;
     
     // Update selected plan display
@@ -1083,91 +1028,6 @@ function proceedWithPlanSelection(plan) {
     setTimeout(() => {
         phoneNumberInput.focus();
     }, 300);
-}
-
-// ========================================
-// 7-MINUTE UPSELL PROMPT
-// Shows when user selects 7-min plan, suggesting 1-hour instead
-// ========================================
-function showSevenMinuteUpsellPrompt(sevenMinPlan) {
-    // Find the 1-hour plan from allPlans
-    const oneHourPlan = allPlans.find(p => p.id === 10 || (p.originalData && p.originalData.id === 10));
-    
-    if (!oneHourPlan) {
-        // If 1-hour plan not found, just proceed with 7-min
-        proceedWithPlanSelection(sevenMinPlan);
-        return;
-    }
-    
-    // Create modal overlay
-    const modal = document.createElement('div');
-    modal.className = 'upsell-modal-overlay';
-    modal.innerHTML = `
-        <div class="upsell-modal">
-            <div class="upsell-modal-header">
-                <span class="upsell-icon">💡</span>
-                <span class="upsell-title">Did you know?</span>
-            </div>
-            <div class="upsell-modal-body">
-                <div class="upsell-comparison">
-                    <div class="upsell-option current">
-                        <div class="option-label">You selected</div>
-                        <div class="option-duration">7 Minutes</div>
-                        <div class="option-price">KSH 1</div>
-                        <div class="option-note">1 quick task</div>
-                    </div>
-                    <div class="upsell-arrow">→</div>
-                    <div class="upsell-option better">
-                        <div class="option-label">Better value</div>
-                        <div class="option-duration">1 Hour</div>
-                        <div class="option-price">KSH 5</div>
-                        <div class="option-note">Browse freely!</div>
-                        <div class="option-badge">12x more time</div>
-                    </div>
-                </div>
-                <div class="upsell-message">
-                    ⚡ Just <strong>KSH 4 more</strong> for <strong>12x the time!</strong>
-                </div>
-            </div>
-            <div class="upsell-modal-actions">
-                <button class="upsell-btn primary" id="upsellAccept">
-                    Get 1 Hour - KSH 5
-                </button>
-                <button class="upsell-btn secondary" id="upsellDecline">
-                    Keep 7 Minutes
-                </button>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-    
-    // Add click handlers
-    const acceptBtn = modal.querySelector('#upsellAccept');
-    const declineBtn = modal.querySelector('#upsellDecline');
-    
-    acceptBtn.addEventListener('click', () => {
-        modal.remove();
-        console.log('✅ User upgraded from 7-min to 1-hour');
-        proceedWithPlanSelection(oneHourPlan);
-    });
-    
-    declineBtn.addEventListener('click', () => {
-        modal.remove();
-        console.log('⏭️ User kept 7-min plan');
-        proceedWithPlanSelection(sevenMinPlan);
-    });
-    
-    // Close on overlay click (outside modal)
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.remove();
-            // Don't select anything - let them choose again
-        }
-    });
-    
-    // Focus on the primary button
-    setTimeout(() => acceptBtn.focus(), 100);
 }
 
 // ========================================
