@@ -103,6 +103,7 @@ const RADIUS_PAYMENT_STATUS_ENDPOINT = `${API_BASE_URL}/radius/hotspot/payment-s
 const FALLBACK_ROUTER_ID = 2;
 let routerId = null; // Will be set after lookup
 let routerAuthMethod = 'DIRECT_API'; // Will be set after lookup ('DIRECT_API' or 'RADIUS')
+let routerBusinessName = null; // Will be set after lookup from backend
 
 // Payment polling configuration
 const PAYMENT_POLL_INTERVAL = 3000; // Poll every 3 seconds
@@ -177,6 +178,12 @@ async function getRouterId(identity) {
         // Store auth_method globally for use in payment flow
         routerAuthMethod = data.auth_method || 'DIRECT_API';
         console.log('🔐 [ROUTER DEBUG] Router auth_method set to:', routerAuthMethod);
+        
+        // Store business name for branding
+        if (data.business_name) {
+            routerBusinessName = data.business_name;
+            console.log('🏢 [ROUTER DEBUG] Business name:', routerBusinessName);
+        }
         
         return data.router_id;
         
@@ -481,6 +488,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(id => {
             console.log('✅ Router lookup SUCCESS, id:', id);
             routerId = id;
+            updateBranding();
         })
         .catch(error => {
             console.error('❌ Router lookup FAILED:', error.message);
@@ -616,6 +624,20 @@ function setupBrandLink() {
     });
     
     console.log('🔗 Brand link configured');
+}
+
+// ========================================
+// UPDATE BRANDING - Apply business name from router lookup
+// ========================================
+function updateBranding() {
+    if (!routerBusinessName) return;
+    
+    const logoEl = document.querySelector('.logo');
+    if (logoEl) logoEl.textContent = routerBusinessName;
+    
+    document.title = `${routerBusinessName} - Get Connected`;
+    
+    console.log('🏢 Branding updated to:', routerBusinessName);
 }
 
 // ========================================
