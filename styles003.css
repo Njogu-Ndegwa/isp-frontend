@@ -469,8 +469,7 @@ body::before {
     grid-template-columns: repeat(2, 1fr);
     gap: var(--space-md);
     margin-bottom: var(--space-lg);
-    /* Prevent layout shift - reserve space for 6 cards (3 rows) */
-    min-height: 450px;
+    align-content: start;
 }
 
 /* Skeleton Loading */
