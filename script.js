@@ -86,7 +86,9 @@ const MAINTENANCE_PLAN = {
 // API CONFIGURATION
 // ========================================
 const API_BASE_URL = 'https://isp.bitwavetechnologies.com/api';
-// Plans endpoint - built dynamically after router lookup
+// Single portal endpoint — returns router, plans, and ads in one request
+const PORTAL_ENDPOINT = `${API_BASE_URL}/public/portal`;
+// Legacy endpoints (used as fallback if portal endpoint fails)
 function getPlansUrl(rId) {
     return `${API_BASE_URL}/public/plans/${rId || FALLBACK_ROUTER_ID}`;
 }
@@ -193,6 +195,39 @@ async function getRouterId(identity) {
         console.log('═══════════════════════════════════════════════════════');
         throw error;
     }
+}
+
+// ========================================
+// PORTAL DATA FETCH — single request for router + plans + ads
+// GET /api/public/portal/{identity}
+// ========================================
+async function fetchPortalData(identity) {
+    if (!identity) {
+        throw new Error('No router identity for portal lookup');
+    }
+
+    const url = `${PORTAL_ENDPOINT}/${encodeURIComponent(identity)}`;
+    console.log('📡 [PORTAL] Fetching all data from:', url);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+    const response = await fetch(getProxiedUrl(url), {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+        mode: 'cors',
+        signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+        throw new Error(`Portal API ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log('✅ [PORTAL] Response:', JSON.stringify(data, null, 2));
+    return data;
 }
 
 // ========================================
@@ -458,60 +493,75 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('🔒 [ROUTER DEBUG] Pay button DISABLED until router_id resolves');
     }
     
-    // Lookup router_id from identity (non-blocking - runs in background)
-    // Router ID is only needed at payment time, not for displaying content
-    console.log('═══════════════════════════════════════════════════════');
-    console.log('🔍 [ROUTER DEBUG] STEP 1.5: PREPARING ROUTER IDENTITY');
-    console.log('═══════════════════════════════════════════════════════');
-    console.log('📍 mikrotikParams.router value:', `"${mikrotikParams.router}"`);
-    console.log('📍 mikrotikParams.router is truthy:', !!mikrotikParams.router);
-    console.log('📍 mikrotikParams.router is empty string:', mikrotikParams.router === '');
-    
     const routerIdentity = mikrotikParams.router || 'MikroTik';
-    
-    console.log('📍 After fallback logic (|| "MikroTik"):');
-    console.log('📍 Final routerIdentity:', `"${routerIdentity}"`);
-    console.log('📍 Will use fallback "MikroTik":', routerIdentity === 'MikroTik' && !mikrotikParams.router);
-    console.log('🌐 Lookup URL:', `${ROUTER_LOOKUP_ENDPOINT}/${encodeURIComponent(routerIdentity)}`);
-    console.log('═══════════════════════════════════════════════════════');
-    
-    console.log('🔄 [ROUTER DEBUG] Calling getRouterId() with identity:', `"${routerIdentity}"`);
-    
-    // Show cached plans instantly so users see something while router resolves
+    console.log('📍 Router identity:', `"${routerIdentity}"`);
+
+    // Show cached plans instantly so users see something while portal data loads
     const cachedPlans = getCachedPlans();
     if (cachedPlans) {
-        console.log('⚡ Showing cached plans while router resolves...');
+        console.log('⚡ Showing cached plans while portal data loads...');
         displayPlans(cachedPlans);
     }
 
-    getRouterId(routerIdentity)
-        .then(id => {
-            console.log('✅ Router lookup SUCCESS, id:', id);
-            routerId = id;
-            updateBranding();
+    // Single portal fetch — router + plans + ads in one request
+    // Falls back to individual endpoints if the portal endpoint fails
+    window.portalDataPromise = fetchPortalData(routerIdentity)
+        .then(data => {
+            // ---- Router info ----
+            if (data.router) {
+                routerId = data.router.router_id;
+                routerAuthMethod = data.router.auth_method || 'DIRECT_API';
+                routerBusinessName = data.router.business_name || null;
+                console.log('✅ [PORTAL] Router resolved — id:', routerId, 'auth:', routerAuthMethod);
+                updateBranding();
+            }
+
+            // ---- Plans ----
+            if (Array.isArray(data.plans) && data.plans.length > 0) {
+                const apiBestseller = data.plans.find(p => p.is_bestseller);
+                if (apiBestseller) {
+                    BESTSELLER_PLAN_ID = apiBestseller.id;
+                }
+                cachePlans(data.plans);
+                displayPlans(data.plans);
+                console.log('✅ [PORTAL] Plans loaded:', data.plans.length);
+            } else if (!cachedPlans) {
+                showPlansError();
+            }
+
+            // ---- Ads (store for ads.js to consume) ----
+            window._portalAds = data.ads || [];
+            console.log('✅ [PORTAL] Ads received:', window._portalAds.length);
+
+            return data;
         })
-        .catch(error => {
-            console.error('❌ Router lookup FAILED:', error.message);
-            routerId = FALLBACK_ROUTER_ID;
-            routerAuthMethod = 'DIRECT_API';
-        })
-        .then(async () => {
-            // Fetch fresh plans from API using the resolved routerId
-            console.log('📡 Fetching plans for router_id:', routerId);
+        .catch(async (error) => {
+            console.warn('⚠️ [PORTAL] Portal fetch failed, falling back to individual endpoints:', error.message);
+            window._portalAds = null; // signal ads.js to fetch independently
+
+            // Fallback: individual router lookup + plans fetch
+            try {
+                routerId = await getRouterId(routerIdentity);
+                updateBranding();
+            } catch (err) {
+                console.error('❌ Router lookup fallback failed:', err.message);
+                routerId = FALLBACK_ROUTER_ID;
+                routerAuthMethod = 'DIRECT_API';
+            }
+
             try {
                 const freshPlans = await fetchPlansFromAPI(routerId);
                 cachePlans(freshPlans);
                 displayPlans(freshPlans);
-                console.log('✅ Plans loaded from API:', freshPlans.length);
-            } catch (error) {
-                console.warn('⚠️ API plan fetch failed:', error.message);
+            } catch (err) {
+                console.warn('⚠️ Plans fallback failed:', err.message);
                 if (!cachedPlans) {
                     showPlansError();
                 }
             }
         })
         .finally(() => {
-            console.log('🏁 Router + plans resolved. routerId:', routerId);
+            console.log('🏁 Portal data resolved. routerId:', routerId);
             if (submitButton) {
                 submitButton.disabled = false;
                 console.log('🔓 Pay button ENABLED');

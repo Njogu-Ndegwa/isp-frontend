@@ -1072,26 +1072,52 @@ function updateStickyAd() {
 }
 
 // ========================================
+// INITIALIZE ADS FROM PORTAL DATA (called when portal endpoint provides ads)
+// ========================================
+function initAdsFromPortalData(portalAds) {
+    if (Array.isArray(portalAds) && portalAds.length > 0) {
+        adsData = applyLocalImages(portalAds);
+        showAdSections();
+        renderAds(adsData);
+        recordImpression(adsData.map(ad => ad.id));
+        console.log('✅ [ADS] Initialized from portal data:', adsData.length, 'ads');
+    } else {
+        adsData = [];
+        hideAdSections();
+        console.log('📭 [ADS] No ads from portal — ad sections hidden');
+    }
+}
+
+// ========================================
 // INITIALIZATION
 // ========================================
 document.addEventListener('DOMContentLoaded', () => {
     console.log('📢 Ads Service Initialized');
     
-    // Setup modal listeners
     setupModalListeners();
-    
-    // Fetch ads (will use hardcoded as fallback)
-    fetchAds().finally(() => {
-        // Initialize sticky ad after ads are loaded
+
+    // If script.js provides a portal data promise, wait for it to avoid a duplicate fetch.
+    // Otherwise fall back to the standalone ads fetch.
+    const adsReady = window.portalDataPromise
+        ? window.portalDataPromise
+            .then(() => {
+                if (window._portalAds !== null && window._portalAds !== undefined) {
+                    initAdsFromPortalData(window._portalAds);
+                } else {
+                    return fetchAds();
+                }
+            })
+            .catch(() => fetchAds())
+        : fetchAds();
+
+    adsReady.finally(() => {
         initStickyAd();
-        // Populate mini products in payment section
         populateMiniProducts();
     });
     
-    // Retry any pending clicks
     retryPendingClicks();
     
-    // Check for test mode (run independently)
+    // Check for test mode
     const urlParams = new URLSearchParams(window.location.search);
     const testMode = urlParams.get('test');
     if (testMode === 'success') {
