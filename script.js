@@ -110,6 +110,7 @@ let routerId = null; // Will be set after lookup
 let routerAuthMethod = 'DIRECT_API'; // Will be set after lookup ('DIRECT_API' or 'RADIUS')
 let routerBusinessName = null; // Will be set after lookup from backend
 let routerPaymentMethods = ['mpesa', 'voucher']; // Default — updated from portal/router API
+let routerSupportPhone = '0795635364'; // Default — updated from portal/router API
 
 // Payment polling configuration
 const PAYMENT_POLL_INTERVAL = 3000; // Poll every 3 seconds
@@ -197,6 +198,8 @@ async function getRouterId(identity) {
             applyPaymentMethods(routerPaymentMethods);
             console.log('💳 [ROUTER DEBUG] Payment methods:', routerPaymentMethods);
         }
+
+        updateSupportPhone(data.support_phone);
         
         return data.router_id;
         
@@ -527,6 +530,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('✅ [PORTAL] Router resolved — id:', routerId, 'auth:', routerAuthMethod, 'methods:', routerPaymentMethods);
                 updateBranding();
                 applyPaymentMethods(routerPaymentMethods);
+                updateSupportPhone(data.router.support_phone);
             }
 
             // ---- Plans ----
@@ -736,6 +740,21 @@ function applyPaymentMethods(methods) {
     }
 
     console.log('💳 Payment methods applied:', methods, '| mpesa:', hasMpesa, '| voucher:', hasVoucher);
+}
+
+// ========================================
+// SUPPORT PHONE — update all tel: links from router config
+// ========================================
+function updateSupportPhone(phone) {
+    if (!phone) return;
+    routerSupportPhone = phone;
+
+    // Update every tel: link in the page
+    document.querySelectorAll('a[href^="tel:"]').forEach(link => {
+        link.href = `tel:${phone}`;
+    });
+
+    console.log('📞 Support phone updated to:', phone);
 }
 
 // ========================================
