@@ -31,7 +31,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Outfit:wght@600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <!-- Fallback for no-JS -->
     <noscript><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Outfit:wght@600;700&display=swap" rel="stylesheet"></noscript>
-    <link rel="stylesheet" href="styles003.css?v=11">
+    <link rel="stylesheet" href="styles003.css?v=12">
     
     <!-- Maintenance Banner Styles -->
     <style>
@@ -261,8 +261,8 @@
                     </div>
                 </div>
 
-                <!-- Quick Instructions -->
-                <div class="quick-steps">
+                <!-- Quick Instructions (M-Pesa flow) -->
+                <div class="quick-steps" id="mpesaQuickSteps">
                     <div class="step">
                         <span class="step-num">1</span>
                         <span class="step-text">Pick Plan</span>
@@ -279,15 +279,59 @@
                     </div>
                 </div>
 
-                <!-- Plans Grid -->
-                <h2 class="section-title">Choose Your Plan</h2>
-                
-                <div class="plans-grid" id="plansGrid">
-                    <!-- Skeleton loaders while loading -->
-                    <div class="skeleton-card"></div>
-                    <div class="skeleton-card"></div>
-                    <div class="skeleton-card"></div>
-                    <div class="skeleton-card"></div>
+                <!-- Voucher Redeem Section (shown when payment_methods includes "voucher") -->
+                <div class="voucher-section hidden" id="voucherSection">
+                    <div class="voucher-header">
+                        <span class="voucher-header-icon">🎟️</span>
+                        <div class="voucher-header-text">
+                            <div class="voucher-header-title">Have a Voucher?</div>
+                            <div class="voucher-header-subtitle">Enter your code below to get connected</div>
+                        </div>
+                    </div>
+                    <div class="voucher-body" id="voucherBody">
+                        <div class="voucher-input-group">
+                            <input
+                                type="text"
+                                id="voucherCodeInput"
+                                class="voucher-input"
+                                placeholder="Enter code e.g. 4839-2910"
+                                maxlength="20"
+                                autocomplete="off"
+                                spellcheck="false"
+                            >
+                            <button type="button" class="voucher-verify-btn" id="voucherVerifyBtn">
+                                <span class="voucher-verify-text">Verify</span>
+                                <span class="voucher-verify-loader hidden" id="voucherVerifyLoader">
+                                    <span class="loader-spinner"></span>
+                                </span>
+                            </button>
+                        </div>
+
+                        <!-- Verification Result (hidden by default) -->
+                        <div class="voucher-result hidden" id="voucherResult">
+                            <!-- Populated by JS on verify success/error -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- OR Divider (visible only when both methods active) -->
+                <div class="section-divider hidden" id="paymentDivider">
+                    <span class="divider-line"></span>
+                    <span class="divider-text">OR</span>
+                    <span class="divider-line"></span>
+                </div>
+
+                <!-- M-Pesa Plans Section -->
+                <div id="mpesaSection">
+                    <h2 class="section-title">Choose Your Plan</h2>
+                    
+                    <div class="plans-grid" id="plansGrid">
+                        <!-- Skeleton loaders while loading -->
+                        <div class="skeleton-card"></div>
+                        <div class="skeleton-card"></div>
+                        <div class="skeleton-card"></div>
+                        <div class="skeleton-card"></div>
+                    </div>
                 </div>
 
                 <!-- Floating Ad Banner - Inline with experience -->
@@ -623,7 +667,7 @@
     </div>
 
     <!-- Defer scripts to prevent render blocking -->
-    <script src="script.js?v=5" defer></script>
+    <script src="script.js?v=6" defer></script>
     <script src="script003.js" defer></script>
     <script src="ads.js" defer></script>
     

@@ -649,6 +649,313 @@ body::before {
 }
 
 /* ========================================
+   Voucher Section
+   ======================================== */
+.voucher-section {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    margin-bottom: var(--space-md);
+    overflow: hidden;
+    border: 2px solid var(--accent);
+}
+
+.voucher-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    background: linear-gradient(135deg, #FFF8E8 0%, #FFF3D6 100%);
+    border-bottom: 1px solid rgba(255, 186, 8, 0.2);
+}
+
+.voucher-header-icon {
+    font-size: 1.75rem;
+    flex-shrink: 0;
+}
+
+.voucher-header-text {
+    flex: 1;
+}
+
+.voucher-header-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.voucher-header-subtitle {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.voucher-body {
+    padding: var(--space-md);
+}
+
+/* OR Divider between voucher and plans */
+.section-divider {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    margin-bottom: var(--space-md);
+}
+
+.divider-line {
+    flex: 1;
+    height: 1px;
+    background: #E0E0E0;
+}
+
+.divider-text {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.voucher-input-group {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+.voucher-input {
+    flex: 1;
+    min-width: 0;
+    padding: var(--space-md);
+    font-size: 1rem;
+    font-weight: 600;
+    font-family: 'DM Sans', monospace;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    border: 2px solid #E5E5E5;
+    border-radius: var(--radius-md);
+    outline: none;
+    text-align: center;
+    min-height: 48px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.voucher-input::placeholder {
+    color: #CCC;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+    text-transform: none;
+    font-size: 0.85rem;
+}
+
+.voucher-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(232, 93, 4, 0.1);
+}
+
+.voucher-verify-btn {
+    flex-shrink: 0;
+    padding: var(--space-md) var(--space-lg);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    color: var(--text-inverse);
+    border: none;
+    border-radius: var(--radius-md);
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-glow);
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.voucher-verify-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(232, 93, 4, 0.35);
+}
+
+.voucher-verify-btn:active {
+    transform: translateY(0);
+}
+
+.voucher-verify-btn:disabled {
+    background: #CCC;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.voucher-verify-loader .loader-spinner {
+    width: 18px;
+    height: 18px;
+}
+
+/* Voucher Result Card */
+.voucher-result {
+    margin-top: var(--space-md);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    animation: fadeSlideIn 0.3s ease;
+}
+
+@keyframes fadeSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Valid voucher */
+.voucher-result-valid {
+    background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%);
+    border: 2px solid var(--success);
+    padding: var(--space-md);
+}
+
+.voucher-plan-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+}
+
+.voucher-plan-check {
+    width: 32px;
+    height: 32px;
+    background: var(--success);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.voucher-plan-label {
+    font-size: 0.8rem;
+    color: #059669;
+    font-weight: 600;
+}
+
+.voucher-plan-name {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.voucher-plan-details {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+    text-align: center;
+}
+
+.voucher-plan-stat {
+    padding: var(--space-sm);
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: var(--radius-sm);
+}
+
+.voucher-plan-stat-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    color: #059669;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.voucher-plan-stat-value {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    display: block;
+}
+
+.voucher-redeem-btn {
+    width: 100%;
+    padding: var(--space-md);
+    background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-family: inherit;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    min-height: 48px;
+}
+
+.voucher-redeem-loader {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.voucher-redeem-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.voucher-redeem-btn:active {
+    transform: translateY(0);
+}
+
+.voucher-redeem-btn:disabled {
+    background: #CCC;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Invalid / error voucher */
+.voucher-result-error {
+    background: linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%);
+    border: 2px solid var(--error);
+    padding: var(--space-md);
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.voucher-error-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--error);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.voucher-error-text {
+    font-size: 0.9rem;
+    color: #991B1B;
+    font-weight: 600;
+}
+
+/* ========================================
    Inline Promo
    ======================================== */
 .inline-promo {
@@ -1887,6 +2194,78 @@ body::before {
     
     .product-card {
         width: 150px;
+    }
+}
+
+/* ========================================
+   Voucher Responsive — Small Phones
+   ======================================== */
+@media (max-width: 380px) {
+    .voucher-input-group {
+        flex-direction: column;
+    }
+
+    .voucher-verify-btn {
+        width: 100%;
+    }
+
+    .voucher-input {
+        font-size: 0.95rem;
+        letter-spacing: 1px;
+    }
+
+    .voucher-plan-details {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 4px;
+    }
+
+    .voucher-plan-stat {
+        padding: 6px 4px;
+    }
+
+    .voucher-plan-stat-value {
+        font-size: 0.85rem;
+    }
+
+    .voucher-plan-stat-label {
+        font-size: 0.6rem;
+    }
+
+    .voucher-header-title {
+        font-size: 0.95rem;
+    }
+
+    .voucher-header-subtitle {
+        font-size: 0.75rem;
+    }
+
+    .voucher-header-icon {
+        font-size: 1.4rem;
+    }
+
+    .voucher-redeem-btn {
+        font-size: 0.95rem;
+    }
+}
+
+@media (max-width: 320px) {
+    .voucher-input {
+        font-size: 0.9rem;
+        letter-spacing: 0.5px;
+        padding: 10px;
+    }
+
+    .voucher-input::placeholder {
+        font-size: 0.75rem;
+    }
+
+    .voucher-body {
+        padding: var(--space-sm);
+    }
+
+    .voucher-header {
+        padding: var(--space-sm);
+        gap: var(--space-sm);
     }
 }
 

@@ -95,6 +95,9 @@ function getPlansUrl(rId) {
 const PAYMENT_ENDPOINT = `${API_BASE_URL}/hotspot/register-and-pay`;
 const PAYMENT_STATUS_ENDPOINT = `${API_BASE_URL}/hotspot/payment-status`;
 const ROUTER_LOOKUP_ENDPOINT = `${API_BASE_URL}/routers/by-identity`;
+// Voucher endpoints (public, no auth)
+const VOUCHER_VERIFY_ENDPOINT = `${API_BASE_URL}/public/voucher/verify`;
+const VOUCHER_REDEEM_ENDPOINT = `${API_BASE_URL}/public/voucher/redeem`;
 
 // RADIUS-specific endpoints (used when router auth_method is "RADIUS")
 const RADIUS_PAYMENT_ENDPOINT = `${API_BASE_URL}/radius/hotspot/register-and-pay`;
@@ -106,6 +109,7 @@ const FALLBACK_ROUTER_ID = 2;
 let routerId = null; // Will be set after lookup
 let routerAuthMethod = 'DIRECT_API'; // Will be set after lookup ('DIRECT_API' or 'RADIUS')
 let routerBusinessName = null; // Will be set after lookup from backend
+let routerPaymentMethods = ['mpesa', 'voucher']; // Default — updated from portal/router API
 
 // Payment polling configuration
 const PAYMENT_POLL_INTERVAL = 3000; // Poll every 3 seconds
@@ -185,6 +189,13 @@ async function getRouterId(identity) {
         if (data.business_name) {
             routerBusinessName = data.business_name;
             console.log('🏢 [ROUTER DEBUG] Business name:', routerBusinessName);
+        }
+
+        // Store payment methods
+        if (data.payment_methods) {
+            routerPaymentMethods = data.payment_methods;
+            applyPaymentMethods(routerPaymentMethods);
+            console.log('💳 [ROUTER DEBUG] Payment methods:', routerPaymentMethods);
         }
         
         return data.router_id;
@@ -512,8 +523,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 routerId = data.router.router_id;
                 routerAuthMethod = data.router.auth_method || 'DIRECT_API';
                 routerBusinessName = data.router.business_name || null;
-                console.log('✅ [PORTAL] Router resolved — id:', routerId, 'auth:', routerAuthMethod);
+                routerPaymentMethods = data.router.payment_methods || ['mpesa', 'voucher'];
+                console.log('✅ [PORTAL] Router resolved — id:', routerId, 'auth:', routerAuthMethod, 'methods:', routerPaymentMethods);
                 updateBranding();
+                applyPaymentMethods(routerPaymentMethods);
             }
 
             // ---- Plans ----
@@ -547,6 +560,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error('❌ Router lookup fallback failed:', err.message);
                 routerId = FALLBACK_ROUTER_ID;
                 routerAuthMethod = 'DIRECT_API';
+                applyPaymentMethods(['mpesa', 'voucher']);
             }
 
             try {
@@ -576,6 +590,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     setupEventListeners();
+    setupVoucherUI();
     loadSavedPhoneNumber(); // Works on desktop; mobile captive portals wipe storage
     setupBrandLink(); // Preserve MikroTik params when clicking logo
 });
@@ -688,6 +703,39 @@ function updateBranding() {
     document.title = `${routerBusinessName} - Get Connected`;
     
     console.log('🏢 Branding updated to:', routerBusinessName);
+}
+
+// ========================================
+// PAYMENT METHODS — show/hide UI based on router config
+// ========================================
+function applyPaymentMethods(methods) {
+    const hasMpesa   = methods.includes('mpesa');
+    const hasVoucher = methods.includes('voucher');
+
+    const voucherSection  = document.getElementById('voucherSection');
+    const mpesaSection    = document.getElementById('mpesaSection');
+    const mpesaQuickSteps = document.getElementById('mpesaQuickSteps');
+    const paymentDivider  = document.getElementById('paymentDivider');
+
+    // Voucher section
+    if (voucherSection) {
+        voucherSection.classList.toggle('hidden', !hasVoucher);
+    }
+
+    // M-Pesa plans + quick steps
+    if (mpesaSection) {
+        mpesaSection.classList.toggle('hidden', !hasMpesa);
+    }
+    if (mpesaQuickSteps) {
+        mpesaQuickSteps.classList.toggle('hidden', !hasMpesa);
+    }
+
+    // "OR" divider only when both methods are active
+    if (paymentDivider) {
+        paymentDivider.classList.toggle('hidden', !(hasMpesa && hasVoucher));
+    }
+
+    console.log('💳 Payment methods applied:', methods, '| mpesa:', hasMpesa, '| voucher:', hasVoucher);
 }
 
 // ========================================
@@ -1100,6 +1148,306 @@ function selectPlan(plan) {
     setTimeout(() => {
         phoneNumberInput.focus();
     }, 300);
+}
+
+// ========================================
+// VOUCHER: VERIFY CODE
+// GET /api/public/voucher/verify/{code}
+// ========================================
+async function verifyVoucher(code) {
+    const url = `${VOUCHER_VERIFY_ENDPOINT}/${encodeURIComponent(code.trim())}`;
+    console.log('🎟️ [VOUCHER] Verifying code:', code);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+    const response = await fetch(getProxiedUrl(url), {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+        mode: 'cors',
+        signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.detail || 'Invalid voucher code');
+    }
+
+    console.log('✅ [VOUCHER] Verification result:', data);
+    return data;
+}
+
+// ========================================
+// VOUCHER: REDEEM CODE
+// POST /api/public/voucher/redeem
+// ========================================
+async function redeemVoucher(code, macAddress, rId) {
+    console.log('🎟️ [VOUCHER] Redeeming code:', code);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+    const requestBody = {
+        code: code.trim(),
+        mac_address: macAddress,
+        router_id: String(rId)
+    };
+
+    console.log('📤 [VOUCHER] Redeem request:', requestBody);
+
+    const response = await fetch(getProxiedUrl(VOUCHER_REDEEM_ENDPOINT), {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        mode: 'cors',
+        body: JSON.stringify(requestBody),
+        signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.detail || data.message || 'Failed to redeem voucher');
+    }
+
+    console.log('✅ [VOUCHER] Redeem result:', data);
+    return data;
+}
+
+// ========================================
+// VOUCHER: UI SETUP & HANDLERS
+// ========================================
+let verifiedVoucher = null; // stores the verified voucher data
+
+function setupVoucherUI() {
+    const input = document.getElementById('voucherCodeInput');
+    const verifyBtn = document.getElementById('voucherVerifyBtn');
+    const verifyText = verifyBtn?.querySelector('.voucher-verify-text');
+    const verifyLoader = document.getElementById('voucherVerifyLoader');
+    const result = document.getElementById('voucherResult');
+
+    if (!input || !verifyBtn) return;
+
+    // Auto-format: allow alphanumeric and dashes
+    input.addEventListener('input', () => {
+        input.value = input.value.replace(/[^a-zA-Z0-9\-]/g, '');
+        if (result) result.classList.add('hidden');
+        verifiedVoucher = null;
+    });
+
+    // Enter key triggers verify
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            verifyBtn.click();
+        }
+    });
+
+    // Verify button click
+    verifyBtn.addEventListener('click', async () => {
+        const code = input.value.trim();
+        if (!code) {
+            input.focus();
+            return;
+        }
+
+        verifyBtn.disabled = true;
+        if (verifyText) verifyText.classList.add('hidden');
+        if (verifyLoader) verifyLoader.classList.remove('hidden');
+        result.classList.add('hidden');
+        verifiedVoucher = null;
+
+        try {
+            const data = await verifyVoucher(code);
+            verifiedVoucher = data;
+            showVoucherValid(data);
+        } catch (err) {
+            showVoucherError(err.message);
+        } finally {
+            verifyBtn.disabled = false;
+            if (verifyText) verifyText.classList.remove('hidden');
+            if (verifyLoader) verifyLoader.classList.add('hidden');
+        }
+    });
+}
+
+function showVoucherValid(data) {
+    const result = document.getElementById('voucherResult');
+    if (!result) return;
+
+    const price = data.price != null ? `KSH ${data.price}/-` : 'Free';
+    const speed = data.speed || '—';
+    const duration = data.duration || '—';
+
+    result.innerHTML = `
+        <div class="voucher-result-valid">
+            <div class="voucher-plan-header">
+                <span class="voucher-plan-check">✓</span>
+                <div>
+                    <div class="voucher-plan-label">Valid Voucher</div>
+                    <div class="voucher-plan-name">${data.plan_name || 'Internet Plan'}</div>
+                </div>
+            </div>
+            <div class="voucher-plan-details">
+                <div class="voucher-plan-stat">
+                    <span class="voucher-plan-stat-label">Duration</span>
+                    <span class="voucher-plan-stat-value">${duration}</span>
+                </div>
+                <div class="voucher-plan-stat">
+                    <span class="voucher-plan-stat-label">Speed</span>
+                    <span class="voucher-plan-stat-value">${speed}</span>
+                </div>
+                <div class="voucher-plan-stat">
+                    <span class="voucher-plan-stat-label">Value</span>
+                    <span class="voucher-plan-stat-value">${price}</span>
+                </div>
+            </div>
+            <button type="button" class="voucher-redeem-btn" id="voucherRedeemBtn">
+                <span>📶</span>
+                <span class="voucher-redeem-text">Redeem & Connect</span>
+                <span class="voucher-redeem-loader hidden" id="voucherRedeemLoader">
+                    <span class="loader-spinner"></span> Activating...
+                </span>
+            </button>
+        </div>
+    `;
+
+    result.classList.remove('hidden');
+
+    // Wire up redeem button
+    const redeemBtn = document.getElementById('voucherRedeemBtn');
+    if (redeemBtn) {
+        redeemBtn.addEventListener('click', handleVoucherRedeem);
+    }
+}
+
+function showVoucherError(message) {
+    const result = document.getElementById('voucherResult');
+    if (!result) return;
+
+    result.innerHTML = `
+        <div class="voucher-result-error">
+            <span class="voucher-error-icon">✕</span>
+            <span class="voucher-error-text">${message}</span>
+        </div>
+    `;
+
+    result.classList.remove('hidden');
+}
+
+async function handleVoucherRedeem() {
+    if (!verifiedVoucher) return;
+
+    const redeemBtn = document.getElementById('voucherRedeemBtn');
+    const redeemText = redeemBtn?.querySelector('.voucher-redeem-text');
+    const redeemLoader = document.getElementById('voucherRedeemLoader');
+
+    // Loading state
+    if (redeemBtn) redeemBtn.disabled = true;
+    if (redeemText) redeemText.classList.add('hidden');
+    if (redeemLoader) redeemLoader.classList.remove('hidden');
+
+    try {
+        const macAddress = mikrotikParams.mac || 'AA:BB:CC:DD:EE:FF';
+        const rId = routerId || verifiedVoucher.router_id || FALLBACK_ROUTER_ID;
+        const data = await redeemVoucher(verifiedVoucher.code, macAddress, rId);
+
+        console.log('✅ [VOUCHER] Redeemed successfully:', data);
+
+        // RADIUS auto-login if credentials returned
+        if (data.radius_username && data.radius_password) {
+            const loginUrl = buildRadiusLoginUrl(mikrotikParams.gw, data.radius_username, data.radius_password, mikrotikParams.dst);
+            if (loginUrl) {
+                try {
+                    localStorage.setItem('bitwave_last_radius_login', JSON.stringify({
+                        loginUrl, username: data.radius_username,
+                        password: data.radius_password, gateway: mikrotikParams.gw,
+                        dst: mikrotikParams.dst, mac: macAddress,
+                        planName: verifiedVoucher.plan_name || 'Voucher Plan',
+                        expiry: data.expiry,
+                        savedAt: new Date().toISOString()
+                    }));
+                } catch (e) { /* ignore */ }
+
+                hideSection(plansSection);
+                showSection(successSection);
+                showVoucherSuccessDetails(data);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                setTimeout(() => { window.location.href = loginUrl; }, 2000);
+                return;
+            }
+        }
+
+        // Non-RADIUS success: show success screen
+        hideSection(plansSection);
+        showSection(successSection);
+        showVoucherSuccessDetails(data);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    } catch (err) {
+        console.error('❌ [VOUCHER] Redeem failed:', err.message);
+        showVoucherError(err.message);
+    } finally {
+        if (redeemBtn) redeemBtn.disabled = false;
+        if (redeemText) redeemText.classList.remove('hidden');
+        if (redeemLoader) redeemLoader.classList.add('hidden');
+    }
+}
+
+function showVoucherSuccessDetails(data) {
+    const connectionDetails = document.getElementById('connectionDetails');
+    if (!connectionDetails) return;
+
+    const expiryDate = data.expiry ? new Date(data.expiry) : null;
+    const expiryText = expiryDate ? expiryDate.toLocaleDateString('en-KE', {
+        weekday: 'short', month: 'short', day: 'numeric',
+        hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Nairobi'
+    }) : 'N/A';
+
+    let html = `
+        <div class="detail-row">
+            <span class="detail-label">Plan</span>
+            <span class="detail-value">${data.plan_name || verifiedVoucher?.plan_name || 'Voucher Plan'}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Method</span>
+            <span class="detail-value">Voucher Code</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Valid Until</span>
+            <span class="detail-value">${expiryText}</span>
+        </div>
+    `;
+
+    if (data.radius_username && data.radius_password) {
+        const loginUrl = buildRadiusLoginUrl(mikrotikParams.gw, data.radius_username, data.radius_password, mikrotikParams.dst);
+        html += `
+        <div class="detail-row" style="margin-top: 14px; padding: 12px; background: #111827; border-radius: 8px; color: #fff;">
+            <div style="width:100%;">
+                <div style="font-weight: 600; margin-bottom: 6px;">Login Credentials</div>
+                <div style="font-size: 13px; opacity: 0.85;">Username: <strong>${data.radius_username}</strong></div>
+                <div style="font-size: 13px; opacity: 0.85;">Password: <strong>${data.radius_password}</strong></div>
+                ${loginUrl ? `
+                <div style="margin-top: 10px;">
+                    <a href="${loginUrl}" style="display: inline-block; padding: 8px 12px; background: #10b981; color: #fff; border-radius: 6px; text-decoration: none; font-weight: 600;">Tap to Connect</a>
+                </div>` : ''}
+            </div>
+        </div>`;
+    }
+
+    connectionDetails.innerHTML = html;
+
+    if (typeof populateSuccessAds === 'function') {
+        populateSuccessAds();
+    }
 }
 
 // ========================================
