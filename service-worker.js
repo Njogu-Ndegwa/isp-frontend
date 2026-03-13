@@ -175,7 +175,7 @@ async function syncSpeedTests() {
         
         for (const test of pendingTests) {
             try {
-                const response = await fetch('https://isp.bitwavetechnologies.com/api/speed-tests', {
+                const response = await fetch('https://isp.bitwavetechnologies.net/api/speed-tests', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(test)

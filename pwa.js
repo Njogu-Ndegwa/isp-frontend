@@ -6,7 +6,7 @@
 // ========================================
 // API CONFIGURATION
 // ========================================
-const API_BASE_URL = 'https://isp.bitwavetechnologies.com/api';
+const API_BASE_URL = 'https://isp.bitwavetechnologies.net/api';
 const SPEED_TEST_ENDPOINT = `${API_BASE_URL}/speed-tests`;
 const ADS_ENDPOINT = `${API_BASE_URL}/ads`;
 

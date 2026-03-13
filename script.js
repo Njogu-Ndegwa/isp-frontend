@@ -85,7 +85,7 @@ const MAINTENANCE_PLAN = {
 // ========================================
 // API CONFIGURATION
 // ========================================
-const API_BASE_URL = 'https://isp.bitwavetechnologies.com/api';
+const API_BASE_URL = 'https://isp.bitwavetechnologies.net/api';
 // Single portal endpoint — returns router, plans, and ads in one request
 const PORTAL_ENDPOINT = `${API_BASE_URL}/public/portal`;
 // Legacy endpoints (used as fallback if portal endpoint fails)

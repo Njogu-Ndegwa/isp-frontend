@@ -6,17 +6,17 @@
 // ========================================
 // BACKEND API CONFIGURATION
 // ========================================
-const ADS_API_BASE_URL = 'https://isp.bitwavetechnologies.com/api';
+const ADS_API_BASE_URL = 'https://isp.bitwavetechnologies.net/api';
 const ADS_ENDPOINT = `${ADS_API_BASE_URL}/ads`;
 const AD_CLICK_ENDPOINT = `${ADS_API_BASE_URL}/ads/click`;
 const AD_IMPRESSION_ENDPOINT = `${ADS_API_BASE_URL}/ads/impression`;
 
-// Note: Backend API format from https://isp.bitwavetechnologies.com/api/ads
+// Note: Backend API format from https://isp.bitwavetechnologies.net/api/ads
 
 // ========================================
 // DATA TRANSFER OBJECTS (DTOs)
 // These define the structure of data exchanged with the backend
-// API Base: https://isp.bitwavetechnologies.com/api
+// API Base: https://isp.bitwavetechnologies.net/api
 // ========================================
 
 /**
@@ -698,7 +698,7 @@ function closeAdDetails() {
 
 // ========================================
 // RECORD AD CLICK - Analytics
-// POST https://isp.bitwavetechnologies.com/api/ads/click
+// POST https://isp.bitwavetechnologies.net/api/ads/click
 // ========================================
 async function recordClick(adId, clickType) {
     console.log(`📊 Recording click: Ad #${adId}, Type: ${clickType}`);
@@ -749,7 +749,7 @@ async function recordClick(adId, clickType) {
 
 // ========================================
 // RECORD AD IMPRESSION - Analytics
-// POST https://isp.bitwavetechnologies.com/api/ads/impression
+// POST https://isp.bitwavetechnologies.net/api/ads/impression
 // ========================================
 async function recordImpression(adIds) {
     console.log(`📊 Recording impression for ${adIds.length} ads`);
