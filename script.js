@@ -593,6 +593,10 @@ function applyPlanFlags(flags) {
     if (!banner) return;
 
     if (flags.emergency_mode_active) {
+        if (flags.emergency_message) {
+            const msgEl = banner.querySelector('.emergency-banner-message');
+            if (msgEl) msgEl.textContent = flags.emergency_message;
+        }
         banner.classList.remove('hidden');
         console.log('🚨 Emergency mode active — banner shown');
     } else {
