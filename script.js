@@ -63,23 +63,11 @@ window.dumpRadiusLogin = function() {
     }
 };
 
-// ========================================
-// 🚨 MAINTENANCE MODE CONFIGURATION 🚨
-// ========================================
-// Set to TRUE to show maintenance page with special offer
-// Set to FALSE for normal operation
-const MAINTENANCE_MODE = false;
-
-// Special plan for maintenance mode
-// IMPORTANT: Create this plan in your backend first!
-const MAINTENANCE_PLAN = {
-    id: 19,              // Backend plan ID - UPDATE THIS after creating the plan
-    name: '24 Hour Free',
-    duration: '24 Hours',
-    price: 1,
-    priceDisplay: 'KSH 1/-',
-    speed: '5Mbps',
-    speedRaw: '5M/5M'
+// Plan flags — populated from portal API response
+let planFlags = {
+    has_emergency_plans: false,
+    has_special_offers: false,
+    emergency_mode_active: false
 };
 
 // ========================================
@@ -385,8 +373,6 @@ let allPlans = [];
 // DOM ELEMENTS
 // ========================================
 const plansSection = document.getElementById('plansSection');
-const maintenanceBanner = document.getElementById('maintenanceBanner');
-const specialOfferCard = document.getElementById('specialOfferCard');
 const paymentSection = document.getElementById('paymentSection');
 const processingSection = document.getElementById('processingSection');
 const successSection = document.getElementById('successSection');
@@ -546,6 +532,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 showPlansError();
             }
 
+            // ---- Plan Flags (emergency mode, special offers) ----
+            if (data.plan_flags) {
+                planFlags = data.plan_flags;
+                console.log('✅ [PORTAL] Plan flags:', planFlags);
+                applyPlanFlags(planFlags);
+            }
+
             // ---- Ads (store for ads.js to consume) ----
             window._portalAds = data.ads || [];
             console.log('✅ [PORTAL] Ads received:', window._portalAds.length);
@@ -586,13 +579,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     
-    // Check maintenance mode - show banner and special offer if active
-    if (MAINTENANCE_MODE) {
-        console.log('🔧 MAINTENANCE MODE ACTIVE');
-        console.log('📦 Special Plan:', MAINTENANCE_PLAN);
-        initMaintenanceMode();
-    }
-    
     setupEventListeners();
     setupVoucherUI();
     loadSavedPhoneNumber(); // Works on desktop; mobile captive portals wipe storage
@@ -600,75 +586,18 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ========================================
-// MAINTENANCE MODE INITIALIZATION
+// PLAN FLAGS — show/hide emergency & offer UI from API
 // ========================================
-function initMaintenanceMode() {
-    // Show maintenance banner and special offer card
-    if (maintenanceBanner) maintenanceBanner.classList.remove('hidden');
-    if (specialOfferCard) specialOfferCard.classList.remove('hidden');
-    
-    // Update special offer display with configured values
-    const priceEl = document.getElementById('specialOfferPrice');
-    const titleEl = document.getElementById('specialOfferTitle');
-    
-    if (priceEl) priceEl.textContent = `${MAINTENANCE_PLAN.price}/-`;
-    if (titleEl) titleEl.textContent = `${MAINTENANCE_PLAN.duration} Access`;
-    
-    // Setup special offer card click handler
-    if (specialOfferCard) {
-        specialOfferCard.addEventListener('click', selectMaintenancePlan);
-        specialOfferCard.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                selectMaintenancePlan();
-            }
-        });
-    }
-}
+function applyPlanFlags(flags) {
+    const banner = document.getElementById('emergencyBanner');
+    if (!banner) return;
 
-// ========================================
-// SELECT MAINTENANCE PLAN
-// ========================================
-function selectMaintenancePlan() {
-    // Create a plan object compatible with existing payment flow
-    selectedPlan = {
-        id: MAINTENANCE_PLAN.id,
-        duration: MAINTENANCE_PLAN.duration,
-        price: MAINTENANCE_PLAN.priceDisplay,
-        speed: MAINTENANCE_PLAN.speed,
-        popular: false,
-        bestseller: false,
-        valueMessage: '',
-        originalData: {
-            id: MAINTENANCE_PLAN.id,
-            name: MAINTENANCE_PLAN.name,
-            speed: MAINTENANCE_PLAN.speedRaw,
-            price: MAINTENANCE_PLAN.price,
-            duration_value: 24,
-            duration_unit: 'HOURS'
-        }
-    };
-    
-    // Update selected plan display
-    selectedPlanInfo.innerHTML = `
-        <div class="selected-plan-name">${MAINTENANCE_PLAN.name}</div>
-        <div class="selected-plan-price"><span class="currency-code">KSH</span> ${MAINTENANCE_PLAN.price}/-</div>
-        <div class="selected-plan-speed">${MAINTENANCE_PLAN.duration} • ${MAINTENANCE_PLAN.speed}</div>
-    `;
-    
-    // Show payment section, hide plans section
-    showSection(paymentSection);
-    hideSection(plansSection);
-    
-    // Scroll to top smoothly
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    
-    // Focus on phone input
-    setTimeout(() => {
-        phoneNumberInput.focus();
-    }, 300);
-    
-    console.log('✅ Selected maintenance plan:', selectedPlan);
+    if (flags.emergency_mode_active) {
+        banner.classList.remove('hidden');
+        console.log('🚨 Emergency mode active — banner shown');
+    } else {
+        banner.classList.add('hidden');
+    }
 }
 
 // ========================================
@@ -928,53 +857,50 @@ async function forceRefreshPlans() {
 // TRANSFORM API PLANS DATA
 // ========================================
 function transformPlansData(apiPlans) {
-    // First, calculate time-to-price ratio for each plan
-    const plansWithRatio = apiPlans.map((plan) => {
-        // Convert duration to hours for comparison
-        const durationInHours = convertToHours(plan.duration_value, plan.duration_unit);
-        
-        // Calculate ratio: hours per KSH (higher is better value)
-        const timeToPrice = durationInHours / plan.price;
-        
-        return {
-            ...plan,
-            durationInHours: durationInHours,
-            timeToPrice: timeToPrice
-        };
+    const visiblePlans = apiPlans.filter(p => {
+        if (p.is_hidden) return false;
+        if (p.connection_type && p.connection_type !== 'hotspot') return false;
+        if (p.plan_type === 'emergency' && !planFlags.emergency_mode_active) return false;
+        if (p.plan_type === 'special_offer' && !planFlags.has_special_offers) return false;
+        return true;
     });
-    
-    // Find the plan with the best (highest) time-to-price ratio
-    const bestPlan = plansWithRatio.reduce((best, current) => {
-        return current.timeToPrice > best.timeToPrice ? current : best;
-    });
-    
-    // Transform plans with popularity/bestseller marking
-    const transformedPlans = plansWithRatio.map((plan) => {
-        // Parse duration
+
+    const regularPlans = visiblePlans.filter(p => !p.plan_type || p.plan_type === 'regular');
+
+    // Calculate best time-to-price ratio among regular plans only
+    let bestRegularPlanId = null;
+    if (regularPlans.length > 0) {
+        const withRatio = regularPlans.map(p => ({
+            id: p.id,
+            ratio: convertToHours(p.duration_value, p.duration_unit) / p.price
+        }));
+        bestRegularPlanId = withRatio.reduce((best, cur) => cur.ratio > best.ratio ? cur : best).id;
+    }
+
+    const transformedPlans = visiblePlans.map((plan) => {
         const duration = formatDuration(plan.duration_value, plan.duration_unit);
-        
-        // Format price
         const price = `KSH ${plan.price}/-`;
-        
-        // Format speed
         const speed = formatSpeed(plan.speed);
-        
-        // Mark plan as bestseller (high revenue generator)
-        const bestseller = plan.id === BESTSELLER_PLAN_ID;
-        
-        // Mark plan as popular if it has the best time-to-price ratio (and not bestseller)
-        const popular = plan.id === bestPlan.id && !bestseller;
-        
-        // Calculate value message
+
+        const isEmergency = plan.plan_type === 'emergency';
+        const isSpecialOffer = plan.plan_type === 'special_offer';
+        const isRegular = !isEmergency && !isSpecialOffer;
+
+        const bestseller = isRegular && plan.id === BESTSELLER_PLAN_ID;
+        const popular = isRegular && plan.id === bestRegularPlanId && !bestseller;
+
         let valueMessage = '';
-        if (bestseller) {
+        if (isSpecialOffer && plan.original_price) {
+            const pct = Math.round((1 - plan.price / plan.original_price) * 100);
+            valueMessage = `Save ${pct}%`;
+        } else if (bestseller) {
             valueMessage = '🔥 Bestseller';
         } else if (popular) {
             const hours = convertToHours(plan.duration_value, plan.duration_unit);
             const pricePerDay = (plan.price / (hours / 24)).toFixed(0);
             valueMessage = `Only KSH ${pricePerDay}/day`;
         }
-        
+
         return {
             id: plan.id,
             duration: duration,
@@ -983,25 +909,27 @@ function transformPlansData(apiPlans) {
             popular: popular,
             bestseller: bestseller,
             valueMessage: valueMessage,
-            // Keep original data for API submission
+            planType: plan.plan_type || 'regular',
+            badgeText: plan.badge_text || null,
+            originalPrice: plan.original_price || null,
+            validUntil: plan.valid_until || null,
             originalData: plan
         };
     });
-    
-    // Sort plans: Bestseller first → Popular (best value) → Others by price (high to low)
+
+    // Sort: special_offer → emergency → bestseller → popular → regular (high price first)
+    const typeOrder = { special_offer: 0, emergency: 1 };
     transformedPlans.sort((a, b) => {
-        // Bestseller always comes first
+        const ta = typeOrder[a.planType] ?? 2;
+        const tb = typeOrder[b.planType] ?? 2;
+        if (ta !== tb) return ta - tb;
         if (a.bestseller && !b.bestseller) return -1;
         if (!a.bestseller && b.bestseller) return 1;
-        // Then popular (best value)
         if (a.popular && !b.popular) return -1;
         if (!a.popular && b.popular) return 1;
-        // Sort remaining plans by price (highest first)
-        const priceA = a.originalData.price;
-        const priceB = b.originalData.price;
-        return priceB - priceA; // Descending order (high to low)
+        return b.originalData.price - a.originalData.price;
     });
-    
+
     return transformedPlans;
 }
 
@@ -1081,13 +1009,76 @@ function formatSpeed(speed) {
 // RENDER PLANS
 // ========================================
 function renderPlans(plans) {
-    // Clear skeleton loaders
     plansGrid.innerHTML = '';
-    
-    plans.forEach(plan => {
-        const planCard = createPlanCard(plan);
-        plansGrid.appendChild(planCard);
-    });
+
+    const specialPlans = plans.filter(p => p.planType === 'special_offer' || p.planType === 'emergency');
+    const regularPlans = plans.filter(p => p.planType !== 'special_offer' && p.planType !== 'emergency');
+
+    // Render special / emergency plans first with a header
+    if (specialPlans.length > 0) {
+        const header = document.createElement('div');
+        header.className = 'plans-group-header';
+        header.innerHTML = planFlags.emergency_mode_active
+            ? '⚡ Special Deals For You'
+            : '🔥 Limited Offers';
+        plansGrid.appendChild(header);
+
+        specialPlans.forEach(plan => plansGrid.appendChild(createPlanCard(plan)));
+
+        if (regularPlans.length > 0) {
+            const divider = document.createElement('div');
+            divider.className = 'plans-group-divider';
+            divider.innerHTML = '<span>All Plans</span>';
+            plansGrid.appendChild(divider);
+        }
+    }
+
+    regularPlans.forEach(plan => plansGrid.appendChild(createPlanCard(plan)));
+
+    // Start countdown timers for time-limited offers
+    startPlanCountdowns();
+}
+
+// ========================================
+// COUNTDOWN TIMERS for valid_until plans
+// ========================================
+let countdownInterval = null;
+
+function startPlanCountdowns() {
+    if (countdownInterval) clearInterval(countdownInterval);
+
+    const countdownEls = document.querySelectorAll('.plan-countdown[data-expires]');
+    if (countdownEls.length === 0) return;
+
+    function tick() {
+        countdownEls.forEach(el => {
+            const expires = new Date(el.dataset.expires);
+            const now = new Date();
+            const diff = expires - now;
+
+            if (diff <= 0) {
+                el.textContent = 'Expired';
+                el.classList.add('expired');
+                return;
+            }
+
+            const days = Math.floor(diff / 86400000);
+            const hours = Math.floor((diff % 86400000) / 3600000);
+            const mins = Math.floor((diff % 3600000) / 60000);
+
+            if (days > 0) {
+                el.textContent = `⏳ ${days}d ${hours}h left`;
+            } else if (hours > 0) {
+                el.textContent = `⏳ ${hours}h ${mins}m left`;
+            } else {
+                el.textContent = `⏳ ${mins}m left`;
+                el.classList.add('urgent');
+            }
+        });
+    }
+
+    tick();
+    countdownInterval = setInterval(tick, 60000);
 }
 
 // ========================================
@@ -1095,39 +1086,56 @@ function renderPlans(plans) {
 // ========================================
 function createPlanCard(plan) {
     const card = document.createElement('div');
-    // Add appropriate class: bestseller, popular, or regular
+
     let cardClass = 'plan-card';
-    if (plan.bestseller) cardClass += ' bestseller';
+    if (plan.planType === 'emergency') cardClass += ' emergency';
+    else if (plan.planType === 'special_offer') cardClass += ' special-offer';
+    else if (plan.bestseller) cardClass += ' bestseller';
     else if (plan.popular) cardClass += ' popular';
     card.className = cardClass;
-    
+
     card.setAttribute('role', 'button');
     card.setAttribute('tabindex', '0');
     card.setAttribute('aria-label', `Select ${plan.duration} plan for ${plan.price}, ${plan.speed}`);
-    
-    // Format price with smaller currency code
+
     const formattedPrice = formatPrice(plan.price);
-    
+
+    // Badge ribbon (emergency / special offer / bestseller / best value handled by CSS ::after)
+    let badgeHtml = '';
+    if (plan.badgeText) {
+        badgeHtml = `<span class="plan-badge-text">${plan.badgeText}</span>`;
+    }
+
+    // Original price strikethrough for discounted plans
+    let originalPriceHtml = '';
+    if (plan.originalPrice) {
+        originalPriceHtml = `<div class="plan-original-price">KSH ${plan.originalPrice}/-</div>`;
+    }
+
+    // Countdown for time-limited offers
+    let countdownHtml = '';
+    if (plan.validUntil) {
+        countdownHtml = `<div class="plan-countdown" data-expires="${plan.validUntil}"></div>`;
+    }
+
     card.innerHTML = `
+        ${badgeHtml}
         <div class="plan-duration">${plan.duration}</div>
+        ${originalPriceHtml}
         <div class="plan-price">${formattedPrice}</div>
         <div class="plan-speed">${plan.speed}</div>
         ${plan.valueMessage ? `<div class="plan-value-msg">${plan.valueMessage}</div>` : ''}
+        ${countdownHtml}
     `;
-    
-    // Add click event to the card
-    card.addEventListener('click', () => {
-        selectPlan(plan);
-    });
-    
-    // Keyboard accessibility
+
+    card.addEventListener('click', () => selectPlan(plan));
     card.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             selectPlan(plan);
         }
     });
-    
+
     return card;
 }
 

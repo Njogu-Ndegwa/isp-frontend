@@ -3376,3 +3376,189 @@ body::before {
     }
 }
 
+/* ========================================
+   EMERGENCY PLAN CARDS
+   ======================================== */
+.plan-card.emergency {
+    border-color: #F59E0B;
+    background: linear-gradient(145deg, #FFFBEB 0%, #FEF3C7 100%);
+    padding-bottom: 50px;
+}
+
+.plan-card.emergency::after {
+    content: '⚡ Emergency';
+    position: absolute;
+    top: 8px;
+    right: -28px;
+    background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
+    color: white;
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 4px 34px;
+    transform: rotate(45deg);
+}
+
+.plan-card.emergency:hover {
+    border-color: #D97706;
+    box-shadow: 0 8px 25px rgba(245, 158, 11, 0.25);
+}
+
+.plan-card.emergency .plan-price {
+    color: #D97706;
+}
+
+/* ========================================
+   SPECIAL OFFER PLAN CARDS
+   ======================================== */
+.plan-card.special-offer {
+    border-color: var(--success);
+    background: linear-gradient(145deg, #ECFDF5 0%, #D1FAE5 100%);
+    padding-bottom: 50px;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+}
+
+.plan-card.special-offer::after {
+    content: '💰 Deal';
+    position: absolute;
+    top: 8px;
+    right: -28px;
+    background: linear-gradient(135deg, #059669 0%, #10B981 100%);
+    color: white;
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 4px 34px;
+    transform: rotate(45deg);
+}
+
+.plan-card.special-offer:hover {
+    border-color: #059669;
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+}
+
+.plan-card.special-offer .plan-price {
+    color: #059669;
+}
+
+/* ========================================
+   PLAN BADGE TEXT (from API badge_text)
+   ======================================== */
+.plan-badge-text {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    margin-bottom: var(--space-sm);
+    letter-spacing: 0.3px;
+}
+
+.plan-card.emergency .plan-badge-text {
+    background: linear-gradient(135deg, #D97706 0%, #B45309 100%);
+}
+
+.plan-card.special-offer .plan-badge-text {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+/* ========================================
+   ORIGINAL PRICE STRIKETHROUGH
+   ======================================== */
+.plan-original-price {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    text-decoration: line-through;
+    opacity: 0.7;
+    margin-bottom: 2px;
+    font-weight: 600;
+}
+
+/* ========================================
+   PLAN COUNTDOWN (valid_until)
+   ======================================== */
+.plan-countdown {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #059669;
+    padding: 4px 12px;
+    background: rgba(16, 185, 129, 0.12);
+    border-radius: var(--radius-full);
+    white-space: nowrap;
+}
+
+.plan-countdown.urgent {
+    color: #DC2626;
+    background: rgba(220, 38, 38, 0.12);
+    animation: countdown-pulse 1s ease-in-out infinite;
+}
+
+.plan-countdown.expired {
+    color: var(--text-light);
+    background: rgba(0, 0, 0, 0.06);
+}
+
+/* ========================================
+   PLANS GROUP HEADER & DIVIDER
+   ======================================== */
+.plans-group-header {
+    grid-column: 1 / -1;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    text-align: center;
+    padding: var(--space-sm) var(--space-md);
+    background: linear-gradient(135deg, rgba(232, 93, 4, 0.08) 0%, rgba(255, 186, 8, 0.08) 100%);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-xs);
+}
+
+.plans-group-divider {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    margin: var(--space-sm) 0;
+}
+
+.plans-group-divider::before,
+.plans-group-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #E0E0E0;
+}
+
+.plans-group-divider span {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+/* ========================================
+   RESPONSIVE — Emergency & Special Offer
+   ======================================== */
+@media (max-width: 480px) {
+    .plan-badge-text {
+        font-size: 0.55rem;
+        padding: 2px 8px;
+    }
+
+    .plan-original-price {
+        font-size: 0.75rem;
+    }
+
+    .plan-countdown {
+        font-size: 0.6rem;
+        padding: 3px 10px;
+    }
+}
+
