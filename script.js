@@ -519,6 +519,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateSupportPhone(data.router.support_phone);
             }
 
+            // ---- Plan Flags (must be set before plans are rendered) ----
+            if (data.plan_flags) {
+                planFlags = data.plan_flags;
+                console.log('✅ [PORTAL] Plan flags:', planFlags);
+                applyPlanFlags(planFlags);
+            }
+
             // ---- Plans ----
             if (Array.isArray(data.plans) && data.plans.length > 0) {
                 const apiBestseller = data.plans.find(p => p.is_bestseller);
@@ -530,13 +537,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('✅ [PORTAL] Plans loaded:', data.plans.length);
             } else if (!cachedPlans) {
                 showPlansError();
-            }
-
-            // ---- Plan Flags (emergency mode, special offers) ----
-            if (data.plan_flags) {
-                planFlags = data.plan_flags;
-                console.log('✅ [PORTAL] Plan flags:', planFlags);
-                applyPlanFlags(planFlags);
             }
 
             // ---- Ads (store for ads.js to consume) ----
