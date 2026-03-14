@@ -589,19 +589,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // PLAN FLAGS — show/hide emergency & offer UI from API
 // ========================================
 function applyPlanFlags(flags) {
-    const banner = document.getElementById('emergencyBanner');
-    if (!banner) return;
-
-    if (flags.emergency_mode_active) {
-        if (flags.emergency_message) {
-            const msgEl = banner.querySelector('.emergency-banner-message');
-            if (msgEl) msgEl.textContent = flags.emergency_message;
-        }
-        banner.classList.remove('hidden');
-        console.log('🚨 Emergency mode active — banner shown');
-    } else {
-        banner.classList.add('hidden');
-    }
+    console.log('🚨 Plan flags applied:', flags);
 }
 
 // ========================================
@@ -1018,14 +1006,31 @@ function renderPlans(plans) {
     const specialPlans = plans.filter(p => p.planType === 'special_offer' || p.planType === 'emergency');
     const regularPlans = plans.filter(p => p.planType !== 'special_offer' && p.planType !== 'emergency');
 
-    // Render special / emergency plans first with a header
     if (specialPlans.length > 0) {
-        const header = document.createElement('div');
-        header.className = 'plans-group-header';
-        header.innerHTML = planFlags.emergency_mode_active
-            ? '⚡ Special Deals For You'
-            : '🔥 Limited Offers';
-        plansGrid.appendChild(header);
+        // Build an inline message card that sits inside the grid, above the special plan cards
+        const msgCard = document.createElement('div');
+        msgCard.className = 'plans-notice-card';
+
+        if (planFlags.emergency_mode_active) {
+            msgCard.classList.add('emergency');
+            const msg = planFlags.emergency_message || 'We\'re sorry for the disruption. Enjoy these deals on us!';
+            msgCard.innerHTML = `
+                <span class="plans-notice-icon">⚠️</span>
+                <div class="plans-notice-body">
+                    <div class="plans-notice-title">Service Notice</div>
+                    <p class="plans-notice-msg">${msg}</p>
+                </div>
+            `;
+        } else {
+            msgCard.innerHTML = `
+                <span class="plans-notice-icon">🔥</span>
+                <div class="plans-notice-body">
+                    <div class="plans-notice-title">Limited-Time Offers</div>
+                    <p class="plans-notice-msg">Grab these deals before they're gone!</p>
+                </div>
+            `;
+        }
+        plansGrid.appendChild(msgCard);
 
         specialPlans.forEach(plan => plansGrid.appendChild(createPlanCard(plan)));
 
@@ -1039,7 +1044,6 @@ function renderPlans(plans) {
 
     regularPlans.forEach(plan => plansGrid.appendChild(createPlanCard(plan)));
 
-    // Start countdown timers for time-limited offers
     startPlanCountdowns();
 }
 

@@ -3503,21 +3503,63 @@ body::before {
 }
 
 /* ========================================
-   PLANS GROUP HEADER & DIVIDER
+   PLANS NOTICE CARD (inline emergency / offer message)
+   Sits inside the plans grid, directly above special plan cards.
    ======================================== */
-.plans-group-header {
+.plans-notice-card {
     grid-column: 1 / -1;
-    font-family: 'Outfit', sans-serif;
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--text);
-    text-align: center;
-    padding: var(--space-sm) var(--space-md);
-    background: linear-gradient(135deg, rgba(232, 93, 4, 0.08) 0%, rgba(255, 186, 8, 0.08) 100%);
-    border-radius: var(--radius-md);
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    border-radius: var(--radius-lg);
+    background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+    border: 1px solid #93C5FD;
     margin-bottom: var(--space-xs);
 }
 
+.plans-notice-card.emergency {
+    background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+    border-color: #FBBF24;
+}
+
+.plans-notice-icon {
+    font-size: 1.6rem;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.plans-notice-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.plans-notice-title {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--text);
+    margin-bottom: 2px;
+}
+
+.plans-notice-msg {
+    font-size: 0.8rem;
+    line-height: 1.45;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.plans-notice-card.emergency .plans-notice-title {
+    color: #92400E;
+}
+
+.plans-notice-card.emergency .plans-notice-msg {
+    color: #78350F;
+}
+
+/* ========================================
+   PLANS GROUP DIVIDER
+   ======================================== */
 .plans-group-divider {
     grid-column: 1 / -1;
     display: flex;

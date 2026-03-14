@@ -33,39 +33,6 @@
     <noscript><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Outfit:wght@600;700&display=swap" rel="stylesheet"></noscript>
     <link rel="stylesheet" href="styles003.css?v=12">
     
-    <!-- Emergency & Plan Flags Styles (inline for fast paint) -->
-    <style>
-        .emergency-banner {
-            background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
-            border-radius: var(--radius-lg);
-            padding: var(--space-md);
-            margin-bottom: var(--space-lg);
-            border: 1px solid #F59E0B;
-        }
-        .emergency-banner-content {
-            display: flex;
-            align-items: center;
-            gap: var(--space-md);
-        }
-        .emergency-banner-icon {
-            font-size: 1.5rem;
-            flex-shrink: 0;
-        }
-        .emergency-banner-text { flex: 1; }
-        .emergency-banner-title {
-            font-family: 'Outfit', sans-serif;
-            font-weight: 700;
-            font-size: 0.95rem;
-            color: #92400E;
-            margin-bottom: 2px;
-        }
-        .emergency-banner-message {
-            font-size: 0.8rem;
-            color: #78350F;
-            line-height: 1.4;
-            margin: 0;
-        }
-    </style>
 </head>
 <body>
     <div class="app">
@@ -92,17 +59,6 @@
             <!-- Plans Section -->
             <section class="plans-section" id="plansSection">
                 
-                <!-- Emergency Banner (Hidden by default) — shown when API sets emergency_mode_active -->
-                <div class="emergency-banner hidden" id="emergencyBanner">
-                    <div class="emergency-banner-content">
-                        <span class="emergency-banner-icon">⚠️</span>
-                        <div class="emergency-banner-text">
-                            <div class="emergency-banner-title">We're Sorry for the Disruption</div>
-                            <p class="emergency-banner-message">We're working to restore full service. In the meantime, check out our special deals below!</p>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Featured Marketplace Ads - Horizontal Scroll -->
                 <div class="marketplace-showcase">
                     <div class="showcase-header">
