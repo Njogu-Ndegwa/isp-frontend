@@ -447,12 +447,6 @@ function hideAdSections() {
         successAds.style.display = 'none';
     }
     
-    // Hide sticky footer ad
-    const stickyAd = document.getElementById('stickyAd');
-    if (stickyAd) {
-        stickyAd.classList.add('hidden');
-    }
-    
     console.log('🙈 Ad content sections hidden (CTA visible)');
 }
 
@@ -986,92 +980,6 @@ function populateMiniProducts() {
 window.populateMiniProducts = populateMiniProducts;
 
 // ========================================
-// STICKY FOOTER AD - Dynamic from DB
-// ========================================
-let stickyAdIndex = 0;
-let stickyAdInterval = null;
-
-function initStickyAd() {
-    const stickyAd = document.getElementById('stickyAd');
-    const stickyAdContent = document.getElementById('stickyAdContent');
-    const stickyAdClose = document.getElementById('stickyAdClose');
-    
-    if (!stickyAd || !stickyAdContent) return;
-    
-    // No ads available - don't initialize sticky ad
-    if (adsData.length === 0) {
-        stickyAd.classList.add('hidden');
-        console.log('📭 No ads - sticky ad disabled');
-        return;
-    }
-    
-    // Close button handler
-    if (stickyAdClose) {
-        stickyAdClose.addEventListener('click', (e) => {
-            e.stopPropagation();
-            stickyAd.classList.add('hidden');
-            // Remember it was closed for this session
-            sessionStorage.setItem('bitwave_sticky_ad_closed', 'true');
-            if (stickyAdInterval) clearInterval(stickyAdInterval);
-        });
-    }
-    
-    // Click handler to open ad details
-    stickyAdContent.addEventListener('click', () => {
-        if (adsData.length > 0) {
-            const currentAd = adsData[stickyAdIndex % adsData.length];
-            openAdDetails(currentAd);
-            recordClick(currentAd.id, 'view_details');
-        }
-    });
-    
-    // Show sticky ad after scroll (only if not closed before and ads exist)
-    if (!sessionStorage.getItem('bitwave_sticky_ad_closed') && adsData.length > 0) {
-        window.addEventListener('scroll', () => {
-            if (window.scrollY > 200 && adsData.length > 0) {
-                updateStickyAd();
-                stickyAd.classList.remove('hidden');
-            }
-        }, { once: true });
-    }
-    
-    // Rotate ads every 8 seconds (only if ads exist)
-    if (adsData.length > 0) {
-        stickyAdInterval = setInterval(() => {
-            if (!stickyAd.classList.contains('hidden') && adsData.length > 0) {
-                stickyAdIndex++;
-                updateStickyAd();
-            }
-        }, 8000);
-    }
-}
-
-function updateStickyAd() {
-    // No ads - hide sticky ad
-    if (adsData.length === 0) {
-        const stickyAd = document.getElementById('stickyAd');
-        if (stickyAd) stickyAd.classList.add('hidden');
-        return;
-    }
-    
-    const ad = adsData[stickyAdIndex % adsData.length];
-    
-    const img = document.getElementById('stickyAdImg');
-    const title = document.getElementById('stickyAdTitle');
-    const subtitle = document.getElementById('stickyAdSubtitle');
-    
-    if (img) {
-        img.src = ad.image_url;
-        img.alt = ad.title;
-        // Reset fallback flag and setup fallback with ad ID
-        img.dataset.fallbackAttempted = '';
-        setupImageFallback(img, ad.category, ad.id);
-    }
-    if (title) title.textContent = ad.title;
-    if (subtitle) subtitle.textContent = `${ad.seller_name} - ${ad.price}`;
-}
-
-// ========================================
 // INITIALIZE ADS FROM PORTAL DATA (called when portal endpoint provides ads)
 // ========================================
 function initAdsFromPortalData(portalAds) {
@@ -1111,7 +1019,6 @@ document.addEventListener('DOMContentLoaded', () => {
         : fetchAds();
 
     adsReady.finally(() => {
-        initStickyAd();
         populateMiniProducts();
     });
     

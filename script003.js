@@ -78,7 +78,6 @@ const marketplaceAds = [
 // ========================================
 document.addEventListener('DOMContentLoaded', () => {
     initializeMarketplace();
-    initializeStickyAd();
     // Mini products now populated by ads.js with proper ad data
     // initializeMiniProducts();
     enhanceScrollHint();
@@ -126,59 +125,6 @@ function initializeMarketplace() {
             scrollInterval = setInterval(autoScroll, 4000);
         }
     }, { passive: true });
-}
-
-// ========================================
-// STICKY FOOTER AD - Show on Scroll
-// ========================================
-function initializeStickyAd() {
-    const stickyAd = document.getElementById('stickyAd');
-    if (!stickyAd) return;
-    
-    let lastScroll = 0;
-    let hasShown = false;
-    
-    function handleScroll() {
-        const currentScroll = window.scrollY;
-        const viewportHeight = window.innerHeight;
-        const documentHeight = document.documentElement.scrollHeight;
-        
-        // Show ad after scrolling down 300px or when near bottom
-        const shouldShow = currentScroll > 300 || 
-                          (documentHeight - currentScroll - viewportHeight < 200);
-        
-        // Hide when scrolling back to top
-        const isScrollingUp = currentScroll < lastScroll && currentScroll < 200;
-        
-        if (shouldShow && !isScrollingUp && !hasShown) {
-            stickyAd.classList.add('visible');
-            stickyAd.classList.remove('hidden');
-        } else if (isScrollingUp) {
-            stickyAd.classList.remove('visible');
-        }
-        
-        lastScroll = currentScroll;
-    }
-    
-    // Throttle scroll events
-    let ticking = false;
-    window.addEventListener('scroll', () => {
-        if (!ticking) {
-            window.requestAnimationFrame(() => {
-                handleScroll();
-                ticking = false;
-            });
-            ticking = true;
-        }
-    }, { passive: true });
-    
-    // Auto-hide after 10 seconds
-    setTimeout(() => {
-        if (stickyAd.classList.contains('visible')) {
-            stickyAd.classList.remove('visible');
-            hasShown = true;
-        }
-    }, 10000);
 }
 
 // ========================================
@@ -311,58 +257,6 @@ function renderMarketplaceAds(ads) {
     
     showcase.innerHTML = adsHTML + ctaCard;
 }
-
-// ========================================
-// ROTATING STICKY AD CONTENT
-// ========================================
-const stickyAdContent = [
-    {
-        image: "images/tomatoes-thumb.jpg",
-        title: "Today's Special!",
-        text: "Fresh produce at Stall 42"
-    },
-    {
-        image: "images/phone-cases.jpg",
-        title: "Tech Deals!",
-        text: "Phone accessories at B12"
-    },
-    {
-        image: "images/watches.jpg",
-        title: "Fashion Sale!",
-        text: "Watches from KSH 500 at C3"
-    }
-];
-
-function rotateStickyAd() {
-    const stickyAd = document.getElementById('stickyAd');
-    if (!stickyAd) return;
-    
-    let currentIndex = 0;
-    
-    setInterval(() => {
-        currentIndex = (currentIndex + 1) % stickyAdContent.length;
-        const ad = stickyAdContent[currentIndex];
-        
-        const img = stickyAd.querySelector('.sticky-ad-img');
-        const title = stickyAd.querySelector('.sticky-ad-text strong');
-        const text = stickyAd.querySelector('.sticky-ad-text span');
-        
-        if (img && title && text) {
-            // Fade out
-            stickyAd.querySelector('.sticky-ad-content').style.opacity = '0.5';
-            
-            setTimeout(() => {
-                img.src = ad.image;
-                title.textContent = ad.title;
-                text.textContent = ad.text;
-                stickyAd.querySelector('.sticky-ad-content').style.opacity = '1';
-            }, 200);
-        }
-    }, 8000);
-}
-
-// Start rotation
-rotateStickyAd();
 
 // ========================================
 // CONSOLE LOG
