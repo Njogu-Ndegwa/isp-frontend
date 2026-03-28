@@ -71,9 +71,22 @@ let planFlags = {
 };
 
 // ========================================
-// API CONFIGURATION
+// API CONFIGURATION (with fallback)
 // ========================================
-const API_BASE_URL = 'https://isp.bitwavetechnologies.net/api';
+const PRIMARY_API_BASE = 'https://isp.bitwavetechnologies.com/api';
+const FALLBACK_API_BASE = 'https://isp.bitwavetechnologies.com/api';
+const API_BASE_URL = PRIMARY_API_BASE;
+
+// Shared fallback state — ads.js and pwa.js read this to rewrite their URLs too
+window.__apiFallback = { primary: PRIMARY_API_BASE, fallback: FALLBACK_API_BASE, active: false };
+
+function activateApiFallback() {
+    if (!window.__apiFallback.active) {
+        window.__apiFallback.active = true;
+        console.warn('⚠️ Primary API unreachable — switched to fallback:', FALLBACK_API_BASE);
+    }
+}
+
 // Single portal endpoint — returns router, plans, and ads in one request
 const PORTAL_ENDPOINT = `${API_BASE_URL}/public/portal`;
 // Legacy endpoints (used as fallback if portal endpoint fails)
@@ -110,6 +123,9 @@ const USE_CORS_PROXY = false; // Set to true only for local testing
 const CORS_PROXY = 'https://corsproxy.io/?';
 
 function getProxiedUrl(url) {
+    if (window.__apiFallback.active) {
+        url = url.replace(PRIMARY_API_BASE, FALLBACK_API_BASE);
+    }
     return USE_CORS_PROXY ? CORS_PROXY + encodeURIComponent(url) : url;
 }
 
@@ -214,22 +230,53 @@ async function fetchPortalData(identity) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-    const response = await fetch(getProxiedUrl(url), {
-        method: 'GET',
-        headers: { 'Accept': 'application/json' },
-        mode: 'cors',
-        signal: controller.signal
-    });
+    try {
+        const response = await fetch(getProxiedUrl(url), {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' },
+            mode: 'cors',
+            signal: controller.signal
+        });
 
-    clearTimeout(timeoutId);
+        clearTimeout(timeoutId);
 
-    if (!response.ok) {
-        throw new Error(`Portal API ${response.status} ${response.statusText}`);
+        if (!response.ok) {
+            throw new Error(`Portal API ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ [PORTAL] Response:', JSON.stringify(data, null, 2));
+        return data;
+    } catch (err) {
+        clearTimeout(timeoutId);
+
+        const isNetworkErr = err instanceof TypeError || err.name === 'AbortError';
+        if (!window.__apiFallback.active && isNetworkErr) {
+            activateApiFallback();
+
+            const fb = new AbortController();
+            const fbTimeout = setTimeout(() => fb.abort(), 15000);
+
+            const response = await fetch(getProxiedUrl(url), {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' },
+                mode: 'cors',
+                signal: fb.signal
+            });
+
+            clearTimeout(fbTimeout);
+
+            if (!response.ok) {
+                throw new Error(`Fallback Portal API ${response.status} ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            console.log('✅ [PORTAL] Response (via fallback):', JSON.stringify(data, null, 2));
+            return data;
+        }
+
+        throw err;
     }
-
-    const data = await response.json();
-    console.log('✅ [PORTAL] Response:', JSON.stringify(data, null, 2));
-    return data;
 }
 
 // ========================================

@@ -6,17 +6,26 @@
 // ========================================
 // BACKEND API CONFIGURATION
 // ========================================
-const ADS_API_BASE_URL = 'https://isp.bitwavetechnologies.net/api';
+const ADS_API_BASE_URL = 'https://isp.bitwavetechnologies.com/api';
 const ADS_ENDPOINT = `${ADS_API_BASE_URL}/ads`;
 const AD_CLICK_ENDPOINT = `${ADS_API_BASE_URL}/ads/click`;
 const AD_IMPRESSION_ENDPOINT = `${ADS_API_BASE_URL}/ads/impression`;
 
-// Note: Backend API format from https://isp.bitwavetechnologies.net/api/ads
+// Resolves a URL through the global fallback state set by script.js
+function resolveAdsUrl(url) {
+    const fb = window.__apiFallback;
+    if (fb && fb.active) {
+        return url.replace(fb.primary, fb.fallback);
+    }
+    return url;
+}
+
+// Note: Backend API format from https://isp.bitwavetechnologies.com/api/ads
 
 // ========================================
 // DATA TRANSFER OBJECTS (DTOs)
 // These define the structure of data exchanged with the backend
-// API Base: https://isp.bitwavetechnologies.net/api
+// API Base: https://isp.bitwavetechnologies.com/api
 // ========================================
 
 /**
@@ -349,7 +358,7 @@ async function fetchAds() {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000);
         
-        const response = await fetch(ADS_ENDPOINT, {
+        const response = await fetch(resolveAdsUrl(ADS_ENDPOINT), {
             method: 'GET',
             headers: {
                 'Accept': 'application/json',
@@ -692,7 +701,7 @@ function closeAdDetails() {
 
 // ========================================
 // RECORD AD CLICK - Analytics
-// POST https://isp.bitwavetechnologies.net/api/ads/click
+// POST https://isp.bitwavetechnologies.com/api/ads/click
 // ========================================
 async function recordClick(adId, clickType) {
     console.log(`📊 Recording click: Ad #${adId}, Type: ${clickType}`);
@@ -718,7 +727,7 @@ async function recordClick(adId, clickType) {
     };
     
     try {
-        const response = await fetch(AD_CLICK_ENDPOINT, {
+        const response = await fetch(resolveAdsUrl(AD_CLICK_ENDPOINT), {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',
@@ -736,14 +745,13 @@ async function recordClick(adId, clickType) {
         }
     } catch (error) {
         console.warn('⚠️ Could not record click:', error.message);
-        // Store locally for retry later
         storeClickLocally(clickData);
     }
 }
 
 // ========================================
 // RECORD AD IMPRESSION - Analytics
-// POST https://isp.bitwavetechnologies.net/api/ads/impression
+// POST https://isp.bitwavetechnologies.com/api/ads/impression
 // ========================================
 async function recordImpression(adIds) {
     console.log(`📊 Recording impression for ${adIds.length} ads`);
@@ -763,7 +771,7 @@ async function recordImpression(adIds) {
     };
     
     try {
-        const response = await fetch(AD_IMPRESSION_ENDPOINT, {
+        const response = await fetch(resolveAdsUrl(AD_IMPRESSION_ENDPOINT), {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',
@@ -807,7 +815,7 @@ async function retryPendingClicks() {
         
         for (const click of pendingClicks) {
             try {
-                const response = await fetch(AD_CLICK_ENDPOINT, {
+                const response = await fetch(resolveAdsUrl(AD_CLICK_ENDPOINT), {
                     method: 'POST',
                     headers: {
                         'Accept': 'application/json',

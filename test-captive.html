@@ -91,7 +91,7 @@
         `;
 
         // Test API
-        fetch('https://isp.bitwavetechnologies.net/api/plans?user_id=1')
+        fetch('https://isp.bitwavetechnologies.com/api/plans?user_id=1')
             .then(response => {
                 if (response.ok) {
                     return response.json();
@@ -106,7 +106,7 @@
             .catch(error => {
                 document.getElementById('apiStatus').className = 'status fail';
                 document.getElementById('apiStatus').innerHTML = '❌ API FAILED: ' + error.message;
-                document.getElementById('apiDetails').innerHTML = '<p>Check if <code>isp.bitwavetechnologies.net</code> is in walled garden</p>';
+                document.getElementById('apiDetails').innerHTML = '<p>Check if <code>isp.bitwavetechnologies.com</code> is in walled garden</p>';
             });
     </script>
 </body>

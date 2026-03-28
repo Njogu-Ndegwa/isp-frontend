@@ -4,9 +4,25 @@
 // ========================================
 
 // ========================================
-// API CONFIGURATION
+// API CONFIGURATION (with fallback)
 // ========================================
-const API_BASE_URL = 'https://isp.bitwavetechnologies.net/api';
+const PRIMARY_PWA_API_BASE = 'https://isp.bitwavetechnologies.com/api';
+const FALLBACK_PWA_API_BASE = 'https://isp.bitwavetechnologies.com/api';
+let pwaApiFallbackActive = false;
+
+function resolvePwaUrl(url) {
+    if (pwaApiFallbackActive) {
+        return url.replace(PRIMARY_PWA_API_BASE, FALLBACK_PWA_API_BASE);
+    }
+    // Also check the global flag set by script.js (if loaded on the same page)
+    const fb = window.__apiFallback;
+    if (fb && fb.active) {
+        return url.replace(fb.primary, fb.fallback);
+    }
+    return url;
+}
+
+const API_BASE_URL = PRIMARY_PWA_API_BASE;
 const SPEED_TEST_ENDPOINT = `${API_BASE_URL}/speed-tests`;
 const ADS_ENDPOINT = `${API_BASE_URL}/ads`;
 
@@ -224,7 +240,7 @@ async function startSpeedTest() {
 async function measurePing() {
     const start = performance.now();
     try {
-        await fetch(`${API_BASE_URL}/ping`, { method: 'HEAD', mode: 'no-cors' });
+        await fetch(resolvePwaUrl(`${API_BASE_URL}/ping`), { method: 'HEAD', mode: 'no-cors' });
     } catch (e) {
         // Simulate ping on error
     }
@@ -346,7 +362,7 @@ function renderSpeedTestHistory() {
 
 async function sendSpeedTestToBackend(result) {
     try {
-        await fetch(SPEED_TEST_ENDPOINT, {
+        await fetch(resolvePwaUrl(SPEED_TEST_ENDPOINT), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(result)
@@ -362,7 +378,7 @@ async function sendSpeedTestToBackend(result) {
 // ========================================
 async function loadAds() {
     try {
-        const response = await fetch(ADS_ENDPOINT);
+        const response = await fetch(resolvePwaUrl(ADS_ENDPOINT));
         if (!response.ok) throw new Error('Failed to load ads');
         
         const ads = await response.json();
