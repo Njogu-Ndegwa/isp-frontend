@@ -649,6 +649,326 @@ body::before {
 }
 
 /* ========================================
+   Reconnect Section
+   ======================================== */
+.reconnect-section {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    margin-bottom: var(--space-md);
+    overflow: hidden;
+    border: 2px solid #60a5fa;
+}
+
+.reconnect-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border-bottom: 1px solid rgba(96, 165, 250, 0.2);
+}
+
+.reconnect-header-icon {
+    font-size: 1.75rem;
+    flex-shrink: 0;
+}
+
+.reconnect-header-text {
+    flex: 1;
+}
+
+.reconnect-header-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.reconnect-header-subtitle {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.reconnect-body {
+    padding: var(--space-md);
+}
+
+.reconnect-input-group {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+.reconnect-input {
+    flex: 1;
+    min-width: 0;
+    padding: var(--space-md);
+    font-size: 1rem;
+    font-weight: 600;
+    font-family: 'DM Sans', monospace;
+    letter-spacing: 0.5px;
+    border: 2px solid #E5E5E5;
+    border-radius: var(--radius-md);
+    outline: none;
+    min-height: 48px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.reconnect-input::placeholder {
+    color: #CCC;
+    font-weight: 400;
+    letter-spacing: 0;
+    font-size: 0.82rem;
+}
+
+.reconnect-input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.reconnect-input.input-phone {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(232, 93, 4, 0.1);
+}
+
+.reconnect-input.input-voucher {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(255, 186, 8, 0.1);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    text-align: center;
+}
+
+.reconnect-btn {
+    flex-shrink: 0;
+    padding: var(--space-md) var(--space-lg);
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: var(--text-inverse);
+    border: none;
+    border-radius: var(--radius-md);
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.reconnect-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.reconnect-btn:active {
+    transform: translateY(0);
+}
+
+.reconnect-btn:disabled {
+    background: #CCC;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.reconnect-btn-loader .loader-spinner {
+    width: 18px;
+    height: 18px;
+}
+
+.reconnect-hint {
+    font-size: 0.75rem;
+    color: var(--text-light);
+    margin-top: var(--space-sm);
+    margin-bottom: 0;
+    transition: color 0.2s ease;
+}
+
+.reconnect-hint.hint-phone {
+    color: var(--primary);
+}
+
+.reconnect-hint.hint-voucher {
+    color: #b45309;
+}
+
+/* Reconnect Result Card */
+.reconnect-result {
+    margin-top: var(--space-md);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    animation: fadeSlideIn 0.3s ease;
+}
+
+.reconnect-result-success {
+    background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%);
+    border: 2px solid var(--success);
+    padding: var(--space-md);
+}
+
+.reconnect-success-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+}
+
+.reconnect-success-check {
+    width: 36px;
+    height: 36px;
+    background: var(--success);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.reconnect-success-label {
+    font-size: 0.8rem;
+    color: #059669;
+    font-weight: 600;
+}
+
+.reconnect-success-name {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.reconnect-details {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+}
+
+.reconnect-detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-xs) 0;
+    font-size: 0.85rem;
+}
+
+.reconnect-detail-label {
+    color: #059669;
+    font-weight: 600;
+}
+
+.reconnect-detail-value {
+    font-weight: 700;
+    color: var(--text);
+}
+
+.reconnect-browse-btn {
+    width: 100%;
+    padding: var(--space-md);
+    background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-family: inherit;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    text-decoration: none;
+}
+
+.reconnect-browse-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.reconnect-result-error {
+    background: linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%);
+    border: 2px solid var(--error);
+    padding: var(--space-md);
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.reconnect-error-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--error);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.reconnect-error-text {
+    font-size: 0.9rem;
+    color: #991B1B;
+    font-weight: 600;
+}
+
+/* Reconnect Responsive — Small Phones */
+@media (max-width: 380px) {
+    .reconnect-input-group {
+        flex-direction: column;
+    }
+
+    .reconnect-btn {
+        width: 100%;
+    }
+
+    .reconnect-input {
+        font-size: 0.95rem;
+    }
+
+    .reconnect-header-title {
+        font-size: 0.95rem;
+    }
+
+    .reconnect-header-subtitle {
+        font-size: 0.75rem;
+    }
+
+    .reconnect-header-icon {
+        font-size: 1.4rem;
+    }
+}
+
+@media (max-width: 320px) {
+    .reconnect-input {
+        font-size: 0.9rem;
+        padding: 10px;
+    }
+
+    .reconnect-input::placeholder {
+        font-size: 0.75rem;
+    }
+
+    .reconnect-body {
+        padding: var(--space-sm);
+    }
+
+    .reconnect-header {
+        padding: var(--space-sm);
+        gap: var(--space-sm);
+    }
+}
+
+/* ========================================
    Voucher Section
    ======================================== */
 .voucher-section {

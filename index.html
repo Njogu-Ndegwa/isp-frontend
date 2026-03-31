@@ -120,6 +120,43 @@
                     </div>
                 </div>
 
+                <!-- Reconnect Section — for returning customers -->
+                <div class="reconnect-section" id="reconnectSection">
+                    <div class="reconnect-header">
+                        <span class="reconnect-header-icon">🔄</span>
+                        <div class="reconnect-header-text">
+                            <div class="reconnect-header-title">Already paid? Reconnect</div>
+                            <div class="reconnect-header-subtitle">Enter your phone number or voucher code to get back online</div>
+                        </div>
+                    </div>
+                    <div class="reconnect-body">
+                        <div class="reconnect-input-group">
+                            <input
+                                type="text"
+                                id="reconnectInput"
+                                class="reconnect-input"
+                                placeholder="Phone or voucher e.g. 0712… or 4839-2910"
+                                maxlength="13"
+                                autocomplete="off"
+                                spellcheck="false"
+                                inputmode="text"
+                            >
+                            <button type="button" class="reconnect-btn" id="reconnectBtn">
+                                <span class="reconnect-btn-text">Reconnect</span>
+                                <span class="reconnect-btn-loader hidden" id="reconnectBtnLoader">
+                                    <span class="loader-spinner"></span>
+                                </span>
+                            </button>
+                        </div>
+                        <p class="reconnect-hint" id="reconnectHint">Enter your M-Pesa phone number or voucher code</p>
+
+                        <!-- Reconnect Result (hidden by default) -->
+                        <div class="reconnect-result hidden" id="reconnectResult">
+                            <!-- Populated by JS on reconnect success/error -->
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Voucher Redeem Section (shown when payment_methods includes "voucher") -->
                 <div class="voucher-section hidden" id="voucherSection">
                     <div class="voucher-header">

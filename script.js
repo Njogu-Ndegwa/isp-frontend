@@ -99,6 +99,8 @@ const ROUTER_LOOKUP_ENDPOINT = `${API_BASE_URL}/routers/by-identity`;
 // Voucher endpoints (public, no auth)
 const VOUCHER_VERIFY_ENDPOINT = `${API_BASE_URL}/public/voucher/verify`;
 const VOUCHER_REDEEM_ENDPOINT = `${API_BASE_URL}/public/voucher/redeem`;
+// Reconnect endpoint (public, no auth)
+const RECONNECT_ENDPOINT = `${API_BASE_URL}/public/reconnect`;
 
 // RADIUS-specific endpoints (used when router auth_method is "RADIUS")
 const RADIUS_PAYMENT_ENDPOINT = `${API_BASE_URL}/radius/hotspot/register-and-pay`;
@@ -628,6 +630,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     setupEventListeners();
     setupVoucherUI();
+    setupReconnectUI();
     loadSavedPhoneNumber(); // Works on desktop; mobile captive portals wipe storage
     setupBrandLink(); // Preserve MikroTik params when clicking logo
 });
@@ -1530,6 +1533,246 @@ function showVoucherSuccessDetails(data) {
     if (typeof populateSuccessAds === 'function') {
         populateSuccessAds();
     }
+}
+
+// ========================================
+// RECONNECT: API CALL
+// POST /api/public/reconnect
+// ========================================
+const VOUCHER_CODE_REGEX = /^\d{4}-\d{4}$/;
+
+function isVoucherCode(value) {
+    return VOUCHER_CODE_REGEX.test(value.trim());
+}
+
+function isPhoneInput(value) {
+    const digits = value.replace(/[^0-9]/g, '');
+    return digits.length >= 4 && !isVoucherCode(value);
+}
+
+async function reconnectUser(inputValue) {
+    const macAddress = mikrotikParams.mac || 'AA:BB:CC:DD:EE:FF';
+    const rId = routerId || FALLBACK_ROUTER_ID;
+    const trimmed = inputValue.trim();
+
+    let requestBody;
+    if (isVoucherCode(trimmed)) {
+        requestBody = {
+            voucher_code: trimmed,
+            mac_address: macAddress,
+            router_id: rId
+        };
+    } else {
+        const phone = formatPhoneForMpesa(trimmed);
+        requestBody = {
+            phone: phone,
+            mac_address: macAddress,
+            router_id: rId
+        };
+    }
+
+    console.log('🔄 [RECONNECT] Sending request:', requestBody);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
+
+    const response = await fetch(getProxiedUrl(RECONNECT_ENDPOINT), {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        mode: 'cors',
+        body: JSON.stringify(requestBody),
+        signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        const msg = data.detail || data.message || 'Reconnection failed';
+        const err = new Error(msg);
+        err.status = response.status;
+        throw err;
+    }
+
+    console.log('✅ [RECONNECT] Success:', data);
+    return data;
+}
+
+// ========================================
+// RECONNECT: UI SETUP & HANDLERS
+// ========================================
+function setupReconnectUI() {
+    const input = document.getElementById('reconnectInput');
+    const btn = document.getElementById('reconnectBtn');
+    const btnText = btn?.querySelector('.reconnect-btn-text');
+    const btnLoader = document.getElementById('reconnectBtnLoader');
+    const hint = document.getElementById('reconnectHint');
+    const result = document.getElementById('reconnectResult');
+
+    if (!input || !btn) return;
+
+    input.addEventListener('input', () => {
+        const val = input.value;
+
+        input.classList.remove('input-phone', 'input-voucher');
+        hint.classList.remove('hint-phone', 'hint-voucher');
+        if (result) result.classList.add('hidden');
+
+        if (isVoucherCode(val)) {
+            input.classList.add('input-voucher');
+            hint.classList.add('hint-voucher');
+            hint.textContent = '🎟️ Voucher code detected';
+        } else if (isPhoneInput(val)) {
+            input.classList.add('input-phone');
+            hint.classList.add('hint-phone');
+            hint.textContent = '📱 Phone number detected';
+        } else {
+            hint.textContent = 'Enter your M-Pesa phone number or voucher code';
+        }
+    });
+
+    // Auto-format voucher: insert dash after 4th digit when typing digits only
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            btn.click();
+        }
+    });
+
+    input.addEventListener('input', () => {
+        let val = input.value;
+        // If purely numeric and length is 5 with no dash, auto-insert dash
+        const digitsOnly = val.replace(/[^0-9]/g, '');
+        if (digitsOnly.length <= 8 && val === digitsOnly && digitsOnly.length === 5) {
+            input.value = digitsOnly.slice(0, 4) + '-' + digitsOnly.slice(4);
+        }
+    });
+
+    btn.addEventListener('click', async () => {
+        const val = input.value.trim();
+        if (!val) {
+            input.focus();
+            return;
+        }
+
+        // Validate: either a valid phone number or a voucher code
+        if (!isVoucherCode(val) && !validatePhoneNumber(val.replace(/[^0-9]/g, ''))) {
+            showReconnectError('Please enter a valid phone number (e.g. 0712345678) or voucher code (e.g. 4839-2910)');
+            return;
+        }
+
+        btn.disabled = true;
+        if (btnText) btnText.classList.add('hidden');
+        if (btnLoader) btnLoader.classList.remove('hidden');
+        if (result) result.classList.add('hidden');
+
+        try {
+            const data = await reconnectUser(val);
+            showReconnectSuccess(data);
+        } catch (err) {
+            let message = err.message;
+            if (err.status === 404) {
+                message = 'No active subscription found. Please check your input or purchase a new plan.';
+            } else if (err.status === 409) {
+                message = 'This device is already registered to another active account.';
+            } else if (err.status === 429) {
+                message = 'Too many attempts. Please wait a moment and try again.';
+            }
+            showReconnectError(message);
+        } finally {
+            btn.disabled = false;
+            if (btnText) btnText.classList.remove('hidden');
+            if (btnLoader) btnLoader.classList.add('hidden');
+        }
+    });
+}
+
+function showReconnectSuccess(data) {
+    const result = document.getElementById('reconnectResult');
+    if (!result) return;
+
+    const expiryDate = data.expires_at ? new Date(data.expires_at) : null;
+    const expiryText = expiryDate ? expiryDate.toLocaleDateString('en-KE', {
+        weekday: 'short', month: 'short', day: 'numeric',
+        hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Nairobi'
+    }) : 'N/A';
+
+    const remaining = data.remaining_hours != null
+        ? (data.remaining_hours >= 24
+            ? `${Math.floor(data.remaining_hours / 24)}d ${Math.round(data.remaining_hours % 24)}h`
+            : `${Math.round(data.remaining_hours * 10) / 10}h`)
+        : '';
+
+    result.innerHTML = `
+        <div class="reconnect-result-success">
+            <div class="reconnect-success-header">
+                <span class="reconnect-success-check">✓</span>
+                <div>
+                    <div class="reconnect-success-label">Welcome back!</div>
+                    <div class="reconnect-success-name">${data.customer_name || 'Customer'}</div>
+                </div>
+            </div>
+            <div class="reconnect-details">
+                <div class="reconnect-detail-row">
+                    <span class="reconnect-detail-label">Plan</span>
+                    <span class="reconnect-detail-value">${data.plan_name || '—'}</span>
+                </div>
+                <div class="reconnect-detail-row">
+                    <span class="reconnect-detail-label">Expires</span>
+                    <span class="reconnect-detail-value">${expiryText}</span>
+                </div>
+                ${remaining ? `
+                <div class="reconnect-detail-row">
+                    <span class="reconnect-detail-label">Remaining</span>
+                    <span class="reconnect-detail-value">${remaining}</span>
+                </div>` : ''}
+            </div>
+            <a href="http://google.com" class="reconnect-browse-btn">
+                <span>📶</span>
+                <span>Start Browsing</span>
+                <span>→</span>
+            </a>
+        </div>
+    `;
+
+    result.classList.remove('hidden');
+
+    // RADIUS auto-login if credentials present
+    if (data.radius_username && data.radius_password) {
+        const loginUrl = buildRadiusLoginUrl(mikrotikParams.gw, data.radius_username, data.radius_password, mikrotikParams.dst);
+        if (loginUrl) {
+            try {
+                localStorage.setItem('bitwave_last_radius_login', JSON.stringify({
+                    loginUrl, username: data.radius_username,
+                    password: data.radius_password, gateway: mikrotikParams.gw,
+                    dst: mikrotikParams.dst, mac: mikrotikParams.mac,
+                    planName: data.plan_name,
+                    expiry: data.expires_at,
+                    savedAt: new Date().toISOString()
+                }));
+            } catch (e) { /* ignore */ }
+
+            setTimeout(() => { window.location.href = loginUrl; }, 2500);
+        }
+    }
+}
+
+function showReconnectError(message) {
+    const result = document.getElementById('reconnectResult');
+    if (!result) return;
+
+    result.innerHTML = `
+        <div class="reconnect-result-error">
+            <span class="reconnect-error-icon">✕</span>
+            <span class="reconnect-error-text">${message}</span>
+        </div>
+    `;
+
+    result.classList.remove('hidden');
 }
 
 // ========================================
