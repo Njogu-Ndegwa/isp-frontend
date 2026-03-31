@@ -768,15 +768,10 @@ body::before {
 }
 
 .reconnect-btn:disabled {
-    background: #CCC;
+    background: #94a3b8;
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
-}
-
-.reconnect-btn-loader .loader-spinner {
-    width: 18px;
-    height: 18px;
 }
 
 .reconnect-hint {

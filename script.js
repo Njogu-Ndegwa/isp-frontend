@@ -1616,8 +1616,16 @@ function setupReconnectUI() {
     if (!input || !btn) return;
 
     input.addEventListener('input', () => {
-        const val = input.value;
+        let val = input.value;
 
+        // Auto-insert dash for voucher codes: after 4 consecutive digits, add dash
+        const digitsOnly = val.replace(/[^0-9]/g, '');
+        if (digitsOnly.length <= 8 && val === digitsOnly && digitsOnly.length === 5) {
+            val = digitsOnly.slice(0, 4) + '-' + digitsOnly.slice(4);
+            input.value = val;
+        }
+
+        // Update visual hints
         input.classList.remove('input-phone', 'input-voucher');
         hint.classList.remove('hint-phone', 'hint-voucher');
         if (result) result.classList.add('hidden');
@@ -1635,20 +1643,10 @@ function setupReconnectUI() {
         }
     });
 
-    // Auto-format voucher: insert dash after 4th digit when typing digits only
     input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
             btn.click();
-        }
-    });
-
-    input.addEventListener('input', () => {
-        let val = input.value;
-        // If purely numeric and length is 5 with no dash, auto-insert dash
-        const digitsOnly = val.replace(/[^0-9]/g, '');
-        if (digitsOnly.length <= 8 && val === digitsOnly && digitsOnly.length === 5) {
-            input.value = digitsOnly.slice(0, 4) + '-' + digitsOnly.slice(4);
         }
     });
 
@@ -1665,9 +1663,9 @@ function setupReconnectUI() {
             return;
         }
 
+        // Show loading state
         btn.disabled = true;
-        if (btnText) btnText.classList.add('hidden');
-        if (btnLoader) btnLoader.classList.remove('hidden');
+        btnText.textContent = 'Reconnecting...';
         if (result) result.classList.add('hidden');
 
         try {
@@ -1685,8 +1683,7 @@ function setupReconnectUI() {
             showReconnectError(message);
         } finally {
             btn.disabled = false;
-            if (btnText) btnText.classList.remove('hidden');
-            if (btnLoader) btnLoader.classList.add('hidden');
+            btnText.textContent = 'Reconnect';
         }
     });
 }
