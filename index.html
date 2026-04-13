@@ -221,6 +221,232 @@
                     </div>
                 </div>
 
+                <!-- ============================================
+                     DEVICE PAIRING SECTION (TV / Console / IoT)
+                     ============================================ -->
+                <div class="device-section" id="deviceSection">
+                    <!-- Entry Header - always visible -->
+                    <div class="device-entry" id="deviceEntry">
+                        <div class="device-entry-header" id="deviceEntryToggle">
+                            <span class="device-entry-icon">📺</span>
+                            <div class="device-entry-text">
+                                <div class="device-entry-title">Connect a TV / Device</div>
+                                <div class="device-entry-subtitle">Smart TVs, consoles & other devices that can't open this page</div>
+                            </div>
+                            <span class="device-entry-chevron" id="deviceChevron">▸</span>
+                        </div>
+
+                        <!-- Expandable body -->
+                        <div class="device-entry-body hidden" id="deviceEntryBody">
+                            <!-- Tab bar: Add Device | My Devices -->
+                            <div class="device-tabs">
+                                <button class="device-tab active" data-tab="add" id="deviceTabAdd">Add Device</button>
+                                <button class="device-tab" data-tab="my" id="deviceTabMy">My Devices</button>
+                            </div>
+
+                            <!-- ======== ADD DEVICE — Multi-step wizard ======== -->
+                            <div class="device-wizard" id="deviceWizard">
+                                <!-- Step indicators -->
+                                <div class="device-steps-bar">
+                                    <div class="device-step-dot active" data-step="1">1</div>
+                                    <div class="device-step-line"></div>
+                                    <div class="device-step-dot" data-step="2">2</div>
+                                    <div class="device-step-line"></div>
+                                    <div class="device-step-dot" data-step="3">3</div>
+                                </div>
+
+                                <!-- STEP 1: Device Info -->
+                                <div class="device-step-panel" id="deviceStep1">
+                                    <h3 class="device-step-title">Device Info</h3>
+
+                                    <label class="device-label">MAC Address <span class="required">*</span></label>
+                                    <div class="device-mac-wrap">
+                                        <input
+                                            type="text"
+                                            id="deviceMacInput"
+                                            class="device-input mono"
+                                            placeholder="XX:XX:XX:XX:XX:XX"
+                                            inputmode="text"
+                                            autocapitalize="characters"
+                                            autocomplete="off"
+                                            spellcheck="false"
+                                            maxlength="17"
+                                        >
+                                        <span class="device-mac-status" id="deviceMacStatus"></span>
+                                    </div>
+                                    <div class="device-mac-counter" id="deviceMacCounter">0/12 characters</div>
+
+                                    <!-- "Where do I find this?" accordion -->
+                                    <details class="device-mac-help">
+                                        <summary>Where do I find the MAC address?</summary>
+                                        <div class="mac-help-list">
+                                            <div class="mac-help-item"><strong>Samsung TV</strong> — Settings &gt; General &gt; Network &gt; Network Status &gt; IP Settings</div>
+                                            <div class="mac-help-item"><strong>LG TV (webOS)</strong> — Settings &gt; All Settings &gt; General &gt; About This TV</div>
+                                            <div class="mac-help-item"><strong>Sony / Android TV</strong> — Settings &gt; Device Preferences &gt; About &gt; Status</div>
+                                            <div class="mac-help-item"><strong>Roku TV / Stick</strong> — Settings &gt; Network &gt; About</div>
+                                            <div class="mac-help-item"><strong>Fire TV / Stick</strong> — Settings &gt; My Fire TV &gt; About &gt; Network</div>
+                                            <div class="mac-help-item"><strong>Apple TV</strong> — Settings &gt; General &gt; About — "Wi-Fi Address"</div>
+                                            <div class="mac-help-item"><strong>Xbox</strong> — Settings &gt; General &gt; Network Settings &gt; Advanced</div>
+                                            <div class="mac-help-item"><strong>PlayStation</strong> — Settings &gt; Network &gt; View Connection Status</div>
+                                            <div class="mac-help-item"><strong>Nintendo Switch</strong> — System Settings &gt; Internet</div>
+                                            <div class="mac-help-item"><strong>Other</strong> — Check WiFi / Network settings for "MAC Address" or "Hardware Address"</div>
+                                        </div>
+                                    </details>
+
+                                    <label class="device-label">Device Type</label>
+                                    <div class="device-type-grid" id="deviceTypeGrid">
+                                        <button class="device-type-btn active" data-type="tv"><span>📺</span> TV</button>
+                                        <button class="device-type-btn" data-type="console"><span>🎮</span> Console</button>
+                                        <button class="device-type-btn" data-type="laptop"><span>💻</span> Laptop</button>
+                                        <button class="device-type-btn" data-type="other"><span>📱</span> Other</button>
+                                    </div>
+
+                                    <label class="device-label">Device Name <span class="optional">(optional)</span></label>
+                                    <input
+                                        type="text"
+                                        id="deviceNameInput"
+                                        class="device-input"
+                                        placeholder="e.g. Living Room TV"
+                                        maxlength="40"
+                                        autocomplete="off"
+                                    >
+
+                                    <button class="device-next-btn" id="deviceStep1Next" disabled>
+                                        Next — Select Plan
+                                        <span class="btn-arrow-sm">→</span>
+                                    </button>
+                                </div>
+
+                                <!-- STEP 2: Select Plan / Voucher -->
+                                <div class="device-step-panel hidden" id="deviceStep2">
+                                    <button class="device-back-link" id="deviceStep2Back">← Back</button>
+                                    <h3 class="device-step-title" id="deviceStep2Title">Select a Plan</h3>
+
+                                    <div class="device-plans-grid" id="devicePlansGrid">
+                                        <!-- Populated by JS from global allPlans -->
+                                    </div>
+
+                                    <div class="device-voucher-divider">
+                                        <span class="divider-line"></span>
+                                        <span class="divider-text">OR USE A VOUCHER</span>
+                                        <span class="divider-line"></span>
+                                    </div>
+
+                                    <div class="device-voucher-row">
+                                        <input
+                                            type="text"
+                                            id="deviceVoucherInput"
+                                            class="device-input"
+                                            placeholder="Enter voucher code"
+                                            maxlength="20"
+                                            autocomplete="off"
+                                            spellcheck="false"
+                                        >
+                                        <button class="device-voucher-btn" id="deviceVoucherBtn">Apply</button>
+                                    </div>
+                                    <div class="device-voucher-result hidden" id="deviceVoucherResult"></div>
+                                </div>
+
+                                <!-- STEP 3: Payment (phone + M-Pesa) -->
+                                <div class="device-step-panel hidden" id="deviceStep3">
+                                    <button class="device-back-link" id="deviceStep3Back">← Back</button>
+                                    <h3 class="device-step-title">Pay with M-Pesa</h3>
+
+                                    <div class="device-summary-card" id="deviceSummaryCard">
+                                        <!-- Filled by JS: device name, plan, price -->
+                                    </div>
+
+                                    <label class="device-label">Phone Number <span class="required">*</span></label>
+                                    <div class="device-phone-wrap">
+                                        <span class="device-phone-prefix">+254</span>
+                                        <input
+                                            type="tel"
+                                            id="devicePhoneInput"
+                                            class="device-input"
+                                            placeholder="7XXXXXXXX"
+                                            maxlength="10"
+                                            autocomplete="tel"
+                                        >
+                                    </div>
+
+                                    <label class="device-label">Your Name <span class="optional">(optional)</span></label>
+                                    <input
+                                        type="text"
+                                        id="deviceOwnerName"
+                                        class="device-input"
+                                        placeholder="e.g. John Doe"
+                                        maxlength="50"
+                                        autocomplete="name"
+                                    >
+
+                                    <button class="device-pay-btn" id="devicePayBtn">
+                                        <span class="device-pay-text" id="devicePayText">Pay with M-Pesa</span>
+                                        <span class="device-pay-loader hidden" id="devicePayLoader">
+                                            <span class="loader-spinner"></span> Processing...
+                                        </span>
+                                    </button>
+
+                                    <div class="device-security-note">
+                                        <span>🔒</span> Secure payment via Safaricom M-Pesa
+                                    </div>
+                                </div>
+
+                                <!-- STEP: Processing / Polling -->
+                                <div class="device-step-panel hidden" id="deviceStepProcessing">
+                                    <div class="device-processing-wrap">
+                                        <div class="device-processing-spinner"></div>
+                                        <h3 class="device-processing-title" id="deviceProcessingTitle">Waiting for payment...</h3>
+                                        <p class="device-processing-sub" id="deviceProcessingSub">Check your phone for the M-Pesa prompt and enter your PIN.</p>
+                                    </div>
+                                </div>
+
+                                <!-- STEP: Success -->
+                                <div class="device-step-panel hidden" id="deviceStepSuccess">
+                                    <div class="device-success-wrap">
+                                        <div class="device-success-icon">✓</div>
+                                        <h3 class="device-success-title">Device Connected!</h3>
+                                        <div class="device-success-details" id="deviceSuccessDetails">
+                                            <!-- Filled by JS -->
+                                        </div>
+                                        <p class="device-success-tip">Your device should now have internet. If it doesn't connect automatically, restart its WiFi connection.</p>
+                                        <button class="device-next-btn" id="deviceSuccessDone">Done</button>
+                                        <button class="device-link-btn" id="deviceSuccessAddAnother">+ Add Another Device</button>
+                                    </div>
+                                </div>
+
+                                <!-- STEP: Error -->
+                                <div class="device-step-panel hidden" id="deviceStepError">
+                                    <div class="device-error-wrap">
+                                        <div class="device-error-icon">✕</div>
+                                        <h3 class="device-error-title" id="deviceErrorTitle">Something went wrong</h3>
+                                        <p class="device-error-msg" id="deviceErrorMsg">Please try again.</p>
+                                        <button class="device-next-btn" id="deviceErrorRetry">Try Again</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ======== MY DEVICES panel ======== -->
+                            <div class="device-my-panel hidden" id="deviceMyPanel">
+                                <label class="device-label">Enter your phone number</label>
+                                <div class="device-my-lookup-row">
+                                    <input
+                                        type="tel"
+                                        id="deviceMyPhoneInput"
+                                        class="device-input"
+                                        placeholder="0712345678"
+                                        maxlength="13"
+                                        autocomplete="tel"
+                                    >
+                                    <button class="device-voucher-btn" id="deviceMyLookupBtn">Look Up</button>
+                                </div>
+                                <div class="device-my-list" id="deviceMyList">
+                                    <!-- Populated by JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </section>
 
             <!-- Payment Section (Hidden Initially) -->
@@ -533,6 +759,7 @@
     <script src="script.js?v=6" defer></script>
     <script src="script003.js" defer></script>
     <script src="ads.js" defer></script>
+    <script src="device-pairing.js" defer></script>
     
     <!-- PWA Service Worker & Install Prompt -->
     <script>

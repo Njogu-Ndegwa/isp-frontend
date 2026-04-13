@@ -3854,3 +3854,987 @@ body::before {
     }
 }
 
+/* ========================================
+   DEVICE PAIRING SECTION (TV / Console)
+   ======================================== */
+.device-section {
+    margin-bottom: var(--space-lg);
+}
+
+.device-entry {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    border: 2px solid #7c3aed;
+}
+
+.device-entry-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+    border-bottom: 1px solid rgba(124, 58, 237, 0.15);
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s ease;
+}
+
+.device-entry-header:hover {
+    background: linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 100%);
+}
+
+.device-entry-icon {
+    font-size: 1.75rem;
+    flex-shrink: 0;
+}
+
+.device-entry-text {
+    flex: 1;
+}
+
+.device-entry-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.device-entry-subtitle {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.device-entry-chevron {
+    font-size: 1.25rem;
+    color: #7c3aed;
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+}
+
+.device-entry-chevron.open {
+    transform: rotate(90deg);
+}
+
+.device-entry-body {
+    padding: var(--space-md);
+}
+
+/* Tabs */
+.device-tabs {
+    display: flex;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-md);
+    background: #f3f0ff;
+    border-radius: var(--radius-md);
+    padding: 4px;
+}
+
+.device-tab {
+    flex: 1;
+    padding: var(--space-sm) var(--space-md);
+    border: none;
+    background: transparent;
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.device-tab.active {
+    background: #7c3aed;
+    color: white;
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
+}
+
+/* Step indicators bar */
+.device-steps-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: var(--space-lg);
+}
+
+.device-step-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    background: #e5e5e5;
+    color: var(--text-light);
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.device-step-dot.active {
+    background: #7c3aed;
+    color: white;
+}
+
+.device-step-dot.done {
+    background: var(--success);
+    color: white;
+}
+
+.device-step-line {
+    width: 40px;
+    height: 2px;
+    background: #e5e5e5;
+    transition: background 0.3s ease;
+}
+
+.device-step-line.done {
+    background: var(--success);
+}
+
+/* Step panels */
+.device-step-panel {
+    animation: fadeSlideIn 0.25s ease;
+}
+
+.device-step-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: var(--space-md);
+}
+
+.device-back-link {
+    background: none;
+    border: none;
+    color: #7c3aed;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: var(--space-md);
+    display: inline-block;
+}
+
+.device-back-link:hover {
+    text-decoration: underline;
+}
+
+/* Labels */
+.device-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: var(--space-xs);
+    margin-top: var(--space-md);
+}
+
+.device-label:first-of-type {
+    margin-top: 0;
+}
+
+.device-label .required {
+    color: var(--error);
+}
+
+.device-label .optional {
+    color: var(--text-light);
+    font-weight: 400;
+    font-size: 0.75rem;
+}
+
+/* Inputs */
+.device-input {
+    width: 100%;
+    padding: var(--space-md);
+    font-size: 1rem;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    border: 2px solid #e5e5e5;
+    border-radius: var(--radius-md);
+    outline: none;
+    min-height: 48px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    background: var(--surface);
+}
+
+.device-input::placeholder {
+    color: #ccc;
+    font-weight: 400;
+}
+
+.device-input:focus {
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.device-input.mono {
+    font-family: 'DM Sans', monospace;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+
+.device-input.valid {
+    border-color: var(--success);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.device-input.invalid {
+    border-color: var(--error);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+/* MAC address wrap */
+.device-mac-wrap {
+    position: relative;
+}
+
+.device-mac-status {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.1rem;
+}
+
+.device-mac-counter {
+    font-size: 0.7rem;
+    color: var(--text-light);
+    margin-top: 4px;
+    text-align: right;
+}
+
+/* MAC help accordion */
+.device-mac-help {
+    margin-top: var(--space-sm);
+    font-size: 0.85rem;
+}
+
+.device-mac-help summary {
+    color: #7c3aed;
+    font-weight: 600;
+    cursor: pointer;
+    padding: var(--space-sm) 0;
+}
+
+.device-mac-help summary:hover {
+    text-decoration: underline;
+}
+
+.mac-help-list {
+    padding: var(--space-sm) 0;
+}
+
+.mac-help-item {
+    padding: 6px 0;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+    line-height: 1.5;
+}
+
+.mac-help-item:last-child {
+    border-bottom: none;
+}
+
+.mac-help-item strong {
+    color: var(--text);
+}
+
+/* Device type grid */
+.device-type-grid {
+    display: flex;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+}
+
+.device-type-btn {
+    flex: 1;
+    min-width: 70px;
+    padding: var(--space-sm) var(--space-xs);
+    border: 2px solid #e5e5e5;
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    font-family: inherit;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.device-type-btn span {
+    display: block;
+    font-size: 1.25rem;
+    margin-bottom: 2px;
+}
+
+.device-type-btn.active {
+    border-color: #7c3aed;
+    background: #f5f3ff;
+    color: #7c3aed;
+}
+
+.device-type-btn:hover:not(.active) {
+    border-color: #c4b5fd;
+    background: #faf5ff;
+}
+
+/* Next/action buttons */
+.device-next-btn {
+    width: 100%;
+    padding: var(--space-md);
+    margin-top: var(--space-lg);
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    min-height: 48px;
+}
+
+.device-next-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
+}
+
+.device-next-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+.btn-arrow-sm {
+    font-size: 1.1rem;
+}
+
+.device-link-btn {
+    width: 100%;
+    padding: var(--space-md);
+    margin-top: var(--space-sm);
+    background: transparent;
+    color: #7c3aed;
+    border: 2px solid #ddd6fe;
+    border-radius: var(--radius-md);
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.device-link-btn:hover {
+    background: #f5f3ff;
+    border-color: #7c3aed;
+}
+
+/* Device plans grid (reused plan cards) */
+.device-plans-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-sm);
+}
+
+.device-plan-card {
+    background: var(--surface);
+    border: 2px solid #e5e5e5;
+    border-radius: var(--radius-md);
+    padding: var(--space-md) var(--space-sm);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    position: relative;
+}
+
+.device-plan-card:hover {
+    border-color: #7c3aed;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.device-plan-card.selected {
+    border-color: #7c3aed;
+    background: #f5f3ff;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+}
+
+.device-plan-duration {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 2px;
+}
+
+.device-plan-price {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #7c3aed;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+
+.device-plan-price .currency-code {
+    font-size: 0.5em;
+    font-weight: 600;
+    vertical-align: super;
+    opacity: 0.7;
+}
+
+.device-plan-speed {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--text-inverse);
+    background: var(--text);
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    display: inline-block;
+}
+
+/* Voucher divider */
+.device-voucher-divider {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    margin: var(--space-lg) 0 var(--space-md);
+}
+
+/* Voucher row */
+.device-voucher-row {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+.device-voucher-btn {
+    flex-shrink: 0;
+    padding: var(--space-md) var(--space-lg);
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 48px;
+}
+
+.device-voucher-btn:hover {
+    transform: translateY(-1px);
+}
+
+.device-voucher-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.device-voucher-result {
+    margin-top: var(--space-md);
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    animation: fadeSlideIn 0.25s ease;
+}
+
+.device-voucher-result.success {
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    border: 2px solid var(--success);
+}
+
+.device-voucher-result.error {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    border: 2px solid var(--error);
+    color: #991b1b;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* Phone wrap */
+.device-phone-wrap {
+    display: flex;
+    align-items: center;
+    border: 2px solid #e5e5e5;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.device-phone-wrap:focus-within {
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.device-phone-prefix {
+    padding: var(--space-md);
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: #f5f5f5;
+    border-right: 2px solid #e5e5e5;
+    font-size: 0.95rem;
+}
+
+.device-phone-wrap .device-input {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.device-phone-wrap .device-input:focus {
+    box-shadow: none;
+}
+
+/* Summary card */
+.device-summary-card {
+    background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+    border: 1px solid #c4b5fd;
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+    margin-bottom: var(--space-md);
+}
+
+.device-summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    font-size: 0.85rem;
+}
+
+.device-summary-label {
+    color: #6d28d9;
+}
+
+.device-summary-value {
+    font-weight: 700;
+    color: var(--text);
+}
+
+/* Pay button */
+.device-pay-btn {
+    width: 100%;
+    padding: var(--space-md);
+    margin-top: var(--space-lg);
+    background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-family: inherit;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+}
+
+.device-pay-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.device-pay-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+.device-pay-loader {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.device-security-note {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xs);
+    margin-top: var(--space-md);
+    font-size: 0.75rem;
+    color: var(--text-light);
+}
+
+/* Processing state */
+.device-processing-wrap {
+    text-align: center;
+    padding: var(--space-xl) 0;
+}
+
+.device-processing-spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid rgba(124, 58, 237, 0.2);
+    border-top-color: #7c3aed;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto var(--space-md);
+}
+
+.device-processing-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: var(--space-xs);
+}
+
+.device-processing-sub {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Success state */
+.device-success-wrap {
+    text-align: center;
+    padding: var(--space-lg) 0;
+}
+
+.device-success-icon {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 auto var(--space-md);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.device-success-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: var(--space-md);
+}
+
+.device-success-details {
+    text-align: left;
+    background: #f8fafc;
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+    margin-bottom: var(--space-md);
+}
+
+.device-success-tip {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: var(--space-sm);
+}
+
+/* Error state */
+.device-error-wrap {
+    text-align: center;
+    padding: var(--space-lg) 0;
+}
+
+.device-error-icon {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, var(--error) 0%, #dc2626 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 auto var(--space-md);
+}
+
+.device-error-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: var(--space-xs);
+}
+
+.device-error-msg {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin: 0 0 var(--space-sm);
+    line-height: 1.5;
+}
+
+/* My Devices panel */
+.device-my-panel {
+    animation: fadeSlideIn 0.25s ease;
+}
+
+.device-my-lookup-row {
+    display: flex;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+}
+
+.device-my-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.device-my-card {
+    background: var(--surface);
+    border: 2px solid #e5e5e5;
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+    position: relative;
+}
+
+.device-my-card-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-sm);
+}
+
+.device-my-card-icon {
+    font-size: 1.5rem;
+}
+
+.device-my-card-name {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    flex: 1;
+}
+
+.device-my-card-status {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: var(--radius-full);
+}
+
+.device-my-card-status.active {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.device-my-card-status.expired {
+    background: #f3f4f6;
+    color: var(--text-light);
+}
+
+.device-my-card-detail {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    padding: 2px 0;
+    color: var(--text-secondary);
+}
+
+.device-my-card-detail span:last-child {
+    font-weight: 600;
+    color: var(--text);
+}
+
+.device-my-card-actions {
+    display: flex;
+    gap: var(--space-sm);
+    margin-top: var(--space-md);
+    padding-top: var(--space-sm);
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.device-my-action-btn {
+    flex: 1;
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-sm);
+    border: 1px solid #e5e5e5;
+    background: var(--surface);
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-secondary);
+}
+
+.device-my-action-btn:hover {
+    border-color: #7c3aed;
+    color: #7c3aed;
+    background: #f5f3ff;
+}
+
+.device-my-action-btn.danger:hover {
+    border-color: var(--error);
+    color: var(--error);
+    background: #fef2f2;
+}
+
+.device-my-action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.device-my-empty {
+    text-align: center;
+    padding: var(--space-xl) 0;
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+.device-my-loading {
+    text-align: center;
+    padding: var(--space-lg) 0;
+    color: var(--text-light);
+}
+
+/* Confirm dialog overlay */
+.device-confirm-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-md);
+    animation: fadeIn 0.15s ease;
+}
+
+.device-confirm-box {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    max-width: 340px;
+    width: 100%;
+    box-shadow: var(--shadow-lg);
+    text-align: center;
+}
+
+.device-confirm-title {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    margin-bottom: var(--space-sm);
+}
+
+.device-confirm-msg {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-lg);
+    line-height: 1.5;
+}
+
+.device-confirm-actions {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+.device-confirm-actions button {
+    flex: 1;
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.device-confirm-cancel {
+    background: #f3f4f6;
+    color: var(--text-secondary);
+}
+
+.device-confirm-cancel:hover {
+    background: #e5e7eb;
+}
+
+.device-confirm-ok {
+    background: var(--error);
+    color: white;
+}
+
+.device-confirm-ok:hover {
+    background: #dc2626;
+}
+
+/* Responsive — Device Section */
+@media (max-width: 380px) {
+    .device-type-grid {
+        gap: 4px;
+    }
+
+    .device-type-btn {
+        min-width: 60px;
+        padding: 6px 4px;
+        font-size: 0.7rem;
+    }
+
+    .device-type-btn span {
+        font-size: 1rem;
+    }
+
+    .device-voucher-row {
+        flex-direction: column;
+    }
+
+    .device-voucher-btn {
+        width: 100%;
+    }
+
+    .device-my-lookup-row {
+        flex-direction: column;
+    }
+
+    .device-entry-title {
+        font-size: 0.95rem;
+    }
+
+    .device-entry-subtitle {
+        font-size: 0.75rem;
+    }
+}
+
+@media (max-width: 320px) {
+    .device-entry-body {
+        padding: var(--space-sm);
+    }
+
+    .device-plans-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
