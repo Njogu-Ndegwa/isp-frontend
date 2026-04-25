@@ -43,7 +43,7 @@
                     <span class="brand-icon">📡</span>
                     <div class="brand-text">
                         <h1 class="logo">Bitwave Soko</h1>
-                        <span class="tagline">Market WiFi</span>
+                        <span class="tagline">Public WiFi</span>
                     </div>
                 </a>
                 <a href="tel:0795635364" class="help-btn">
@@ -447,6 +447,17 @@
                     </div>
                 </div>
 
+                <!-- Discreet account sign-in link.
+                     Used by a small number of users (admins / non-paying access accounts)
+                     who have a username + password issued by the reseller.
+                     Placed at the very bottom and styled small/low-contrast on purpose. -->
+                <div class="staff-login-footer">
+                    <button type="button" class="staff-login-trigger" id="staffLoginTrigger" aria-label="Account sign-in">
+                        <span class="staff-login-trigger-icon" aria-hidden="true">🔑</span>
+                        <span class="staff-login-trigger-text">Account sign-in</span>
+                    </button>
+                </div>
+
             </section>
 
             <!-- Payment Section (Hidden Initially) -->
@@ -740,6 +751,67 @@
                 </div>
             </div>
         </div>
+
+        <!-- ============================================
+             ACCOUNT SIGN-IN MODAL
+             POST /api/public/access-login
+             For admins / non-paying access credentials.
+             ============================================ -->
+        <div class="staff-login-overlay hidden" id="staffLoginOverlay" role="dialog" aria-modal="true" aria-labelledby="staffLoginTitle">
+            <div class="staff-login-modal" id="staffLoginModal">
+                <button class="staff-login-close" id="staffLoginClose" type="button" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+
+                <div class="staff-login-header">
+                    <div class="staff-login-icon" aria-hidden="true">🔐</div>
+                    <h2 class="staff-login-title" id="staffLoginTitle">Account Sign-In</h2>
+                    <p class="staff-login-subtitle">For staff &amp; special-access accounts</p>
+                </div>
+
+                <form class="staff-login-form" id="staffLoginForm" autocomplete="off" novalidate>
+                    <label class="staff-login-label" for="staffLoginUsername">Username</label>
+                    <input
+                        type="text"
+                        id="staffLoginUsername"
+                        class="staff-login-input"
+                        placeholder="e.g. alice"
+                        autocomplete="username"
+                        autocapitalize="none"
+                        spellcheck="false"
+                        maxlength="64"
+                        required
+                    >
+
+                    <label class="staff-login-label" for="staffLoginPassword">Password</label>
+                    <div class="staff-login-pw-wrap">
+                        <input
+                            type="password"
+                            id="staffLoginPassword"
+                            class="staff-login-input"
+                            placeholder="Your password"
+                            autocomplete="current-password"
+                            spellcheck="false"
+                            maxlength="128"
+                            required
+                        >
+                        <button type="button" class="staff-login-pw-toggle" id="staffLoginPwToggle" aria-label="Show password">Show</button>
+                    </div>
+
+                    <div class="staff-login-error hidden" id="staffLoginError" role="alert"></div>
+
+                    <button type="submit" class="staff-login-submit" id="staffLoginSubmit">
+                        <span class="staff-login-btn-text" id="staffLoginBtnText">Sign In &amp; Connect</span>
+                        <span class="staff-login-btn-loader hidden" id="staffLoginBtnLoader">
+                            <span class="loader-spinner"></span>
+                            Signing in…
+                        </span>
+                    </button>
+
+                    <p class="staff-login-hint">Forgot your password? Contact the person who issued this account.</p>
+                </form>
+            </div>
+        </div>
     </div>
 
     <!-- PWA Install Prompt Banner -->
@@ -760,6 +832,7 @@
     <script src="script003.js" defer></script>
     <script src="ads.js" defer></script>
     <script src="device-pairing.js" defer></script>
+    <script src="access-login.js" defer></script>
     
     <!-- PWA Service Worker & Install Prompt -->
     <script>
