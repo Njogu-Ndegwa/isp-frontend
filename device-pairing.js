@@ -170,9 +170,19 @@
 
         nextBtn.addEventListener('click', () => {
             if (!isValidMac(macInput.value)) return;
+            try { localStorage.setItem('bitwave_tv_mac', macInput.value.trim()); } catch (e) { /* ignore */ }
             goToStep(2);
             populateDevicePlans();
         });
+
+        // Pre-fill saved MAC address for returning users
+        try {
+            const savedMac = localStorage.getItem('bitwave_tv_mac');
+            if (savedMac) {
+                macInput.value = savedMac;
+                macInput.dispatchEvent(new Event('input'));
+            }
+        } catch (e) { /* ignore */ }
     }
 
     // ========================================
