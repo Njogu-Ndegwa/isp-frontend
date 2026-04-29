@@ -626,6 +626,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 submitButton.disabled = false;
                 console.log('🔓 Pay button ENABLED');
             }
+
+            // Safety net: always clear the header skeleton regardless of API outcome.
+            // updateBranding() already handles the happy path; this covers every
+            // failure/null-business-name scenario so the shimmer never stays forever.
+            const brandLink = document.getElementById('brandLink');
+            if (brandLink) brandLink.classList.remove('brand-loading');
+            const logoEl = document.querySelector('.logo');
+            if (logoEl && !logoEl.textContent.trim()) {
+                logoEl.textContent = 'WiFi Portal';
+            }
         });
     
     setupEventListeners();
@@ -674,6 +684,9 @@ function updateBranding() {
     
     const logoEl = document.querySelector('.logo');
     if (logoEl) logoEl.textContent = routerBusinessName;
+
+    const brandLink = document.getElementById('brandLink');
+    if (brandLink) brandLink.classList.remove('brand-loading');
     
     document.title = `${routerBusinessName} - Get Connected`;
     
