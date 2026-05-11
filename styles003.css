@@ -727,7 +727,7 @@ body::before {
     font-family: 'Outfit', sans-serif;
     font-size: 1.05rem;
     font-weight: 700;
-    color: var(--primary);
+    color: var(--text);
 }
 
 .reconnect-header-subtitle {
@@ -1012,40 +1012,30 @@ body::before {
    Reconnect Section — Per-Theme Overrides
    ======================================== */
 
-/* slate_gray: primary is near-neutral gray so the header tint barely reads
-   against white. Fix: use actual slate palette shades + accent border for pop. */
+/* slate_gray: primary is near-neutral gray so the tinted header barely reads
+   against white. Use info-blue (matching the admin portal preview) — reconnect
+   is a utility action, not commerce, so blue reads correctly here. */
 [data-theme="slate_gray"] .reconnect-section {
-    border-color: var(--accent); /* orange accent gives clear visual contrast */
-    box-shadow: 0 4px 16px rgba(71, 85, 105, 0.14);
+    border-color: #60a5fa; /* blue-400 — same as admin portal preview */
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.14);
 }
 
 [data-theme="slate_gray"] .reconnect-header {
-    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); /* slate-100 → slate-200 */
-    border-bottom: 1px solid #cbd5e1; /* slate-300 */
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); /* blue-50 → blue-100 */
+    border-bottom: 1px solid rgba(96, 165, 250, 0.2);
 }
 
 [data-theme="slate_gray"] .reconnect-header-title {
-    color: var(--primary-dark); /* #334155 dark slate, clearly readable */
+    color: var(--text); /* plain dark text — same as admin */
 }
 
-[data-theme="slate_gray"] .reconnect-header-icon {
-    background: rgba(var(--accent-rgb), 0.15);
-    border-radius: var(--radius-sm);
-    padding: 0.15rem 0.3rem;
+[data-theme="slate_gray"] .reconnect-btn {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); /* blue-500 → blue-600 */
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
-/* sunset_orange / rose_gold: warm hues look even richer with a warm-tinted surface */
-[data-theme="sunset_orange"] .reconnect-section,
-[data-theme="rose_gold"] .reconnect-section {
-    box-shadow: 0 4px 16px rgba(var(--primary-rgb), 0.18);
-}
-
-/* ocean_blue / bright_violet / emerald_green: cool hues already read well at
-   18% opacity; just give a slightly warmer glow shadow. */
-[data-theme="ocean_blue"] .reconnect-section,
-[data-theme="bright_violet"] .reconnect-section,
-[data-theme="emerald_green"] .reconnect-section {
-    box-shadow: 0 4px 16px rgba(var(--primary-rgb), 0.16);
+[data-theme="slate_gray"] .reconnect-btn:hover {
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
 }
 
 /* ========================================
