@@ -872,13 +872,25 @@ function renderHeroHeader(settings) {
     const title = settings.welcome_title || window._routerBusinessName || 'Welcome';
     const subtitle = settings.welcome_subtitle || 'Fast & Reliable Internet Access';
 
-    // Portal runs behind a walled garden — external URLs will never load.
-    // Always use a bundled local preset.  If the configured URL contains a
-    // known preset keyword (city/cafe/nature/people/tech) honour that choice;
-    // otherwise default to 'city'.
-    const PRESETS = ['city', 'cafe', 'nature', 'people', 'tech'];
+    // Portal runs behind a walled garden — always use a bundled local preset.
+    // Resolution order:
+    //   1. Match the Unsplash photo ID stored by the admin portal → preset name
+    //   2. Keyword in the URL (e.g. "/presets/nature.webp")
+    //   3. Default to 'city'
+    const PRESET_PHOTO_IDS = {
+        '1477959858617-67f85cf4f1df': 'city',
+        '1529156069898-49953e39b3ac': 'people',
+        '1523805009345-7448845a9e53': 'nature',
+        '1554118811-1e0d58224f24':    'cafe',
+        '1518770660439-4636190af475': 'tech',
+    };
+    const PRESET_NAMES = ['city', 'cafe', 'nature', 'people', 'tech'];
     const configuredUrl = (settings.header_bg_image_url || '').toLowerCase();
-    const preset = PRESETS.find(p => configuredUrl.includes(p)) || 'city';
+    const photoIdMatch  = configuredUrl.match(/photo-([\w-]+)/);
+    const preset =
+        (photoIdMatch && PRESET_PHOTO_IDS[photoIdMatch[1]]) ||
+        PRESET_NAMES.find(p => configuredUrl.includes(p))   ||
+        'city';
 
     const picHtml = `
         <picture class="hero-bg-img">
