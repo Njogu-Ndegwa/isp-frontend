@@ -630,6 +630,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 applyPlanFlags(planFlags);
             }
 
+            // ---- Portal Settings (must run BEFORE plans so flags like
+            //      show_plan_speed are in portalSettings when cards render) ----
+            if (data.portal_settings) {
+                if (data.portal_settings.featured_plan_ids) {
+                    window.featuredPlanIds = data.portal_settings.featured_plan_ids
+                        .split(',').map(Number).filter(Boolean);
+                }
+                applyPortalSettings(data.portal_settings); // also sets portalSettings global
+            }
+
             // ---- Plans ----
             if (Array.isArray(data.plans) && data.plans.length > 0) {
                 const apiBestseller = data.plans.find(p => p.is_bestseller);
@@ -645,16 +655,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // ---- Ads (store for ads.js to consume) ----
             window._portalAds = data.ads || [];
             console.log('✅ [PORTAL] Ads received:', window._portalAds.length);
-
-            // ---- Portal Settings ----
-            if (data.portal_settings) {
-                portalSettings = data.portal_settings;
-                if (portalSettings.featured_plan_ids) {
-                    window.featuredPlanIds = portalSettings.featured_plan_ids
-                        .split(',').map(Number).filter(Boolean);
-                }
-                applyPortalSettings(portalSettings);
-            }
 
             return data;
         })
@@ -1117,6 +1117,7 @@ function applyLanguage(lang) {
 // APPLY PORTAL SETTINGS — orchestrator
 // ========================================
 function applyPortalSettings(settings) {
+    portalSettings = settings; // keep global in sync (covers startup-cache path)
     applyTheme(settings.color_theme || 'sunset_orange');
     // Persist the full settings object so the next page load renders
     // the correct theme, header style, branding, and feature flags
@@ -1710,7 +1711,7 @@ function selectPlan(plan) {
     selectedPlanInfo.innerHTML = `
         <div class="selected-plan-name">${plan.duration}</div>
         <div class="selected-plan-price">${formatPrice(plan.price)}</div>
-        <div class="selected-plan-speed">${plan.speed}</div>
+        ${portalSettings.show_plan_speed !== false && plan.speed ? `<div class="selected-plan-speed">${plan.speed}</div>` : ''}
     `;
     
     // Show payment section, hide plans
@@ -2701,10 +2702,10 @@ function showAuthenticatedMessage(phoneNumber, plan, data, isRadiusAutoLogin = f
                 <span class="detail-label">Plan</span>
                 <span class="detail-value">${data.plan_name || plan.duration}</span>
             </div>
-            <div class="detail-row">
+            ${portalSettings.show_plan_speed !== false ? `<div class="detail-row">
                 <span class="detail-label">Speed</span>
                 <span class="detail-value">${plan.speed || 'Standard'}</span>
-            </div>
+            </div>` : ''}
             <div class="detail-row">
                 <span class="detail-label">Phone</span>
                 <span class="detail-value">${formattedPhone}</span>
