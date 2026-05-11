@@ -70,6 +70,9 @@ let planFlags = {
     emergency_mode_active: false
 };
 
+// Portal settings — populated from portal API response
+let portalSettings = {};
+
 // ========================================
 // API CONFIGURATION (with fallback)
 // ========================================
@@ -218,10 +221,63 @@ async function getRouterId(identity) {
 }
 
 // ========================================
+// DEV PREVIEW — shows a badge and clears mock data when clicked
+// ========================================
+function _showDevPreviewBadge() {
+    if (document.getElementById('dev-preview-badge')) return;
+    const badge = document.createElement('div');
+    badge.id = 'dev-preview-badge';
+    badge.style.cssText = [
+        'position:fixed', 'top:8px', 'right:8px', 'z-index:99999',
+        'background:#7c3aed', 'color:#fff', 'font:bold 11px/1.4 monospace',
+        'padding:5px 10px', 'border-radius:5px', 'box-shadow:0 2px 10px rgba(0,0,0,.4)',
+        'cursor:pointer', 'letter-spacing:.5px'
+    ].join(';');
+    badge.textContent = '🧪 DEV PREVIEW';
+    badge.title = 'Using local mock data.\nClick to clear and use the live API on next reload.';
+    badge.onclick = () => {
+        try { sessionStorage.removeItem('__DEV_MOCK_PORTAL__'); } catch {}
+        badge.remove();
+        const msg = document.createElement('div');
+        msg.style.cssText = badge.style.cssText + ';background:#16a34a;cursor:default';
+        msg.textContent = '✅ Mock cleared — reload to use live API';
+        document.body.appendChild(msg);
+        setTimeout(() => msg.remove(), 3000);
+    };
+    document.body.appendChild(badge);
+}
+
+// ========================================
 // PORTAL DATA FETCH — single request for router + plans + ads
 // GET /api/public/portal/{identity}
 // ========================================
 async function fetchPortalData(identity) {
+    // Demo mode shortcut — set via demo.html redirect.  No badge, silent.
+    try {
+        const _demoRaw = sessionStorage.getItem('__DEMO_PORTAL__');
+        if (_demoRaw) {
+            console.log('%c🎬 DEMO MODE — using local mock portal data', 'background:#0369a1;color:#fff;padding:2px 8px;border-radius:3px;font-weight:bold');
+            return Promise.resolve(JSON.parse(_demoRaw));
+        }
+    } catch (_) {}
+
+    // Dev preview shortcut — set via dev-preview.html or manually via sessionStorage /
+    // window.__MOCK_PORTAL_DATA.  Persists across reloads in the same tab.
+    try {
+        const _raw = sessionStorage.getItem('__DEV_MOCK_PORTAL__');
+        const mockData = window.__MOCK_PORTAL_DATA || (_raw && JSON.parse(_raw));
+        if (mockData) {
+            console.log('%c🧪 DEV PREVIEW — using local mock portal data', 'background:#7c3aed;color:#fff;padding:2px 8px;border-radius:3px;font-weight:bold');
+            // Defer badge so it appears after the DOM is ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', _showDevPreviewBadge, { once: true });
+            } else {
+                setTimeout(_showDevPreviewBadge, 0);
+            }
+            return Promise.resolve(mockData);
+        }
+    } catch (_) {}
+
     if (!identity) {
         throw new Error('No router identity for portal lookup');
     }
@@ -527,6 +583,9 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 [ROUTER DEBUG] DOM CONTENT LOADED - INITIALIZATION');
     console.log('═══════════════════════════════════════════════════════');
 
+    // Apply default theme immediately for first-paint colours
+    applyTheme('sunset_orange');
+
     // Check for saved RADIUS credentials from a previous payment session
     checkSavedRadiusLogin();
     
@@ -561,6 +620,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 routerId = data.router.router_id;
                 routerAuthMethod = data.router.auth_method || 'DIRECT_API';
                 routerBusinessName = data.router.business_name || null;
+                window._routerBusinessName = routerBusinessName;
                 routerPaymentMethods = data.router.payment_methods || ['mpesa', 'voucher'];
                 console.log('✅ [PORTAL] Router resolved — id:', routerId, 'auth:', routerAuthMethod, 'methods:', routerPaymentMethods);
                 updateBranding();
@@ -591,6 +651,16 @@ document.addEventListener('DOMContentLoaded', () => {
             // ---- Ads (store for ads.js to consume) ----
             window._portalAds = data.ads || [];
             console.log('✅ [PORTAL] Ads received:', window._portalAds.length);
+
+            // ---- Portal Settings ----
+            if (data.portal_settings) {
+                portalSettings = data.portal_settings;
+                if (portalSettings.featured_plan_ids) {
+                    window.featuredPlanIds = portalSettings.featured_plan_ids
+                        .split(',').map(Number).filter(Boolean);
+                }
+                applyPortalSettings(portalSettings);
+            }
 
             return data;
         })
@@ -644,6 +714,388 @@ document.addEventListener('DOMContentLoaded', () => {
     loadSavedPhoneNumber(); // Works on desktop; mobile captive portals wipe storage
     setupBrandLink(); // Preserve MikroTik params when clicking logo
 });
+
+// ========================================
+// ESCAPE HTML — XSS protection for dynamic content
+// ========================================
+function escapeHtml(str) {
+    return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ========================================
+// THEMES — full colour palettes for applyTheme()
+// ========================================
+const THEMES = {
+    sunset_orange: {
+        primary: '#E85D04', primaryLight: '#F48C06', primaryDark: '#DC2F02',
+        accent: '#FFBA08', background: '#FFFCF2', surface: '#FFFFFF',
+        text: '#1A1A1A', textSecondary: '#6B7280', textInverse: '#FFFFFF',
+        border: '#E5E7EB', success: '#10B981', error: '#EF4444', info: '#3B82F6', warning: '#F59E0B'
+    },
+    ocean_blue: {
+        primary: '#3B82F6', primaryLight: '#60A5FA', primaryDark: '#2563EB',
+        accent: '#06B6D4', background: '#F0F7FF', surface: '#FFFFFF',
+        text: '#1A1A1A', textSecondary: '#6B7280', textInverse: '#FFFFFF',
+        border: '#E5E7EB', success: '#10B981', error: '#EF4444', info: '#0EA5E9', warning: '#F59E0B'
+    },
+    emerald_green: {
+        primary: '#10B981', primaryLight: '#34D399', primaryDark: '#059669',
+        accent: '#84CC16', background: '#F0FDF4', surface: '#FFFFFF',
+        text: '#1A1A1A', textSecondary: '#6B7280', textInverse: '#FFFFFF',
+        border: '#E5E7EB', success: '#16A34A', error: '#EF4444', info: '#3B82F6', warning: '#F59E0B'
+    },
+    bright_violet: {
+        primary: '#8B5CF6', primaryLight: '#A78BFA', primaryDark: '#7C3AED',
+        accent: '#F472B6', background: '#FAF5FF', surface: '#FFFFFF',
+        text: '#1A1A1A', textSecondary: '#6B7280', textInverse: '#FFFFFF',
+        border: '#E5E7EB', success: '#10B981', error: '#EF4444', info: '#3B82F6', warning: '#F59E0B'
+    },
+    rose_gold: {
+        primary: '#E11D48', primaryLight: '#FB7185', primaryDark: '#BE123C',
+        accent: '#FB923C', background: '#FFF1F2', surface: '#FFFFFF',
+        text: '#1A1A1A', textSecondary: '#6B7280', textInverse: '#FFFFFF',
+        border: '#E5E7EB', success: '#10B981', error: '#EF4444', info: '#3B82F6', warning: '#F59E0B'
+    },
+    slate_gray: {
+        primary: '#475569', primaryLight: '#64748B', primaryDark: '#334155',
+        accent: '#F97316', background: '#F8FAFC', surface: '#FFFFFF',
+        text: '#1A1A1A', textSecondary: '#6B7280', textInverse: '#FFFFFF',
+        border: '#E5E7EB', success: '#10B981', error: '#EF4444', info: '#3B82F6', warning: '#F59E0B'
+    }
+};
+
+function applyTheme(themeName) {
+    const palette = THEMES[themeName] || THEMES.sunset_orange;
+    const root = document.documentElement;
+
+    // New --p-* variables (used by new theme-aware components)
+    root.style.setProperty('--p-primary',        palette.primary);
+    root.style.setProperty('--p-primary-light',  palette.primaryLight);
+    root.style.setProperty('--p-primary-dark',   palette.primaryDark);
+    root.style.setProperty('--p-accent',         palette.accent);
+    root.style.setProperty('--p-bg',             palette.background);
+    root.style.setProperty('--p-surface',        palette.surface);
+    root.style.setProperty('--p-text',           palette.text);
+    root.style.setProperty('--p-text-sec',       palette.textSecondary);
+    root.style.setProperty('--p-text-inv',       palette.textInverse);
+    root.style.setProperty('--p-border',         palette.border);
+    root.style.setProperty('--p-success',        palette.success);
+    root.style.setProperty('--p-error',          palette.error);
+    root.style.setProperty('--p-info',           palette.info);
+    root.style.setProperty('--p-warning',        palette.warning);
+
+    // Bridge to existing styles003.css variable names so existing
+    // plan cards, buttons, steps, etc. all pick up the theme too.
+    root.style.setProperty('--primary',          palette.primary);
+    root.style.setProperty('--primary-light',    palette.primaryLight);
+    root.style.setProperty('--primary-dark',     palette.primaryDark);
+    root.style.setProperty('--accent',           palette.accent);
+    root.style.setProperty('--accent-soft',      palette.accent);
+    root.style.setProperty('--bg',               palette.background);
+    root.style.setProperty('--bg-warm',          palette.background);
+    root.style.setProperty('--surface',          palette.surface);
+    root.style.setProperty('--surface-raised',   palette.surface);
+    root.style.setProperty('--text',             palette.text);
+    root.style.setProperty('--text-secondary',   palette.textSecondary);
+    root.style.setProperty('--text-light',       palette.textSecondary);
+    root.style.setProperty('--text-inverse',     palette.textInverse);
+    root.style.setProperty('--success',          palette.success);
+    root.style.setProperty('--error',            palette.error);
+    // Update glow shadow to match primary
+    root.style.setProperty('--shadow-glow', `0 4px 20px ${palette.primary}40`);
+
+    // RGB decomposed vars so CSS can do rgba(var(--primary-rgb), 0.1) etc.
+    const hexRgb = (hex) => {
+        const h = hex.replace('#', '');
+        return `${parseInt(h.slice(0,2),16)}, ${parseInt(h.slice(2,4),16)}, ${parseInt(h.slice(4,6),16)}`;
+    };
+    root.style.setProperty('--primary-rgb', hexRgb(palette.primary));
+    root.style.setProperty('--accent-rgb',  hexRgb(palette.accent));
+
+    document.documentElement.dataset.theme = themeName;
+}
+
+// ========================================
+// HEADER RENDERING — standard & hero modes
+// ========================================
+function isSafeImageUrl(url) {
+    if (!url) return false;
+    try {
+        const { protocol } = new URL(url);
+        // Allow any HTTPS image (URLs come from trusted admin portal settings).
+        // Also allow HTTP on localhost for local dev.
+        return protocol === 'https:'
+            || (protocol === 'http:' && location.hostname === 'localhost');
+    } catch { return false; }
+}
+
+function wifiSvgHtml() {
+    return `<svg class="hero-wifi-icon" viewBox="0 0 80 60" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M40 48l6-6a8.5 8.5 0 00-12 0l6 6z" fill="white" opacity="0.9"/>
+        <path d="M40 48l10-10a14 14 0 00-20 0l10 10z" fill="white" opacity="0.6"/>
+        <path d="M40 48l15-15a21 21 0 00-30 0l15 15z" fill="white" opacity="0.35"/>
+        <circle cx="40" cy="50" r="3" fill="white"/>
+    </svg>`;
+}
+
+function renderStandardHeader(settings) {
+    // Preserve the existing header HTML exactly — the original design is already
+    // correct. Just update the help-button href with the resolved phone number.
+    const phone = settings.portal_support_phone;
+    if (phone) {
+        const helpBtn = document.querySelector('.help-btn');
+        if (helpBtn) helpBtn.href = `tel:${phone}`;
+    }
+    // Brand name is handled by the existing updateBranding() call.
+    // No className or innerHTML changes — the original header layout stays intact.
+}
+
+function renderHeroHeader(settings) {
+    const header = document.getElementById('portal-header');
+    if (!header) return;
+    const palette = THEMES[settings.color_theme] || THEMES.sunset_orange;
+    const title = settings.welcome_title || window._routerBusinessName || 'Welcome';
+    const subtitle = settings.welcome_subtitle || 'Fast & Reliable Internet Access';
+    const bgUrl = isSafeImageUrl(settings.header_bg_image_url) ? settings.header_bg_image_url : null;
+
+    const supportHtml = settings.portal_support_whatsapp
+        ? `<a href="https://wa.me/${settings.portal_support_whatsapp}" class="hero-support-btn hero-support-btn--whatsapp" target="_blank" rel="noopener">
+               <span>💬</span> WhatsApp
+           </a>`
+        : `<a href="${settings.portal_support_phone ? 'tel:' + settings.portal_support_phone : '#'}" class="hero-support-btn">
+               <span>📞</span> Call Support
+           </a>`;
+
+    let picHtml = '';
+    if (bgUrl) {
+        const presetMatch = bgUrl.match(/\/(city|people|nature|cafe|tech)\.webp/i);
+        if (presetMatch) {
+            const name = presetMatch[1].toLowerCase();
+            picHtml = `
+                <picture class="hero-bg-img">
+                    <source srcset="/images/presets/${name}.webp" type="image/webp">
+                    <img src="/images/presets/${name}.jpg" alt="" aria-hidden="true" decoding="async">
+                </picture>`;
+        } else {
+            picHtml = `
+                <picture class="hero-bg-img">
+                    <img src="${bgUrl}" alt="" aria-hidden="true" decoding="async">
+                </picture>`;
+        }
+    }
+
+    header.className = 'portal-header portal-header--hero';
+    header.innerHTML = `
+        ${picHtml}
+        <div class="hero-gradient-overlay" style="background: linear-gradient(135deg, ${palette.primary}bb 0%, ${palette.primaryDark}88 100%)"></div>
+        <div class="hero-content">
+            ${wifiSvgHtml()}
+            <h1 class="hero-title">${escapeHtml(title)}</h1>
+            <p class="hero-subtitle">${escapeHtml(subtitle)}</p>
+            <div class="hero-pills">
+                <span class="hero-pill" data-i18n="fastPill">⚡ Fast</span>
+                <span class="hero-pill" data-i18n="securePill">🔒 Secure</span>
+                <span class="hero-pill" data-i18n="easyPill">📱 Easy</span>
+            </div>
+            ${supportHtml}
+        </div>`;
+
+    const img = header.querySelector('.hero-bg-img img');
+    if (img) {
+        if (img.complete) {
+            img.closest('picture').classList.add('loaded');
+        } else {
+            img.addEventListener('load', () => img.closest('picture').classList.add('loaded'));
+        }
+    }
+}
+
+function renderHeader(settings) {
+    if (settings.header_style === 'hero') {
+        renderHeroHeader(settings);
+    } else {
+        renderStandardHeader(settings);
+    }
+}
+
+// ========================================
+// FEATURE FLAGS — show/hide portal sections
+// ========================================
+function applyFeatureFlags(settings) {
+    const adsSection = document.getElementById('ads-section');
+    if (adsSection) {
+        const showAds = settings.show_ads && window._portalAds && window._portalAds.length > 0;
+        adsSection.style.display = showAds ? '' : 'none';
+    }
+
+    const reconnectBlock = document.getElementById('reconnectSection');
+    if (reconnectBlock) {
+        reconnectBlock.style.display = settings.show_reconnect_button !== false ? '' : 'none';
+    }
+
+    const welcomeBanner = document.getElementById('welcome-banner');
+    if (welcomeBanner) {
+        // The title is already prominent in both modes (hero heading / sticky header brand),
+        // so only show the welcome banner when there is a subtitle with extra context.
+        const showBanner = settings.show_welcome_banner && !!settings.welcome_subtitle;
+        welcomeBanner.style.display = showBanner ? '' : 'none';
+        if (showBanner) {
+            const titleEl = welcomeBanner.querySelector('.welcome-banner-title');
+            const subEl = welcomeBanner.querySelector('.welcome-banner-sub');
+            if (titleEl) {
+                titleEl.style.display = 'none'; // title always visible elsewhere
+            }
+            if (subEl) subEl.textContent = settings.welcome_subtitle;
+        }
+    }
+
+    const announcement = document.getElementById('announcement-banner');
+    if (announcement) {
+        const showAnnouncement = settings.show_announcement && settings.announcement_text;
+        announcement.style.display = showAnnouncement ? '' : 'none';
+        if (showAnnouncement) {
+            announcement.dataset.type = settings.announcement_type || 'info';
+            const textEl = announcement.querySelector('.announcement-text');
+            if (textEl) textEl.textContent = settings.announcement_text;
+        }
+    }
+
+    const ratings = document.getElementById('ratings-section');
+    if (ratings) {
+        ratings.style.display = settings.show_ratings ? '' : 'none';
+    }
+
+    const socialSection = document.getElementById('social-links');
+    if (socialSection) {
+        const hasSocial = settings.show_social_links &&
+            (settings.facebook_url || settings.whatsapp_group_url || settings.instagram_url);
+        socialSection.style.display = hasSocial ? '' : 'none';
+        if (hasSocial) {
+            const fbLink = socialSection.querySelector('.social-link--facebook');
+            const waLink = socialSection.querySelector('.social-link--whatsapp');
+            const igLink = socialSection.querySelector('.social-link--instagram');
+            if (fbLink) { fbLink.href = settings.facebook_url || '#'; fbLink.style.display = settings.facebook_url ? '' : 'none'; }
+            if (waLink) { waLink.href = settings.whatsapp_group_url ? `https://wa.me/${settings.whatsapp_group_url}` : '#'; waLink.style.display = settings.whatsapp_group_url ? '' : 'none'; }
+            if (igLink) { igLink.href = settings.instagram_url || '#'; igLink.style.display = settings.instagram_url ? '' : 'none'; }
+        }
+    }
+}
+
+// ========================================
+// BRANDING — titles, footer, promo phone
+// ========================================
+function applyBranding(settings) {
+    const title = settings.welcome_title || window._routerBusinessName || 'Demo ISP';
+
+    document.title = title;
+
+    const planHeading = document.getElementById('plans-section-title');
+    if (planHeading) planHeading.textContent = settings.plans_section_title || 'Choose Your Plan';
+
+    const footer = document.getElementById('portal-footer-text');
+    if (footer) footer.textContent = settings.footer_text || `© ${new Date().getFullYear()} Bitwave Technologies. All rights reserved.`;
+
+    const promoCallBtn = document.getElementById('promo-call-btn');
+    if (promoCallBtn && settings.portal_support_phone) {
+        promoCallBtn.href = `tel:${settings.portal_support_phone}`;
+    }
+}
+
+// ========================================
+// FEATURED PLAN ORDERING
+// ========================================
+function applyFeaturedOrder(plans, featuredIds) {
+    if (!featuredIds || !featuredIds.length) return plans;
+    const featured = featuredIds.map(id => plans.find(p => p.id === id)).filter(Boolean);
+    const rest = plans.filter(p => !featuredIds.includes(p.id));
+    return [...featured, ...rest];
+}
+
+// ========================================
+// I18N — multi-language support
+// ========================================
+const I18N = {
+    en: {
+        choosePlan: 'Choose Your Plan',
+        enterPhone: 'Enter Phone Number',
+        pay: 'Pay & Connect',
+        reconnectTitle: 'Already paid? Reconnect',
+        reconnectSub: 'Enter your phone number or voucher code to reconnect',
+        reconnectBtn: 'Reconnect',
+        helpBtn: 'Help',
+        callSupport: 'Call Support',
+        fastPill: '⚡ Fast',
+        securePill: '🔒 Secure',
+        easyPill: '📱 Easy',
+        promoTitle: 'Need Home WiFi?',
+        callNow: 'Call Now',
+        followUs: 'Follow Us',
+        ratingsLabel: 'How was your connection?',
+        swipeHint: '← Swipe for more deals →',
+        adsBadge: 'Soko Deals Today',
+    },
+    sw: {
+        choosePlan: 'Chagua Mpango',
+        enterPhone: 'Ingiza Nambari ya Simu',
+        pay: 'Lipa & Unganisha',
+        reconnectTitle: 'Ulisha lipa? Unganisha tena',
+        reconnectSub: 'Ingiza nambari yako au voucher kuunganisha tena',
+        reconnectBtn: 'Unganisha',
+        helpBtn: 'Msaada',
+        callSupport: 'Piga Simu',
+        fastPill: '⚡ Haraka',
+        securePill: '🔒 Salama',
+        easyPill: '📱 Rahisi',
+        promoTitle: 'Unahitaji WiFi ya Nyumbani?',
+        callNow: 'Piga Sasa',
+        followUs: 'Tufuate',
+        ratingsLabel: 'Muunganiko ulikuwaje?',
+        swipeHint: '← Sogeza zaidi →',
+        adsBadge: 'Ofa za Leo',
+    },
+    fr: {
+        choosePlan: 'Choisissez votre forfait',
+        enterPhone: 'Entrez votre numéro',
+        pay: 'Payer & Connecter',
+        reconnectTitle: 'Déjà payé? Reconnectez',
+        reconnectSub: 'Entrez votre numéro ou code voucher',
+        reconnectBtn: 'Reconnecter',
+        helpBtn: 'Aide',
+        callSupport: 'Appeler Support',
+        fastPill: '⚡ Rapide',
+        securePill: '🔒 Sécurisé',
+        easyPill: '📱 Facile',
+        promoTitle: 'Besoin du WiFi à domicile?',
+        callNow: 'Appeler',
+        followUs: 'Suivez-nous',
+        ratingsLabel: 'Comment était votre connexion?',
+        swipeHint: '← Glissez pour plus →',
+        adsBadge: 'Offres du Jour',
+    }
+};
+
+function applyLanguage(lang) {
+    const t = I18N[lang] || I18N.en;
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.dataset.i18n;
+        if (t[key] !== undefined) el.textContent = t[key];
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.dataset.i18nPlaceholder;
+        if (t[key] !== undefined) el.placeholder = t[key];
+    });
+}
+
+// ========================================
+// APPLY PORTAL SETTINGS — orchestrator
+// ========================================
+function applyPortalSettings(settings) {
+    applyTheme(settings.color_theme || 'sunset_orange');
+    renderHeader(settings);
+    applyFeatureFlags(settings);
+    applyBranding(settings);
+    applyLanguage(settings.portal_language || 'en');
+}
 
 // ========================================
 // PLAN FLAGS — show/hide emergency & offer UI from API
@@ -1066,6 +1518,10 @@ function formatSpeed(speed) {
 function renderPlans(plans) {
     plansGrid.innerHTML = '';
 
+    if (window.featuredPlanIds && window.featuredPlanIds.length) {
+        plans = applyFeaturedOrder(plans, window.featuredPlanIds);
+    }
+
     const specialPlans = plans.filter(p => p.planType === 'special_offer' || p.planType === 'emergency');
     const regularPlans = plans.filter(p => p.planType !== 'special_offer' && p.planType !== 'emergency');
 
@@ -1189,12 +1645,16 @@ function createPlanCard(plan) {
         countdownHtml = `<div class="plan-countdown" data-expires="${plan.validUntil}"></div>`;
     }
 
+    const speedHtml = (portalSettings.show_plan_speed !== false && plan.speed)
+        ? `<div class="plan-speed">${plan.speed}</div>`
+        : '';
+
     card.innerHTML = `
         ${badgeHtml}
         <div class="plan-duration">${plan.duration}</div>
         ${originalPriceHtml}
         <div class="plan-price">${formattedPrice}</div>
-        <div class="plan-speed">${plan.speed}</div>
+        ${speedHtml}
         ${plan.valueMessage ? `<div class="plan-value-msg">${plan.valueMessage}</div>` : ''}
         ${countdownHtml}
     `;

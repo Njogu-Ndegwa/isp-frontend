@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Dev Preview</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'DM Sans', system-ui, sans-serif;
+            background: #0d0d0f;
+            color: #e5e5e5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 16px 40px;
+            gap: 16px;
+        }
+
+        /* ── toolbar ── */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+            max-width: 900px;
+        }
+        .toolbar-badge {
+            background: #7c3aed;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 20px;
+            letter-spacing: .5px;
+        }
+        .toolbar-label {
+            font-size: 13px;
+            color: #888;
+            flex: 1;
+            text-align: center;
+        }
+        .toolbar-btn {
+            background: #1e1e24;
+            color: #e5e5e5;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 7px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background .15s, border-color .15s;
+        }
+        .toolbar-btn:hover { background: #2a2a34; border-color: #555; }
+        .toolbar-btn.primary { background: #7c3aed; border-color: #7c3aed; color: #fff; }
+        .toolbar-btn.primary:hover { background: #6d28d9; }
+
+        /* ── two-column layout ── */
+        .layout {
+            display: flex;
+            gap: 24px;
+            align-items: flex-start;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        /* ── phone bezel ── */
+        .pp-bezel-wrap { flex-shrink: 0; }
+        .pp-bezel {
+            width: 340px;
+            background: #1a1a1a;
+            border-radius: 44px;
+            padding: 10px;
+            box-shadow:
+                0 25px 50px -12px rgba(0,0,0,.6),
+                0 0 0 1px rgba(255,255,255,.08);
+            position: relative;
+        }
+        .pp-viewport {
+            width: 320px;
+            height: 640px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            background: #fff;
+            border-radius: 34px;
+            position: relative;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+        }
+        .pp-viewport::-webkit-scrollbar { display: none; }
+
+        /* ── info panel ── */
+        .info-panel {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .info-card {
+            background: #111116;
+            border: 1px solid #222;
+            border-radius: 12px;
+            padding: 14px 16px;
+        }
+        .info-card h3 {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #555;
+            margin-bottom: 10px;
+        }
+        .info-row {
+            display: flex;
+            gap: 8px;
+            font-size: 12px;
+            margin-bottom: 5px;
+            align-items: baseline;
+        }
+        .info-row:last-child { margin-bottom: 0; }
+        .info-key { color: #555; min-width: 110px; flex-shrink: 0; }
+        .info-val { color: #ccc; word-break: break-all; }
+        .badge-row { display: flex; flex-wrap: wrap; gap: 4px; }
+        .chip {
+            background: #1e1e2a;
+            border: 1px solid #333;
+            color: #a78bfa;
+            font-size: 10px;
+            padding: 2px 7px;
+            border-radius: 20px;
+        }
+        .color-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,.15);
+            vertical-align: middle;
+            margin-right: 4px;
+        }
+        .plan-mini {
+            background: #1a1a22;
+            border-radius: 8px;
+            padding: 8px 10px;
+            margin-bottom: 6px;
+            font-size: 11px;
+        }
+        .plan-mini:last-child { margin-bottom: 0; }
+        .plan-mini-name { color: #e0e0e0; font-weight: 600; margin-bottom: 2px; }
+        .plan-mini-meta { color: #555; }
+        .plan-mini-price { color: #34d399; font-weight: 700; }
+
+        @media (max-width: 720px) {
+            .layout { flex-direction: column; align-items: center; }
+            .pp-bezel { width: 100%; max-width: 340px; }
+            .pp-viewport { width: 100%; height: 560px; }
+            .info-panel { width: 100%; max-width: 360px; }
+        }
+
+        /* ═══════════════════════════════════════
+           PORTAL INNER STYLES (matches PortalPreview.tsx)
+           All scoped inside #portal-inner
+           ═══════════════════════════════════════ */
+        #portal-inner {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--p-bg);
+            color: var(--p-text);
+            min-height: 100%;
+            padding-bottom: 24px;
+        }
+
+        /* Status bar */
+        #portal-inner .pp-status-bar {
+            position: sticky;
+            top: 0;
+            z-index: 200;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            flex-shrink: 0;
+        }
+        #portal-inner .pp-status-time {
+            font-size: 0.68rem;
+            font-weight: 700;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        #portal-inner .pp-status-notch {
+            width: 76px;
+            height: 18px;
+            background: #1a1a1a;
+            border-radius: 0 0 12px 12px;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            top: 0;
+        }
+        #portal-inner .pp-status-icons {
+            display: flex;
+            gap: 3px;
+            font-size: 0.6rem;
+        }
+
+        /* Standard header */
+        #portal-inner .pp-header {
+            position: sticky;
+            z-index: 100;
+            top: 36px;
+            background: var(--p-surface);
+            border-bottom: 1px solid rgba(0,0,0,.06);
+            backdrop-filter: blur(12px);
+        }
+        #portal-inner .pp-header-inner {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        #portal-inner .pp-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: inherit;
+        }
+        #portal-inner .pp-brand-icon { font-size: 1.4rem; }
+        #portal-inner .pp-brand-text { display: flex; flex-direction: column; line-height: 1.2; }
+        #portal-inner .pp-brand-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--p-primary);
+            letter-spacing: -0.5px;
+        }
+        #portal-inner .pp-brand-tagline {
+            font-size: 0.6rem;
+            color: var(--p-text-sec);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+        #portal-inner .pp-help-btn {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 12px;
+            background: var(--p-bg);
+            border-radius: 9999px;
+            text-decoration: none;
+            color: var(--p-text);
+            font-weight: 600;
+            font-size: 0.8rem;
+            border: 1px solid var(--p-border);
+        }
+
+        /* Hero header */
+        #portal-inner .pp-hero {
+            padding: 28px 20px 24px;
+            text-align: center;
+            color: #fff;
+            background-size: cover;
+            background-position: center;
+            min-height: 190px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        #portal-inner .pp-hero-wifi { margin-bottom: 10px; opacity: .85; }
+        #portal-inner .pp-hero-logo {
+            width: 44px; height: 44px; border-radius: 10px;
+            object-fit: cover; margin-bottom: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.2);
+        }
+        #portal-inner .pp-hero-title {
+            font-size: 1.35rem; font-weight: 700; margin: 0 0 4px;
+            text-shadow: 0 2px 4px rgba(0,0,0,.3);
+        }
+        #portal-inner .pp-hero-sub {
+            font-size: 0.75rem; margin: 0; opacity: .9;
+            text-shadow: 0 1px 2px rgba(0,0,0,.3);
+        }
+        #portal-inner .pp-hero-pills {
+            display: flex; gap: 6px; margin-top: 12px;
+            flex-wrap: wrap; justify-content: center;
+        }
+        #portal-inner .pp-hero-pill {
+            font-size: 0.58rem; font-weight: 700; padding: 3px 9px;
+            border-radius: 9999px; background: rgba(255,255,255,.2);
+            color: rgba(255,255,255,.95); letter-spacing: .3px;
+            backdrop-filter: blur(4px);
+        }
+        #portal-inner .pp-hero-support {
+            display: flex; gap: 6px; margin-top: 14px;
+            flex-wrap: wrap; justify-content: center;
+        }
+        #portal-inner .pp-hero-sup-btn {
+            display: inline-flex; align-items: center; gap: 5px;
+            font-size: 0.6rem; font-weight: 700; padding: 6px 12px;
+            border-radius: 9999px; border: 1.5px solid rgba(255,255,255,.7);
+            background: rgba(255,255,255,.15); color: rgba(255,255,255,.95);
+            text-decoration: none; backdrop-filter: blur(6px);
+        }
+
+        /* Main content */
+        #portal-inner .pp-main {
+            max-width: 600px; margin: 0 auto;
+            width: 100%; padding: 0 16px 24px;
+        }
+
+        /* Ads */
+        #portal-inner .pp-ads {
+            margin: 16px -16px 20px;
+            padding: 14px 0;
+            border-top: 1px solid transparent;
+            border-bottom: 1px solid transparent;
+            min-height: 195px;
+            /* background + border-color injected via inline style in renderPortal() */
+        }
+        #portal-inner .pp-ads-head {
+            display: flex; align-items: center;
+            justify-content: space-between; padding: 0 16px 8px;
+        }
+        #portal-inner .pp-ads-title { font-size: .9rem; font-weight: 700; color: var(--p-text); }
+        #portal-inner .pp-ads-badge {
+            font-size: .58rem; font-weight: 700; color: var(--p-text-sec);
+            background: rgba(0,0,0,.06); padding: 2px 8px; border-radius: 9999px;
+            letter-spacing: .5px;
+        }
+        #portal-inner .pp-ads-scroll {
+            display: flex; gap: 12px; overflow-x: auto;
+            scroll-snap-type: x mandatory; padding: 4px 16px 6px;
+            -webkit-overflow-scrolling: touch; scrollbar-width: none;
+        }
+        #portal-inner .pp-ads-scroll::-webkit-scrollbar { display: none; }
+        #portal-inner .pp-ad-card {
+            flex-shrink: 0; width: 120px; background: var(--p-surface);
+            border-radius: 12px; overflow: hidden; scroll-snap-align: start;
+            box-shadow: 0 1px 4px rgba(0,0,0,.08);
+        }
+        #portal-inner .pp-ad-img {
+            position: relative; width: 100%; aspect-ratio: 1;
+            background: #f5f5f5; display: flex; align-items: center; justify-content: center;
+        }
+        #portal-inner .pp-ad-emoji { font-size: 1.9rem; }
+        #portal-inner .pp-ad-badge-chip {
+            position: absolute; top: 5px; left: 5px;
+            font-size: .52rem; font-weight: 700; padding: 2px 5px; border-radius: 5px;
+        }
+        #portal-inner .pp-ad-info { padding: 7px; }
+        #portal-inner .pp-ad-name {
+            font-size: .72rem; font-weight: 600; color: var(--p-text);
+            margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        #portal-inner .pp-ad-seller {
+            font-size: .6rem; color: var(--p-text-sec); margin-bottom: 3px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        #portal-inner .pp-ad-price { font-size: .82rem; font-weight: 700; color: var(--p-primary); }
+        #portal-inner .pp-ad-cta {
+            flex-shrink: 0; width: 120px; background: #f8f8f8; border: 2px dashed #ddd;
+            border-radius: 12px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; min-height: 120px;
+            scroll-snap-align: start; text-decoration: none; text-align: center; gap: 5px; color: #999;
+        }
+        #portal-inner .pp-ad-cta-icon {
+            width: 34px; height: 34px; background: #eee; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; font-weight: 300; color: #aaa;
+        }
+        #portal-inner .pp-ad-cta span { font-size: .64rem; font-weight: 600; }
+        #portal-inner .pp-ads-hint {
+            text-align: center; padding: 5px 16px 0;
+            font-size: .58rem; color: var(--p-text-sec); opacity: .7;
+        }
+
+        /* Steps */
+        #portal-inner .pp-steps {
+            display: flex; align-items: center; justify-content: center;
+            gap: 8px; padding: 14px 0; margin-bottom: 14px;
+        }
+        #portal-inner .pp-step { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        #portal-inner .pp-step-num {
+            width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;
+            background: var(--p-primary); color: #fff; font-weight: 700;
+            font-size: .72rem; border-radius: 50%;
+        }
+        #portal-inner .pp-step-lbl { font-size: .6rem; color: var(--p-text-sec); font-weight: 600; }
+        #portal-inner .pp-step-arrow { color: var(--p-text-sec); font-size: .85rem; margin-bottom: 18px; opacity: .5; }
+
+        /* Reconnect */
+        #portal-inner .pp-reconnect {
+            background: var(--p-surface); border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,.08); margin-bottom: 14px;
+            overflow: hidden; border: 2px solid #60a5fa;
+        }
+        #portal-inner .pp-reconnect-head {
+            display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border-bottom: 1px solid rgba(96,165,250,.2);
+        }
+        #portal-inner .pp-reconnect-icon { font-size: 1.5rem; flex-shrink: 0; }
+        #portal-inner .pp-reconnect-title { font-size: .88rem; font-weight: 700; color: var(--p-text); }
+        #portal-inner .pp-reconnect-sub { font-size: .66rem; color: var(--p-text-sec); }
+        #portal-inner .pp-reconnect-body { padding: 10px 14px; }
+        #portal-inner .pp-reconnect-row { display: flex; gap: 8px; }
+        #portal-inner .pp-reconnect-input {
+            flex: 1; min-width: 0; padding: 9px 11px; font-size: .78rem; font-weight: 500;
+            border: 2px solid #e5e5e5; border-radius: 10px; outline: none;
+            min-height: 40px; background: var(--p-surface); color: var(--p-text); font-family: inherit;
+        }
+        #portal-inner .pp-reconnect-btn {
+            flex-shrink: 0; padding: 9px 14px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: #fff; border: none; border-radius: 10px; font-size: .76rem;
+            font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(59,130,246,.3);
+            min-height: 40px; font-family: inherit;
+        }
+
+        /* Plans */
+        #portal-inner .pp-plans { padding: 0; }
+        #portal-inner .pp-plans-title {
+            font-size: 1.1rem; font-weight: 700; text-align: center;
+            margin-bottom: 12px; color: var(--p-text);
+        }
+        #portal-inner .pp-plans-grid {
+            display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin-bottom: 14px;
+        }
+        #portal-inner .pp-plan-card {
+            background: var(--p-surface); border: 2px solid transparent;
+            border-radius: 14px; padding: 16px 10px 14px; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,.08); text-align: center;
+            position: relative; overflow: hidden; min-height: 120px;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 4px;
+        }
+        #portal-inner .pp-plan-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0;
+            height: 4px; background: linear-gradient(90deg, var(--p-primary), var(--p-accent));
+            transform: scaleX(0); transition: transform .3s ease;
+        }
+        #portal-inner .pp-plan-card:hover::before { transform: scaleX(1); }
+        #portal-inner .pp-plan-popular {
+            border-color: var(--p-primary);
+            background: linear-gradient(180deg, color-mix(in srgb, var(--p-primary) 8%, transparent) 0%, var(--p-surface) 100%);
+            padding-bottom: 40px;
+        }
+        #portal-inner .pp-plan-popular::after {
+            content: '⭐ Best Value'; position: absolute; top: 8px; right: -26px;
+            background: var(--p-primary); color: #fff; font-size: .5rem; font-weight: 700;
+            padding: 3px 30px; transform: rotate(45deg);
+        }
+        #portal-inner .pp-plan-orig-price {
+            font-size: .58rem;
+            text-decoration: line-through;
+            color: var(--p-text-sec);
+            opacity: .7;
+        }
+        #portal-inner .pp-plan-duration { font-size: .88rem; font-weight: 700; color: var(--p-text); }
+        #portal-inner .pp-plan-price {
+            font-size: 1.6rem; font-weight: 700; color: var(--p-primary); line-height: 1;
+        }
+        #portal-inner .pp-plan-currency {
+            font-size: .48em; font-weight: 600; vertical-align: super; opacity: .7; margin-right: 1px;
+        }
+        #portal-inner .pp-plan-speed {
+            font-size: .6rem; font-weight: 600; color: var(--p-text-inv);
+            background: var(--p-text); padding: 2px 8px; border-radius: 9999px; display: inline-block;
+        }
+        #portal-inner .pp-plan-value {
+            position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+            font-size: .58rem; font-weight: 700; color: var(--p-primary);
+            padding: 3px 10px; background: rgba(0,0,0,.06); border-radius: 9999px; white-space: nowrap;
+        }
+        #portal-inner .pp-plan-badge {
+            position: absolute; top: 6px; left: 8px;
+            font-size: .5rem; font-weight: 700; padding: 2px 6px; border-radius: 5px;
+            background: var(--p-accent); color: #fff;
+        }
+
+        /* Voucher section */
+        #portal-inner .pp-voucher {
+            background: var(--p-surface);
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,.08);
+            margin-bottom: 14px;
+            overflow: hidden;
+            border: 2px solid var(--p-accent);
+        }
+        #portal-inner .pp-voucher-head {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-bottom: 1px solid transparent;
+        }
+        #portal-inner .pp-voucher-icon { font-size: 1.6rem; flex-shrink: 0; }
+        #portal-inner .pp-voucher-title {
+            font-size: .95rem;
+            font-weight: 700;
+            color: var(--p-text);
+        }
+        #portal-inner .pp-voucher-sub {
+            font-size: .72rem;
+            color: var(--p-text-sec);
+        }
+        #portal-inner .pp-voucher-body { padding: 12px 14px; }
+        #portal-inner .pp-voucher-row { display: flex; gap: 8px; }
+        #portal-inner .pp-voucher-input {
+            flex: 1;
+            min-width: 0;
+            padding: 10px 12px;
+            font-size: .85rem;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            text-align: center;
+            border: 2px solid #e5e5e5;
+            border-radius: 10px;
+            outline: none;
+            min-height: 44px;
+            background: var(--p-surface);
+            color: var(--p-text);
+            font-family: inherit;
+        }
+        #portal-inner .pp-voucher-input::placeholder {
+            color: #ccc;
+            font-weight: 400;
+            letter-spacing: .5px;
+            text-transform: none;
+            font-size: .78rem;
+        }
+        #portal-inner .pp-voucher-btn {
+            flex-shrink: 0;
+            padding: 10px 16px;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: .82rem;
+            font-weight: 700;
+            cursor: pointer;
+            min-height: 44px;
+            font-family: inherit;
+        }
+
+        /* OR divider */
+        #portal-inner .pp-divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        #portal-inner .pp-divider-line { flex: 1; height: 1px; background: #e0e0e0; }
+        #portal-inner .pp-divider-text {
+            font-size: .72rem;
+            font-weight: 700;
+            color: var(--p-text-sec);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Promo */
+        #portal-inner .pp-promo { margin-bottom: 14px; }
+        #portal-inner .pp-promo-inner {
+            display: flex; align-items: center; gap: 10px; padding: 12px;
+            background: linear-gradient(135deg, color-mix(in srgb, var(--p-primary) 8%, transparent) 0%, color-mix(in srgb, var(--p-accent) 6%, transparent) 100%);
+            border-radius: 12px; border: 1px solid color-mix(in srgb, var(--p-primary) 15%, transparent);
+        }
+        #portal-inner .pp-promo-icon { font-size: 1.4rem; flex-shrink: 0; }
+        #portal-inner .pp-promo-text { flex: 1; min-width: 0; }
+        #portal-inner .pp-promo-text strong { display: block; font-size: .78rem; font-weight: 700; color: var(--p-text); }
+        #portal-inner .pp-promo-text span { font-size: .62rem; color: var(--p-text-sec); }
+        #portal-inner .pp-promo-btn {
+            flex-shrink: 0; padding: 6px 12px; background: var(--p-primary);
+            color: #fff; border-radius: 9999px; font-size: .68rem;
+            font-weight: 700; text-decoration: none;
+        }
+
+        /* Footer */
+        #portal-inner .pp-footer {
+            text-align: center; padding: 14px; font-size: .62rem; color: var(--p-text-sec);
+            border-top: 1px solid var(--p-border); margin-top: 6px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="toolbar">
+    <span class="toolbar-badge">🧪 DEV PREVIEW</span>
+    <span class="toolbar-label" id="toolbar-label">Portal preview</span>
+    <button class="toolbar-btn" onclick="cycleTheme()">🎨 Next theme</button>
+    <button class="toolbar-btn primary" onclick="launchInPortal()">🚀 Test full portal</button>
+</div>
+
+<div class="layout">
+    <!-- Phone bezel -->
+    <div class="pp-bezel-wrap">
+        <div class="pp-bezel">
+            <div class="pp-viewport">
+                <div id="portal-inner"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info panel -->
+    <div class="info-panel" id="info-panel"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// MOCK DATA — paste any portal API response here to preview it
+// ═══════════════════════════════════════════════════════════════
+const MOCK_DATA = {
+    "router": {
+        "router_id": 112,
+        "name": "Acme Internet Service #5",
+        "identity": "Router-0244",
+        "user_id": 20,
+        "auth_method": "DIRECT_API",
+        "business_name": "Acme Internet Service",
+        "payment_methods": ["mpesa", "voucher"],
+        "support_phone": "+254712345678"
+    },
+    "plans": [
+        {
+            "id": 73, "name": "Test PPOE Plan", "speed": "5M/5M", "price": 1,
+            "duration_value": 10, "duration_unit": "MINUTES", "connection_type": "pppoe",
+            "router_profile": "default", "plan_type": "regular", "is_hidden": false,
+            "badge_text": null, "original_price": null
+        },
+        {
+            "id": 90, "name": "10 Minute plan", "speed": "5M/5M", "price": 1,
+            "duration_value": 10, "duration_unit": "MINUTES", "connection_type": "hotspot",
+            "router_profile": "default", "plan_type": "regular", "is_hidden": false,
+            "badge_text": null, "original_price": null
+        },
+        {
+            "id": 91, "name": "Test Plan", "speed": "5M/2M", "price": 50,
+            "duration_value": 1, "duration_unit": "HOURS", "connection_type": "pppoe",
+            "router_profile": "default", "plan_type": "regular", "is_hidden": false,
+            "badge_text": null, "original_price": null
+        },
+        {
+            "id": 104, "name": "1 Day plan", "speed": "5M/5M", "price": 1,
+            "duration_value": 1, "duration_unit": "DAYS", "connection_type": "hotspot",
+            "router_profile": "default", "plan_type": "regular", "is_hidden": false,
+            "badge_text": null, "original_price": null
+        }
+    ],
+    "ads": [],
+    "plan_flags": {
+        "has_emergency_plans": false,
+        "has_special_offers": false,
+        "emergency_mode_active": false,
+        "emergency_message": null
+    },
+    "portal_settings": {
+        "color_theme": "slate_gray",
+        "header_style": "hero",
+        "show_ads": false,
+        "show_welcome_banner": true,
+        "welcome_title": "Acme Internet Service",
+        "welcome_subtitle": null,
+        "company_logo_url": null,
+        "header_bg_image_url": "/images/presets/nature.webp",
+        "footer_text": null,
+        "portal_support_phone": "+254712345678",
+        "portal_support_whatsapp": null,
+        "show_ratings": true,
+        "show_reconnect_button": true,
+        "show_social_links": false,
+        "facebook_url": null,
+        "whatsapp_group_url": null,
+        "instagram_url": null,
+        "show_announcement": false,
+        "announcement_type": "info",
+        "announcement_text": null,
+        "portal_language": "en",
+        "plans_section_title": null,
+        "featured_plan_ids": null,
+        "show_plan_speed": true
+    }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// THEME PALETTES — matches portalThemes.ts in isp-billing-admin
+// ═══════════════════════════════════════════════════════════════
+const THEME_PALETTES = {
+    sunset_orange: {
+        primary: '#E85D04', primaryLight: '#F48C06', primaryDark: '#DC2F02',
+        accent: '#FFBA08', background: '#FFFCF2', surface: '#FFFFFF',
+        text: '#1A1A1A', textSecondary: '#5C5C5C', textInverse: '#FFFFFF', border: '#E5E5E5'
+    },
+    ocean_blue: {
+        primary: '#3B82F6', primaryLight: '#60A5FA', primaryDark: '#2563EB',
+        accent: '#06B6D4', background: '#F0F7FF', surface: '#FFFFFF',
+        text: '#1A1A1A', textSecondary: '#5C5C5C', textInverse: '#FFFFFF', border: '#E5E5E5'
+    },
+    emerald_green: {
+        primary: '#10B981', primaryLight: '#34D399', primaryDark: '#059669',
+        accent: '#84CC16', background: '#F0FDF4', surface: '#FFFFFF',
+        text: '#1A1A1A', textSecondary: '#5C5C5C', textInverse: '#FFFFFF', border: '#E5E5E5'
+    },
+    bright_violet: {
+        primary: '#8B5CF6', primaryLight: '#A78BFA', primaryDark: '#7C3AED',
+        accent: '#F472B6', background: '#FAF5FF', surface: '#FFFFFF',
+        text: '#1A1A1A', textSecondary: '#5C5C5C', textInverse: '#FFFFFF', border: '#E5E5E5'
+    },
+    rose_gold: {
+        primary: '#E11D48', primaryLight: '#FB7185', primaryDark: '#BE123C',
+        accent: '#FB923C', background: '#FFF1F2', surface: '#FFFFFF',
+        text: '#1A1A1A', textSecondary: '#5C5C5C', textInverse: '#FFFFFF', border: '#E5E5E5'
+    },
+    slate_gray: {
+        primary: '#475569', primaryLight: '#64748B', primaryDark: '#334155',
+        accent: '#F97316', background: '#F8FAFC', surface: '#FFFFFF',
+        text: '#1A1A1A', textSecondary: '#5C5C5C', textInverse: '#FFFFFF', border: '#E5E5E5'
+    }
+};
+
+const THEME_NAMES = Object.keys(THEME_PALETTES);
+let _themeIdx = THEME_NAMES.indexOf(MOCK_DATA.portal_settings.color_theme);
+if (_themeIdx < 0) _themeIdx = 0;
+
+// ═══════════════════════════════════════════════════════════════
+// MOCK ADS (shown when show_ads is true and ads array is empty)
+// ═══════════════════════════════════════════════════════════════
+const MOCK_ADS = [
+    { emoji: '🌽', name: 'Fresh Maize',    seller: 'Soko Fresh',   price: 'KSH 30',     badge: 'HOT',  badgeBg: '#FEE2E2', badgeCol: '#DC2626' },
+    { emoji: '📱', name: 'Airtime Top-up', seller: 'M-Pesa Agent', price: 'Any amount', badge: 'NEW',  badgeBg: '#DBEAFE', badgeCol: '#2563EB' },
+    { emoji: '🛡️', name: 'Phone Cases',    seller: 'Tech Soko',    price: 'KSH 250',    badge: 'SALE', badgeBg: '#D1FAE5', badgeCol: '#059669' },
+];
+
+// ═══════════════════════════════════════════════════════════════
+// HELPERS — kept in sync with script.js
+// ═══════════════════════════════════════════════════════════════
+function hexToRgba(hex, alpha) {
+    const h = hex.replace('#', '');
+    const r = parseInt(h.slice(0, 2), 16);
+    const g = parseInt(h.slice(2, 4), 16);
+    const b = parseInt(h.slice(4, 6), 16);
+    return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// Matches script.js formatDuration exactly
+function formatDuration(value, unit) {
+    const unitMap = {
+        'HOURS':  value === 1 ? 'Hour'  : 'Hours',
+        'DAYS':   value === 1 ? 'Day'   : 'Days',
+        'WEEKS':  value === 1 ? 'Week'  : 'Weeks',
+        'MONTHS': value === 1 ? 'Month' : 'Months',
+    };
+    return `${value} ${unitMap[unit] || unit.toLowerCase()}`;
+}
+
+// Matches script.js formatSpeed exactly
+function formatSpeed(speed) {
+    if (!speed || speed.toLowerCase() === 'unlimited') return 'Unlimited';
+    const dl = speed.split('/')[0].trim();
+    if (dl.match(/mbps|kbps/i)) return dl;
+    if (dl.match(/^\d+(\.\d+)?[mM]$/)) return dl.replace(/[mM]$/, 'Mbps');
+    if (dl.match(/^\d+(\.\d+)?[kK]$/)) return dl.replace(/[kK]$/, 'Kbps');
+    if (dl.match(/^\d+(\.\d+)?$/))     return `${dl}Mbps`;
+    return dl;
+}
+
+// Matches script.js convertToHours exactly
+function convertToHours(value, unit) {
+    const map = { MINUTES: 1/60, HOURS: 1, DAYS: 24, WEEKS: 24*7, MONTHS: 24*30 };
+    return value * (map[unit.toUpperCase()] || 1);
+}
+
+// Matches script.js transformPlansData — filters + enriches plans exactly as the real portal does
+function transformPlansData(apiPlans, planFlags, BESTSELLER_PLAN_ID) {
+    const visible = apiPlans.filter(p => {
+        if (p.is_hidden) return false;
+        if (p.connection_type && p.connection_type !== 'hotspot') return false;
+        if (p.plan_type === 'emergency'     && !planFlags.emergency_mode_active) return false;
+        if (p.plan_type === 'special_offer' && !planFlags.has_special_offers)    return false;
+        return true;
+    });
+
+    const regular = visible.filter(p => !p.plan_type || p.plan_type === 'regular');
+    let bestRegularId = null;
+    if (regular.length > 0) {
+        const withRatio = regular.map(p => ({ id: p.id, ratio: convertToHours(p.duration_value, p.duration_unit) / p.price }));
+        bestRegularId = withRatio.reduce((best, cur) => cur.ratio > best.ratio ? cur : best).id;
+    }
+
+    return visible.map(plan => {
+        const isEmergency   = plan.plan_type === 'emergency';
+        const isSpecialOffer = plan.plan_type === 'special_offer';
+        const isRegular = !isEmergency && !isSpecialOffer;
+
+        const bestseller = isRegular && plan.id === BESTSELLER_PLAN_ID;
+        const popular    = isRegular && plan.id === bestRegularId && !bestseller;
+
+        let valueMessage = '';
+        if (isSpecialOffer && plan.original_price) {
+            valueMessage = `Save ${Math.round((1 - plan.price / plan.original_price) * 100)}%`;
+        } else if (bestseller) {
+            valueMessage = '🔥 Bestseller';
+        } else if (popular) {
+            const pricePerDay = (plan.price / (convertToHours(plan.duration_value, plan.duration_unit) / 24)).toFixed(0);
+            valueMessage = `Only KSH ${pricePerDay}/day`;
+        }
+
+        return {
+            id:            plan.id,
+            duration:      formatDuration(plan.duration_value, plan.duration_unit),
+            price:         `KSH ${plan.price}/-`,
+            speed:         formatSpeed(plan.speed),
+            popular,
+            bestseller,
+            valueMessage,
+            planType:      plan.plan_type || 'regular',
+            badgeText:     plan.badge_text    || null,
+            originalPrice: plan.original_price ? `KSH ${plan.original_price}/-` : null,
+            validUntil:    plan.valid_until   || null,
+        };
+    });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════════════
+
+function renderPortal(mockData, overrideTheme) {
+    const s  = mockData.portal_settings;
+    const r  = mockData.router;
+    const theme = overrideTheme || s.color_theme;
+    const p  = THEME_PALETTES[theme] || THEME_PALETTES.sunset_orange;
+    const isHero = s.header_style === 'hero';
+
+    // Transform plans exactly as the real portal does (filters pppoe, enriches cards)
+    const plans = transformPlansData(mockData.plans || [], mockData.plan_flags || {}, null);
+
+    // Apply CSS vars
+    const el = document.getElementById('portal-inner');
+    el.style.setProperty('--p-primary',   p.primary);
+    el.style.setProperty('--p-accent',    p.accent);
+    el.style.setProperty('--p-bg',        p.background);
+    el.style.setProperty('--p-surface',   p.surface);
+    el.style.setProperty('--p-text',      p.text);
+    el.style.setProperty('--p-text-sec',  p.textSecondary);
+    el.style.setProperty('--p-text-inv',  p.textInverse);
+    el.style.setProperty('--p-border',    p.border);
+    el.style.setProperty('background',    p.background);
+
+    const title = s.welcome_title || r.business_name || 'Demo ISP';
+    const phone = s.portal_support_phone || r.support_phone || '';
+
+    // ── Announcement banner (matches applyFeatureFlags)
+    const announcementHtml = (s.show_announcement && s.announcement_text) ? (() => {
+        const typeColors = {
+            info:    { bg: '#EFF6FF', color: '#1D4ED8', border: '#BFDBFE' },
+            warning: { bg: '#FFFBEB', color: '#92400E', border: '#FDE68A' },
+            success: { bg: '#ECFDF5', color: '#065F46', border: '#A7F3D0' },
+            error:   { bg: '#FEF2F2', color: '#991B1B', border: '#FCA5A5' },
+        };
+        const c = typeColors[s.announcement_type || 'info'];
+        return `<div style="padding:10px 16px;font-size:12px;font-weight:500;text-align:center;background:${c.bg};color:${c.color};border-bottom:1px solid ${c.border}">${s.announcement_text}</div>`;
+    })() : '';
+
+    // ── Hero / Standard header
+    const heroHtml = isHero ? (() => {
+        const bgUrl  = s.header_bg_image_url || '';
+        const heroBg = bgUrl
+            ? `linear-gradient(135deg, ${p.primary}bb 0%, ${p.primaryDark}88 100%), url(${bgUrl})`
+            : `linear-gradient(135deg, ${p.primary} 0%, ${p.primaryDark} 100%)`;
+        const logo = s.company_logo_url
+            ? `<img src="${s.company_logo_url}" class="pp-hero-logo" alt="">`
+            : `<div class="pp-hero-wifi"><svg width="30" height="24" viewBox="0 0 24 20" fill="none">
+                <path d="M2 6C6.42 1.58 13.58 1.58 18 6" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-linecap="round"/>
+                <path d="M5 9.5c3.86-3.86 10.14-3.86 14 0" stroke="rgba(255,255,255,0.6)" stroke-width="2" stroke-linecap="round"/>
+                <path d="M8 13c2.21-2.21 5.79-2.21 8 0" stroke="rgba(255,255,255,0.85)" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="12" cy="18" r="1.5" fill="rgba(255,255,255,0.95)"/>
+               </svg></div>`;
+        const supportBtn = s.portal_support_whatsapp
+            ? `<a href="https://wa.me/${s.portal_support_whatsapp}" class="pp-hero-sup-btn" style="border-color:rgba(37,211,102,0.8);background:rgba(37,211,102,0.2)">WhatsApp</a>`
+            : `<a href="tel:${phone}" class="pp-hero-sup-btn">📞 Call Support</a>`;
+        return `<div class="pp-hero" style="background-image:${heroBg}">
+            ${logo}
+            <h1 class="pp-hero-title">${title}</h1>
+            <p class="pp-hero-sub">${s.welcome_subtitle || 'Public WiFi'}</p>
+            <div class="pp-hero-pills">
+                <span class="pp-hero-pill">⚡ Fast</span>
+                <span class="pp-hero-pill">🔒 Secure</span>
+                <span class="pp-hero-pill">📱 Easy</span>
+            </div>
+            <div class="pp-hero-support">${supportBtn}</div>
+        </div>`;
+    })() : `<header class="pp-header">
+        <div class="pp-header-inner">
+            <a href="#" class="pp-brand">
+                <span class="pp-brand-icon">📡</span>
+                <div class="pp-brand-text">
+                    <span class="pp-brand-name">${title}</span>
+                    <span class="pp-brand-tagline">Public WiFi</span>
+                </div>
+            </a>
+            <a href="tel:${phone}" class="pp-help-btn">📞 <span class="pp-help-text">Help</span></a>
+        </div>
+    </header>`;
+
+    // ── Welcome banner (matches applyFeatureFlags logic exactly)
+    // Hero mode: show when show_welcome_banner && (title || subtitle)
+    // Standard mode: show when show_welcome_banner && subtitle only
+    const welcomeBannerHtml = (() => {
+        const showBanner = s.show_welcome_banner && (
+            isHero ? (s.welcome_title || s.welcome_subtitle) : !!s.welcome_subtitle
+        );
+        if (!showBanner) return '';
+        const bannerTitle = isHero && s.welcome_title
+            ? `<div style="font-size:17px;font-weight:700;color:var(--p-text);margin:0 0 3px">${s.welcome_title}</div>`
+            : '';
+        const bannerSub = s.welcome_subtitle
+            ? `<div style="font-size:12px;color:var(--p-text-sec)">${s.welcome_subtitle}</div>`
+            : '';
+        return `<div style="padding:14px 16px;background:var(--p-surface);text-align:center;border-bottom:1px solid var(--p-border)">${bannerTitle}${bannerSub}</div>`;
+    })();
+
+    // ── Ads (only when show_ads AND there are real ads; preview falls back to MOCK_ADS)
+    const adsSource = (mockData.ads && mockData.ads.length > 0) ? mockData.ads.map(a => ({
+        emoji: '🖼️', name: a.title || 'Ad', seller: a.subtitle || '', price: '', badge: 'AD',
+        badgeBg: '#E0E7FF', badgeCol: '#3730A3'
+    })) : MOCK_ADS;
+
+    const adsHtml = s.show_ads ? (() => {
+        const adsBg     = `linear-gradient(135deg, ${hexToRgba(p.primary, 0.07)} 0%, ${hexToRgba(p.accent, 0.05)} 100%)`;
+        const adsBorder = hexToRgba(p.primary, 0.12);
+        const adCards   = adsSource.map(ad => `
+            <div class="pp-ad-card">
+                <div class="pp-ad-img">
+                    <span class="pp-ad-emoji">${ad.emoji}</span>
+                    <span class="pp-ad-badge-chip" style="background:${ad.badgeBg};color:${ad.badgeCol}">${ad.badge}</span>
+                </div>
+                <div class="pp-ad-info">
+                    <div class="pp-ad-name">${ad.name}</div>
+                    <div class="pp-ad-seller">${ad.seller}</div>
+                    <div class="pp-ad-price">${ad.price}</div>
+                </div>
+            </div>`).join('');
+        return `<div class="pp-ads" style="background:${adsBg};border-top-color:${adsBorder};border-bottom-color:${adsBorder}">
+            <div class="pp-ads-head">
+                <span class="pp-ads-title">🛒 Soko Deals Today</span>
+                <span class="pp-ads-badge">AD</span>
+            </div>
+            <div class="pp-ads-scroll">
+                ${adCards}
+                <a href="#" class="pp-ad-cta"><div class="pp-ad-cta-icon">+</div><span>Your Ad Here</span></a>
+            </div>
+            <div class="pp-ads-hint">← Swipe for more deals →</div>
+        </div>`;
+    })() : '';
+
+    // ── Steps
+    const stepsHtml = `<div class="pp-steps">
+        <div class="pp-step"><span class="pp-step-num">1</span><span class="pp-step-lbl">Pick Plan</span></div>
+        <span class="pp-step-arrow">→</span>
+        <div class="pp-step"><span class="pp-step-num">2</span><span class="pp-step-lbl">Enter Phone</span></div>
+        <span class="pp-step-arrow">→</span>
+        <div class="pp-step"><span class="pp-step-num">3</span><span class="pp-step-lbl">Pay &amp; Connect</span></div>
+    </div>`;
+
+    // ── Reconnect
+    const reconnectHtml = s.show_reconnect_button !== false ? `<div class="pp-reconnect">
+        <div class="pp-reconnect-head">
+            <span class="pp-reconnect-icon">🔄</span>
+            <div>
+                <div class="pp-reconnect-title">Already paid? Reconnect</div>
+                <div class="pp-reconnect-sub">Enter your phone number or voucher code to get back online</div>
+            </div>
+        </div>
+        <div class="pp-reconnect-body">
+            <div class="pp-reconnect-row">
+                <input class="pp-reconnect-input" placeholder="Phone or voucher e.g. 0712…" readonly>
+                <button class="pp-reconnect-btn">Reconnect</button>
+            </div>
+        </div>
+    </div>` : '';
+
+    // ── Voucher section
+    const paymentMethods = r.payment_methods || [];
+    const hasVoucher = paymentMethods.includes('voucher');
+    const hasMpesa   = paymentMethods.includes('mpesa');
+    const voucherHeadBg  = `linear-gradient(135deg, ${hexToRgba(p.accent, 0.09)} 0%, ${hexToRgba(p.accent, 0.04)} 100%)`;
+    const voucherBtnBg   = `linear-gradient(135deg, ${p.primary} 0%, ${p.primaryLight} 100%)`;
+
+    const voucherHtml = hasVoucher ? `
+        <div class="pp-voucher">
+            <div class="pp-voucher-head" style="background:${voucherHeadBg};border-bottom-color:${hexToRgba(p.accent, 0.2)}">
+                <span class="pp-voucher-icon">🎟️</span>
+                <div>
+                    <div class="pp-voucher-title">Have a Voucher?</div>
+                    <div class="pp-voucher-sub">Enter your code below to get connected</div>
+                </div>
+            </div>
+            <div class="pp-voucher-body">
+                <div class="pp-voucher-row">
+                    <input class="pp-voucher-input" placeholder="Enter code e.g. 4839-2910" readonly>
+                    <button class="pp-voucher-btn" style="background:${voucherBtnBg};box-shadow:0 4px 12px ${hexToRgba(p.primary, 0.3)}">Verify</button>
+                </div>
+            </div>
+        </div>` : '';
+
+    const dividerHtml = (hasVoucher && hasMpesa) ? `
+        <div class="pp-divider">
+            <span class="pp-divider-line"></span>
+            <span class="pp-divider-text">OR</span>
+            <span class="pp-divider-line"></span>
+        </div>` : '';
+
+    // ── Plans grid — real data, real card structure matching createPlanCard()
+    const plansTitle = s.plans_section_title || 'Choose Your Plan';
+    const featuredIds = s.featured_plan_ids ? s.featured_plan_ids.toString().split(',').map(Number) : [];
+    const orderedPlans = featuredIds.length
+        ? [...featuredIds.map(id => plans.find(pl => pl.id === id)).filter(Boolean),
+           ...plans.filter(pl => !featuredIds.includes(pl.id))]
+        : plans;
+
+    const planCards = orderedPlans.map(plan => {
+        let cls = 'pp-plan-card';
+        if (plan.planType === 'emergency')    cls += ' pp-plan-emergency';
+        else if (plan.planType === 'special_offer') cls += ' pp-plan-special';
+        else if (plan.bestseller)             cls += ' pp-plan-popular';
+
+        const badgeHtml    = plan.badgeText    ? `<span class="pp-plan-badge">${plan.badgeText}</span>` : '';
+        const origHtml     = plan.originalPrice ? `<div class="pp-plan-orig-price">${plan.originalPrice}</div>` : '';
+        const speedHtml    = s.show_plan_speed !== false ? `<div class="pp-plan-speed">${plan.speed}</div>` : '';
+        const valueHtml    = plan.valueMessage  ? `<div class="pp-plan-value">${plan.valueMessage}</div>` : '';
+
+        // Price: "KSH 50/-" → split currency + amount (matches formatPrice in real portal)
+        const priceMatch = plan.price.match(/^(KSH)\s*(.+)$/);
+        const priceHtml  = priceMatch
+            ? `<span class="pp-plan-currency">${priceMatch[1]}</span>${priceMatch[2]}`
+            : plan.price;
+
+        return `<div class="${cls}">
+            ${badgeHtml}
+            <div class="pp-plan-duration">${plan.duration}</div>
+            ${origHtml}
+            <div class="pp-plan-price">${priceHtml}</div>
+            ${speedHtml}
+            ${valueHtml}
+        </div>`;
+    }).join('');
+
+    const plansHtml = `<div class="pp-plans">
+        <h2 class="pp-plans-title">${plansTitle}</h2>
+        <div class="pp-plans-grid">${planCards || '<p style="text-align:center;color:var(--p-text-sec);font-size:.8rem;padding:20px 0">No hotspot plans available</p>'}</div>
+    </div>`;
+
+    // ── Promo
+    const promoHtml = `<div class="pp-promo">
+        <div class="pp-promo-inner">
+            <div class="pp-promo-icon">🏠</div>
+            <div class="pp-promo-text">
+                <strong>Need Home WiFi?</strong>
+                <span>Professional installation from KSH 2,000/month</span>
+            </div>
+            <a href="tel:${phone}" class="pp-promo-btn">Call Now</a>
+        </div>
+    </div>`;
+
+    // ── Footer
+    const footerText = s.footer_text || `© ${new Date().getFullYear()} Bitwave Technologies. All rights reserved.`;
+    const footerHtml = `<div class="pp-footer">${footerText}</div>`;
+
+    // ── Status bar
+    const statusBarBg    = isHero ? p.primary : p.surface;
+    const statusTimeCol  = isHero ? '#fff' : p.text;
+    const statusBar = `<div class="pp-status-bar" style="background:${statusBarBg}">
+        <span class="pp-status-time" style="color:${statusTimeCol}">9:41</span>
+        <div class="pp-status-notch"></div>
+        <div class="pp-status-icons"><span>📶</span><span>🔋</span></div>
+    </div>`;
+
+    el.innerHTML = statusBar + announcementHtml + heroHtml + welcomeBannerHtml +
+        `<div class="pp-main">
+            ${adsHtml}
+            ${stepsHtml}
+            ${reconnectHtml}
+            ${voucherHtml}
+            ${dividerHtml}
+            <div style="margin-bottom:20px">${plansHtml}</div>
+            ${promoHtml}
+            ${footerHtml}
+        </div>`;
+
+    document.getElementById('toolbar-label').textContent =
+        `${title} · ${theme} · ${isHero ? 'hero' : 'standard'} · ${plans.length} hotspot plans`;
+
+    renderInfoPanel(mockData, p, theme, plans);
+}
+
+function renderInfoPanel(mockData, p, theme, visiblePlans) {
+    const s = mockData.portal_settings;
+    const r = mockData.router;
+    const allPlans = mockData.plans || [];
+    const hiddenCount = allPlans.length - visiblePlans.length;
+
+    const flags = [
+        s.show_welcome_banner && 'welcome banner',
+        s.show_ratings && 'ratings',
+        s.show_reconnect_button && 'reconnect',
+        s.show_social_links && 'social links',
+        s.show_announcement && 'announcement',
+        s.show_ads && 'ads',
+        s.show_plan_speed && 'plan speed',
+    ].filter(Boolean);
+
+    // Show only the plans actually rendered in the portal (filtered & transformed)
+    const planRows = visiblePlans.map(pl =>
+        `<div class="plan-mini">
+            <div class="plan-mini-name">${pl.duration} · ${pl.speed}</div>
+            <div class="plan-mini-meta">${pl.bestseller ? '🔥 bestseller' : pl.popular ? '⭐ popular' : 'regular'}</div>
+            <div class="plan-mini-price">${pl.price}</div>
+        </div>`
+    ).join('');
+
+    const hiddenNote = hiddenCount > 0
+        ? `<div style="font-size:11px;color:#555;padding:6px 0 0;text-align:center">${hiddenCount} plan(s) hidden (pppoe / hidden flag)</div>`
+        : '';
+
+    const pymethods = (r.payment_methods || []).map(m => `<span class="chip">${m}</span>`).join('');
+    const flagChips  = flags.map(f => `<span class="chip">${f}</span>`).join('');
+
+    document.getElementById('info-panel').innerHTML = `
+        <div class="info-card">
+            <h3>Router</h3>
+            <div class="info-row"><span class="info-key">Business name</span><span class="info-val"><strong>${r.business_name}</strong></span></div>
+            <div class="info-row"><span class="info-key">Identity</span><span class="info-val">${r.identity}</span></div>
+            <div class="info-row"><span class="info-key">Auth method</span><span class="info-val">${r.auth_method}</span></div>
+            <div class="info-row"><span class="info-key">Support phone</span><span class="info-val">${r.support_phone}</span></div>
+            <div class="info-row"><span class="info-key">Payment methods</span><span class="info-val"><span class="badge-row">${pymethods}</span></span></div>
+        </div>
+        <div class="info-card">
+            <h3>Portal Settings</h3>
+            <div class="info-row"><span class="info-key">Theme</span><span class="info-val"><span class="color-dot" style="background:${p.primary}"></span>${theme}</span></div>
+            <div class="info-row"><span class="info-key">Header style</span><span class="info-val">${s.header_style}</span></div>
+            <div class="info-row"><span class="info-key">Welcome title</span><span class="info-val">${s.welcome_title || '—'}</span></div>
+            <div class="info-row"><span class="info-key">Features on</span><span class="info-val"><span class="badge-row">${flagChips}</span></span></div>
+        </div>
+        <div class="info-card">
+            <h3>Visible Plans (${visiblePlans.length})</h3>
+            ${planRows || '<div style="font-size:11px;color:#555;padding:4px 0">No hotspot plans</div>'}
+            ${hiddenNote}
+        </div>`;
+}
+
+// Cycle through themes for quick visual comparison
+function cycleTheme() {
+    _themeIdx = (_themeIdx + 1) % THEME_NAMES.length;
+    renderPortal(MOCK_DATA, THEME_NAMES[_themeIdx]);
+}
+
+// Inject into sessionStorage and open index.html for full payment-flow testing
+function launchInPortal() {
+    try {
+        sessionStorage.setItem('__DEV_MOCK_PORTAL__', JSON.stringify(MOCK_DATA));
+    } catch(e) {
+        alert('sessionStorage not available.\nRun via a local server:\n  npm run dev\nthen open http://localhost:3000/dev-preview.html');
+        return;
+    }
+    const params = new URLSearchParams({
+        router: MOCK_DATA.router.identity,
+        mac: 'AA:BB:CC:11:22:33',
+        ip: '192.168.88.100',
+        gw: '192.168.88.1',
+        dst: 'http://google.com'
+    });
+    window.open('index.html?' + params.toString(), '_blank');
+}
+
+// Initial render
+renderPortal(MOCK_DATA);
+</script>
+</body>
+</html>

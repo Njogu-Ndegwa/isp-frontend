@@ -38,7 +38,7 @@
 <body>
     <div class="app">
         <!-- Floating Header -->
-        <header class="header">
+        <header class="header" id="portal-header">
             <div class="header-inner">
                 <a href="#" class="brand brand-loading" id="brandLink">
                     <span class="brand-icon">📡</span>
@@ -56,12 +56,23 @@
 
         <!-- Main Content -->
         <main class="main" id="mainContent">
+
+            <!-- Announcement banner — shown when show_announcement is true -->
+            <div id="announcement-banner" class="announcement-banner" data-type="info" style="display:none">
+                <span class="announcement-text"></span>
+            </div>
+
+            <!-- Welcome banner — shown when show_welcome_banner is true -->
+            <div id="welcome-banner" class="welcome-banner" style="display:none">
+                <h2 class="welcome-banner-title"></h2>
+                <p class="welcome-banner-sub"></p>
+            </div>
             
             <!-- Plans Section -->
             <section class="plans-section" id="plansSection">
                 
                 <!-- Featured Marketplace Ads - Horizontal Scroll -->
-                <div class="marketplace-showcase">
+                <div class="marketplace-showcase" id="ads-section">
                     <div class="showcase-header">
                         <span class="showcase-title" role="heading" aria-level="2">🛒 Soko Deals Today</span>
                         <span class="showcase-badge">AD</span>
@@ -99,7 +110,7 @@
                         </a>
                     </div>
                     <div class="scroll-hint">
-                        <span>← Swipe for more deals →</span>
+                        <span data-i18n="swipeHint">← Swipe for more deals →</span>
                     </div>
                 </div>
 
@@ -126,8 +137,8 @@
                     <div class="reconnect-header">
                         <span class="reconnect-header-icon">🔄</span>
                         <div class="reconnect-header-text">
-                            <div class="reconnect-header-title">Already paid? Reconnect</div>
-                            <div class="reconnect-header-subtitle">Enter your phone number or voucher code to get back online</div>
+                            <div class="reconnect-header-title" data-i18n="reconnectTitle">Already paid? Reconnect</div>
+                            <div class="reconnect-header-subtitle" data-i18n="reconnectSub">Enter your phone number or voucher code to get back online</div>
                         </div>
                     </div>
                     <div class="reconnect-body">
@@ -143,7 +154,7 @@
                                 inputmode="text"
                             >
                             <button type="button" class="reconnect-btn" id="reconnectBtn">
-                                <span class="reconnect-btn-text">Reconnect</span>
+                                <span class="reconnect-btn-text" data-i18n="reconnectBtn">Reconnect</span>
                             </button>
                         </div>
                         <p class="reconnect-hint" id="reconnectHint">Enter your M-Pesa phone number or voucher code</p>
@@ -199,7 +210,7 @@
 
                 <!-- M-Pesa Plans Section -->
                 <div id="mpesaSection">
-                    <h2 class="section-title">Choose Your Plan</h2>
+                    <h2 class="section-title" id="plans-section-title" data-i18n="choosePlan">Choose Your Plan</h2>
                     
                     <div class="plans-grid" id="plansGrid">
                         <!-- Skeleton loaders while loading -->
@@ -218,8 +229,23 @@
                             <strong>Need Home WiFi?</strong>
                             <span>Professional installation from KSH 2,000/month</span>
                         </div>
-                        <a href="tel:0795635364" class="promo-action">Call Now</a>
+                        <a href="tel:0795635364" class="promo-action" id="promo-call-btn" data-i18n="callNow">Call Now</a>
                     </div>
+                </div>
+
+                <!-- Social links — shown when show_social_links is true -->
+                <div id="social-links" class="social-links" style="display:none">
+                    <h3 class="social-links-heading" data-i18n="followUs">Follow Us</h3>
+                    <div class="social-links-row">
+                        <a href="#" class="social-link social-link--facebook" target="_blank" rel="noopener">Facebook</a>
+                        <a href="#" class="social-link social-link--whatsapp" target="_blank" rel="noopener">WhatsApp</a>
+                        <a href="#" class="social-link social-link--instagram" target="_blank" rel="noopener">Instagram</a>
+                    </div>
+                </div>
+
+                <!-- Ratings — shown when show_ratings is true -->
+                <div id="ratings-section" class="ratings-section" style="display:none">
+                    <p class="ratings-placeholder" data-i18n="ratingsLabel">How was your connection? ⭐⭐⭐⭐⭐</p>
                 </div>
 
                 <!-- ============================================
@@ -446,6 +472,11 @@
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- Portal footer text -->
+                <div class="portal-footer">
+                    <p id="portal-footer-text" class="portal-footer-text">© 2026 Bitwave Technologies. All rights reserved.</p>
                 </div>
 
                 <!-- Discreet account sign-in link.

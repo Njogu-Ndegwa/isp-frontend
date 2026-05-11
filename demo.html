@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading demo…</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: system-ui, sans-serif;
+            background: #0d0d0f;
+            color: #aaa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            font-size: 14px;
+        }
+        .msg { text-align: center; }
+        .msg span { display: block; margin-top: 8px; font-size: 11px; color: #555; }
+    </style>
+</head>
+<body>
+<div class="msg">
+    Setting up demo…
+    <span id="status"></span>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────
+// Mock portal responses keyed by router identity.
+// Add more routers here as needed.
+// ─────────────────────────────────────────────────────
+const DEMO_ROUTERS = {
+    "Router-0244": {
+        "router": {
+            "router_id": 112,
+            "name": "Acme Internet Service #5",
+            "identity": "Router-0244",
+            "user_id": 20,
+            "auth_method": "DIRECT_API",
+            "business_name": "Acme Internet Service",
+            "payment_methods": ["mpesa", "voucher"],
+            "support_phone": "+254712345678"
+        },
+        "plans": [
+            {
+                "id": 73, "name": "Test PPOE Plan", "speed": "5M/5M", "price": 1,
+                "duration_value": 10, "duration_unit": "MINUTES", "connection_type": "pppoe",
+                "router_profile": "default", "user_id": 20, "plan_type": "regular",
+                "is_hidden": false, "badge_text": null, "original_price": null,
+                "valid_until": null, "data_cap_mb": null, "fup_action": null, "fup_throttle_profile": null
+            },
+            {
+                "id": 90, "name": "10 Minute plan", "speed": "5M/5M", "price": 1,
+                "duration_value": 10, "duration_unit": "MINUTES", "connection_type": "hotspot",
+                "router_profile": "default", "user_id": 20, "plan_type": "regular",
+                "is_hidden": false, "badge_text": null, "original_price": null,
+                "valid_until": null, "data_cap_mb": null, "fup_action": null, "fup_throttle_profile": null
+            },
+            {
+                "id": 91, "name": "Test Plan", "speed": "5M/2M", "price": 50,
+                "duration_value": 1, "duration_unit": "HOURS", "connection_type": "pppoe",
+                "router_profile": "default", "user_id": 20, "plan_type": "regular",
+                "is_hidden": false, "badge_text": null, "original_price": null,
+                "valid_until": null, "data_cap_mb": null, "fup_action": null, "fup_throttle_profile": null
+            },
+            {
+                "id": 104, "name": "1 Day plan", "speed": "5M/5M", "price": 1,
+                "duration_value": 1, "duration_unit": "DAYS", "connection_type": "hotspot",
+                "router_profile": "default", "user_id": 20, "plan_type": "regular",
+                "is_hidden": false, "badge_text": null, "original_price": null,
+                "valid_until": null, "data_cap_mb": null, "fup_action": null, "fup_throttle_profile": null
+            }
+        ],
+        "ads": [],
+        "plan_flags": {
+            "has_emergency_plans": false,
+            "has_special_offers": false,
+            "emergency_mode_active": false,
+            "emergency_message": null
+        },
+        "portal_settings": {
+            "color_theme": "slate_gray",
+            "header_style": "hero",
+            "show_ads": false,
+            "show_welcome_banner": true,
+            "welcome_title": "Acme Internet Service",
+            "welcome_subtitle": null,
+            "company_logo_url": null,
+            "header_bg_image_url": "/images/presets/nature.webp",
+            "footer_text": null,
+            "portal_support_phone": "+254712345678",
+            "portal_support_whatsapp": null,
+            "show_ratings": true,
+            "show_reconnect_button": true,
+            "show_social_links": false,
+            "facebook_url": null,
+            "whatsapp_group_url": null,
+            "instagram_url": null,
+            "show_announcement": false,
+            "announcement_type": "info",
+            "announcement_text": null,
+            "portal_language": "en",
+            "plans_section_title": null,
+            "featured_plan_ids": null,
+            "show_plan_speed": true
+        }
+    }
+};
+
+// ─────────────────────────────────────────────────────
+// Read ?router= from URL, fall back to first entry
+// ─────────────────────────────────────────────────────
+const params   = new URLSearchParams(location.search);
+const identity = params.get('router') || Object.keys(DEMO_ROUTERS)[0];
+const mockData = DEMO_ROUTERS[identity];
+
+if (!mockData) {
+    document.querySelector('.msg').innerHTML =
+        `<strong style="color:#f87171">Unknown router: "${identity}"</strong><br>
+         <span>Available: ${Object.keys(DEMO_ROUTERS).map(k => `<code>${k}</code>`).join(', ')}</span>`;
+} else {
+    try {
+        sessionStorage.setItem('__DEMO_PORTAL__', JSON.stringify(mockData));
+        sessionStorage.removeItem('__DEV_MOCK_PORTAL__'); // clear dev badge if previously set
+    } catch (e) {
+        document.getElementById('status').textContent =
+            'sessionStorage blocked — open via http://localhost:3000, not file://';
+        throw e;
+    }
+
+    // Build the MikroTik-style redirect URL that index.html expects.
+    // Use './' (root) instead of 'index.html' — serve 301-redirects /index.html
+    // to /index and strips the query string in the process.
+    const dest = new URLSearchParams({
+        router: identity,
+        mac:    'AA:BB:CC:11:22:33',   // fake device MAC
+        ip:     '192.168.88.100',       // fake client IP
+        gw:     '192.168.88.1',         // fake gateway
+        dst:    'http://google.com'     // original destination
+    });
+
+    document.getElementById('status').textContent =
+        `Loaded "${mockData.router.business_name}" — redirecting…`;
+
+    // './' resolves to http://localhost:3000/ which serve serves directly
+    // without any redirect, keeping the query string intact.
+    location.replace('./' + '?' + dest.toString());
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "dev": "npx serve . --listen 3000 --no-clipboard"
+  },
+  "devDependencies": {
+    "sharp": "^0.34.5"
+  }
+}
