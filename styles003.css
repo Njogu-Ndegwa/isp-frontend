@@ -5196,6 +5196,11 @@ body::before {
    PORTAL SETTINGS SYSTEM — Theme-driven CSS variables
    ===================================================== */
 
+/* Smooth fade-in when the header transitions between standard ↔ hero */
+#portal-header {
+    transition: opacity 0.2s ease;
+}
+
 /* ---- Standard Header ---- */
 .portal-header--standard {
     position: sticky;
@@ -5263,11 +5268,12 @@ body::before {
     max-width: 600px;
     margin: 0 auto;
     color: #fff;
+    text-align: center;
 }
 .hero-wifi-icon { width: 48px; height: 36px; margin-bottom: 8px; }
 .hero-title { font-size: 24px; font-weight: 800; margin: 0 0 4px; color: #fff; }
 .hero-subtitle { font-size: 14px; margin: 0 0 12px; opacity: 0.85; color: #fff; }
-.hero-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.hero-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; justify-content: center; }
 .hero-pill {
     padding: 4px 10px;
     border-radius: 20px;

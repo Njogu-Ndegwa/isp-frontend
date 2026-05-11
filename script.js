@@ -337,30 +337,11 @@ async function fetchPortalData(identity) {
     }
 }
 
-// ========================================
-// PLAN CACHING (localStorage)
-// ========================================
-const PLANS_CACHE_KEY = 'isp_cached_plans';
-const PLANS_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
-
-function getCachedPlans() {
-    try {
-        const raw = localStorage.getItem(PLANS_CACHE_KEY);
-        if (!raw) return null;
-        const { plans, ts } = JSON.parse(raw);
-        if (Date.now() - ts > PLANS_CACHE_TTL) {
-            localStorage.removeItem(PLANS_CACHE_KEY);
-            return null;
-        }
-        return plans;
-    } catch { return null; }
-}
-
-function cachePlans(plans) {
-    try {
-        localStorage.setItem(PLANS_CACHE_KEY, JSON.stringify({ plans, ts: Date.now() }));
-    } catch { /* quota exceeded - ignore */ }
-}
+// Plans are always fetched fresh from the backend — never read from or written
+// to localStorage.  Any previously cached plans are purged on first load.
+(function clearLegacyPlanCache() {
+    try { localStorage.removeItem('isp_cached_plans'); } catch {}
+})();
 
 // Bestseller plan ID - highlighted and shown first (updated from API if is_bestseller flag present)
 let BESTSELLER_PLAN_ID = 13;
@@ -583,8 +564,28 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 [ROUTER DEBUG] DOM CONTENT LOADED - INITIALIZATION');
     console.log('═══════════════════════════════════════════════════════');
 
-    // Apply default theme immediately for first-paint colours
-    applyTheme('sunset_orange');
+    // ── Instant render from cache ──────────────────────────────────────────────
+    // Apply the last-known full portal settings (theme, header style, branding,
+    // feature flags) so returning users see the correct UI on the very first
+    // paint — before the API responds.  Falls back to a neutral slate_gray theme
+    // on a first visit so there is no sunset-orange flash.
+    try {
+        const rawSettings = localStorage.getItem('_cached_portal_settings');
+        if (rawSettings) {
+            applyPortalSettings(JSON.parse(rawSettings));
+        } else {
+            applyTheme('slate_gray');
+        }
+    } catch {
+        applyTheme('slate_gray');
+    }
+
+    // Apply cached payment-method flags so the plans / voucher sections render
+    // correctly from the first frame (before router data comes back).
+    try {
+        const rawMethods = localStorage.getItem('_cached_payment_methods');
+        if (rawMethods) applyPaymentMethods(JSON.parse(rawMethods));
+    } catch { /* ignore — HTML defaults (mpesa visible, voucher hidden) are safe */ }
 
     // Check for saved RADIUS credentials from a previous payment session
     checkSavedRadiusLogin();
@@ -604,13 +605,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const routerIdentity = mikrotikParams.router || 'MikroTik';
     console.log('📍 Router identity:', `"${routerIdentity}"`);
 
-    // Show cached plans instantly so users see something while portal data loads
-    const cachedPlans = getCachedPlans();
-    if (cachedPlans) {
-        console.log('⚡ Showing cached plans while portal data loads...');
-        displayPlans(cachedPlans);
-    }
-
     // Single portal fetch — router + plans + ads in one request
     // Falls back to individual endpoints if the portal endpoint fails
     window.portalDataPromise = fetchPortalData(routerIdentity)
@@ -625,6 +619,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('✅ [PORTAL] Router resolved — id:', routerId, 'auth:', routerAuthMethod, 'methods:', routerPaymentMethods);
                 updateBranding();
                 applyPaymentMethods(routerPaymentMethods);
+                try { localStorage.setItem('_cached_payment_methods', JSON.stringify(routerPaymentMethods)); } catch {}
                 updateSupportPhone(data.router.support_phone);
             }
 
@@ -641,10 +636,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (apiBestseller) {
                     BESTSELLER_PLAN_ID = apiBestseller.id;
                 }
-                cachePlans(data.plans);
                 displayPlans(data.plans);
                 console.log('✅ [PORTAL] Plans loaded:', data.plans.length);
-            } else if (!cachedPlans) {
+            } else {
                 showPlansError();
             }
 
@@ -681,13 +675,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 const freshPlans = await fetchPlansFromAPI(routerId);
-                cachePlans(freshPlans);
                 displayPlans(freshPlans);
             } catch (err) {
                 console.warn('⚠️ Plans fallback failed:', err.message);
-                if (!cachedPlans) {
-                    showPlansError();
-                }
+                showPlansError();
             }
         })
         .finally(() => {
@@ -697,9 +688,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('🔓 Pay button ENABLED');
             }
 
-            // Safety net: always clear the header skeleton regardless of API outcome.
-            // updateBranding() already handles the happy path; this covers every
-            // failure/null-business-name scenario so the shimmer never stays forever.
+            // Safety net: clear the loading shimmer on the standard header
+            // and fill in a fallback name so the header never stays blank.
             const brandLink = document.getElementById('brandLink');
             if (brandLink) brandLink.classList.remove('brand-loading');
             const logoEl = document.querySelector('.logo');
@@ -839,15 +829,40 @@ function wifiSvgHtml() {
 }
 
 function renderStandardHeader(settings) {
-    // Preserve the existing header HTML exactly — the original design is already
-    // correct. Just update the help-button href with the resolved phone number.
+    const header = document.getElementById('portal-header');
+    if (!header) return;
+
+    // If the header was previously rendered as a hero (e.g. from cached settings
+    // that have since been changed to standard), rebuild the standard HTML.
+    if (header.classList.contains('portal-header--hero')) {
+        const name  = escapeHtml(settings.welcome_title || '');
+        const phone = settings.portal_support_phone || '';
+        header.className = 'header';
+        header.innerHTML = `
+            <div class="header-inner">
+                <a href="#" class="brand ${name ? '' : 'brand-loading'}" id="brandLink">
+                    <span class="brand-icon">📡</span>
+                    <div class="brand-text">
+                        <h1 class="logo">${name}</h1>
+                        <span class="tagline">Public WiFi</span>
+                    </div>
+                </a>
+                <a href="${phone ? 'tel:' + phone : '#'}" class="help-btn">
+                    <span class="help-icon">📞</span>
+                    <span class="help-text" data-i18n="helpBtn">Help</span>
+                </a>
+            </div>`;
+        // Re-attach the brand-link reset behaviour after innerHTML was replaced
+        setupBrandLink();
+        return;
+    }
+
+    // Standard header already rendered — just update the phone link
     const phone = settings.portal_support_phone;
     if (phone) {
-        const helpBtn = document.querySelector('.help-btn');
+        const helpBtn = header.querySelector('.help-btn');
         if (helpBtn) helpBtn.href = `tel:${phone}`;
     }
-    // Brand name is handled by the existing updateBranding() call.
-    // No className or innerHTML changes — the original header layout stays intact.
 }
 
 function renderHeroHeader(settings) {
@@ -856,7 +871,20 @@ function renderHeroHeader(settings) {
     const palette = THEMES[settings.color_theme] || THEMES.sunset_orange;
     const title = settings.welcome_title || window._routerBusinessName || 'Welcome';
     const subtitle = settings.welcome_subtitle || 'Fast & Reliable Internet Access';
-    const bgUrl = isSafeImageUrl(settings.header_bg_image_url) ? settings.header_bg_image_url : null;
+
+    // Portal runs behind a walled garden — external URLs will never load.
+    // Always use a bundled local preset.  If the configured URL contains a
+    // known preset keyword (city/cafe/nature/people/tech) honour that choice;
+    // otherwise default to 'city'.
+    const PRESETS = ['city', 'cafe', 'nature', 'people', 'tech'];
+    const configuredUrl = (settings.header_bg_image_url || '').toLowerCase();
+    const preset = PRESETS.find(p => configuredUrl.includes(p)) || 'city';
+
+    const picHtml = `
+        <picture class="hero-bg-img">
+            <source srcset="images/presets/${preset}.webp" type="image/webp">
+            <img src="images/presets/${preset}.jpg" alt="" aria-hidden="true" decoding="async" fetchpriority="high">
+        </picture>`;
 
     const supportHtml = settings.portal_support_whatsapp
         ? `<a href="https://wa.me/${settings.portal_support_whatsapp}" class="hero-support-btn hero-support-btn--whatsapp" target="_blank" rel="noopener">
@@ -865,24 +893,6 @@ function renderHeroHeader(settings) {
         : `<a href="${settings.portal_support_phone ? 'tel:' + settings.portal_support_phone : '#'}" class="hero-support-btn">
                <span>📞</span> Call Support
            </a>`;
-
-    let picHtml = '';
-    if (bgUrl) {
-        const presetMatch = bgUrl.match(/\/(city|people|nature|cafe|tech)\.webp/i);
-        if (presetMatch) {
-            const name = presetMatch[1].toLowerCase();
-            picHtml = `
-                <picture class="hero-bg-img">
-                    <source srcset="/images/presets/${name}.webp" type="image/webp">
-                    <img src="/images/presets/${name}.jpg" alt="" aria-hidden="true" decoding="async">
-                </picture>`;
-        } else {
-            picHtml = `
-                <picture class="hero-bg-img">
-                    <img src="${bgUrl}" alt="" aria-hidden="true" decoding="async">
-                </picture>`;
-        }
-    }
 
     header.className = 'portal-header portal-header--hero';
     header.innerHTML = `
@@ -902,10 +912,12 @@ function renderHeroHeader(settings) {
 
     const img = header.querySelector('.hero-bg-img img');
     if (img) {
-        if (img.complete) {
-            img.closest('picture').classList.add('loaded');
+        const markLoaded = () => img.closest('picture').classList.add('loaded');
+        if (img.complete && img.naturalWidth > 0) {
+            markLoaded();
         } else {
-            img.addEventListener('load', () => img.closest('picture').classList.add('loaded'));
+            img.addEventListener('load', markLoaded);
+            img.addEventListener('error', markLoaded); // gradient-only fallback (local file missing)
         }
     }
 }
@@ -922,6 +934,9 @@ function renderHeader(settings) {
 // FEATURE FLAGS — show/hide portal sections
 // ========================================
 function applyFeatureFlags(settings) {
+    // Expose show_ads flag globally so ads.js can respect it during its own init
+    window._portalShowAds = !!settings.show_ads;
+
     const adsSection = document.getElementById('ads-section');
     if (adsSection) {
         const showAds = settings.show_ads && window._portalAds && window._portalAds.length > 0;
@@ -1091,6 +1106,10 @@ function applyLanguage(lang) {
 // ========================================
 function applyPortalSettings(settings) {
     applyTheme(settings.color_theme || 'sunset_orange');
+    // Persist the full settings object so the next page load renders
+    // the correct theme, header style, branding, and feature flags
+    // instantly — before the API responds (stale-while-revalidate).
+    try { localStorage.setItem('_cached_portal_settings', JSON.stringify(settings)); } catch {}
     renderHeader(settings);
     applyFeatureFlags(settings);
     applyBranding(settings);
@@ -1327,25 +1346,13 @@ async function fetchPlansFromAPI(rId) {
 }
 
 async function loadPlans(rId) {
-    // 1. Instant display from cache (zero latency for returning users)
-    const cached = getCachedPlans();
-    if (cached) {
-        console.log('⚡ Rendering cached plans instantly');
-        displayPlans(cached);
-    }
-
-    // 2. Fetch fresh plans from API
     try {
         const freshPlans = await fetchPlansFromAPI(rId);
-        cachePlans(freshPlans);
         displayPlans(freshPlans);
         console.log('✅ Plans loaded from API:', freshPlans.length);
     } catch (error) {
         console.warn('⚠️ API plan fetch failed:', error.message);
-
-        if (!cached) {
-            showPlansError();
-        }
+        showPlansError();
     }
 }
 
@@ -1356,7 +1363,6 @@ async function forceRefreshPlans() {
         <div class="skeleton-card"></div>
         <div class="skeleton-card"></div>
     `;
-    localStorage.removeItem(PLANS_CACHE_KEY);
     return loadPlans(routerId);
 }
 

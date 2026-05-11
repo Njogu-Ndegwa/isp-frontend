@@ -382,11 +382,14 @@ async function fetchAds() {
         console.log('📊 Pagination:', apiResponse.pagination);
         
         if (Array.isArray(apiAds) && apiAds.length > 0) {
-            // Apply local images for configured ads (use frontend as primary storage)
             adsData = applyLocalImages(apiAds);
-            showAdSections();
-            renderAds(adsData);
-            recordImpression(adsData.map(ad => ad.id));
+            if (window._portalShowAds === false) {
+                hideAdSections();
+            } else {
+                showAdSections();
+                renderAds(adsData);
+                recordImpression(adsData.map(ad => ad.id));
+            }
             return adsData;
         }
         
@@ -408,53 +411,50 @@ async function fetchAds() {
 
 // ========================================
 // HIDE AD SECTIONS (when no ads available)
-// Keeps the showcase with CTA card visible for advertisers
+// When show_ads is off, hides everything including CTA card.
+// When show_ads is on but no actual ads exist, shows CTA card for advertisers.
 // ========================================
 function hideAdSections() {
-    // Keep marketplace showcase visible but show only CTA card
     const showcaseSection = document.querySelector('.marketplace-showcase');
     const showcaseScroll = document.getElementById('showcaseScroll');
-    
+
+    // When the portal explicitly disables ads, hide the entire showcase — no CTA card shown.
+    if (window._portalShowAds === false) {
+        if (showcaseSection) showcaseSection.style.display = 'none';
+        const inlinePromo = document.querySelector('.inline-promo');
+        if (inlinePromo) inlinePromo.style.display = 'none';
+        const paymentAd = document.querySelector('.payment-ad');
+        if (paymentAd) paymentAd.style.display = 'none';
+        const successAds = document.querySelector('.success-ads');
+        if (successAds) successAds.style.display = 'none';
+        console.log('🙈 Ads disabled by portal settings — all ad sections hidden');
+        return;
+    }
+
+    // Ads are allowed but none are available — keep showcase with CTA card for advertisers
     if (showcaseSection && showcaseScroll) {
-        // Show the showcase section
         showcaseSection.style.display = '';
         
-        // Remove skeleton loaders and product cards, keep only CTA card
         const existingCards = showcaseScroll.querySelectorAll('.product-card:not(.ad-cta-card), .ad-skeleton');
         existingCards.forEach(card => card.remove());
         
-        // Hide the scroll hint since there's nothing to scroll
         const scrollHint = showcaseSection.querySelector('.scroll-hint');
-        if (scrollHint) {
-            scrollHint.style.display = 'none';
-        }
+        if (scrollHint) scrollHint.style.display = 'none';
         
-        // Update the showcase title to encourage advertisers
         const showcaseTitle = showcaseSection.querySelector('.showcase-title');
-        if (showcaseTitle) {
-            showcaseTitle.textContent = '📢 Advertise Here';
-        }
+        if (showcaseTitle) showcaseTitle.textContent = '📢 Advertise Here';
         
         console.log('📢 Showing CTA card for advertisers');
     }
     
-    // Hide inline promo
     const inlinePromo = document.querySelector('.inline-promo');
-    if (inlinePromo) {
-        inlinePromo.style.display = 'none';
-    }
+    if (inlinePromo) inlinePromo.style.display = 'none';
     
-    // Hide payment ad section
     const paymentAd = document.querySelector('.payment-ad');
-    if (paymentAd) {
-        paymentAd.style.display = 'none';
-    }
+    if (paymentAd) paymentAd.style.display = 'none';
     
-    // Hide success page ads
     const successAds = document.querySelector('.success-ads');
-    if (successAds) {
-        successAds.style.display = 'none';
-    }
+    if (successAds) successAds.style.display = 'none';
     
     console.log('🙈 Ad content sections hidden (CTA visible)');
 }
@@ -463,41 +463,31 @@ function hideAdSections() {
 // SHOW ALL AD SECTIONS (when ads are available)
 // ========================================
 function showAdSections() {
-    // Show marketplace showcase section
+    // Never show ads if the portal has disabled them
+    if (window._portalShowAds === false) {
+        hideAdSections();
+        return;
+    }
+
     const showcaseSection = document.querySelector('.marketplace-showcase');
     if (showcaseSection) {
         showcaseSection.style.display = '';
         
-        // Restore original title
         const showcaseTitle = showcaseSection.querySelector('.showcase-title');
-        if (showcaseTitle) {
-            showcaseTitle.textContent = '🛒 Soko Deals Today';
-        }
+        if (showcaseTitle) showcaseTitle.textContent = '🛒 Soko Deals Today';
         
-        // Show scroll hint
         const scrollHint = showcaseSection.querySelector('.scroll-hint');
-        if (scrollHint) {
-            scrollHint.style.display = '';
-        }
+        if (scrollHint) scrollHint.style.display = '';
     }
     
-    // Show inline promo
     const inlinePromo = document.querySelector('.inline-promo');
-    if (inlinePromo) {
-        inlinePromo.style.display = '';
-    }
+    if (inlinePromo) inlinePromo.style.display = '';
     
-    // Show payment ad section
     const paymentAd = document.querySelector('.payment-ad');
-    if (paymentAd) {
-        paymentAd.style.display = '';
-    }
+    if (paymentAd) paymentAd.style.display = '';
     
-    // Show success page ads
     const successAds = document.querySelector('.success-ads');
-    if (successAds) {
-        successAds.style.display = '';
-    }
+    if (successAds) successAds.style.display = '';
     
     console.log('👁️ All ad sections visible');
 }
