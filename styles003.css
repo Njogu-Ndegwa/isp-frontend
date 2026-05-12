@@ -88,7 +88,7 @@ body::before {
     right: 0;
     bottom: 0;
     background: 
-        radial-gradient(circle at 20% 80%, rgba(var(--primary-rgb), 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 20% 80%, var(--pt-03) 0%, transparent 50%),
         radial-gradient(circle at 80% 20%, rgba(var(--accent-rgb), 0.05) 0%, transparent 50%);
     pointer-events: none;
     z-index: -1;
@@ -252,7 +252,7 @@ body::before {
     margin: var(--space-md) calc(-1 * var(--space-md)) var(--space-lg);
     background: linear-gradient(135deg, var(--bg-warm) 0%, var(--bg) 100%);
     padding: var(--space-md) 0;
-    border-bottom: 1px solid rgba(var(--primary-rgb), 0.1);
+    border-bottom: 1px solid var(--pt-10);
     /* Prevent layout shift - reserve space for carousel */
     min-height: 220px;
 }
@@ -395,7 +395,7 @@ body::before {
 
 /* Ad CTA Card - Minimal placeholder style */
 .product-card.ad-cta-card {
-    background: rgba(var(--primary-rgb), 0.03);
+    background: var(--pt-03);
     border: 2px dashed rgba(var(--primary-rgb), 0.25);
     display: flex;
     align-items: center;
@@ -407,7 +407,7 @@ body::before {
 
 .product-card.ad-cta-card:hover {
     border-color: var(--primary);
-    background: rgba(var(--primary-rgb), 0.07);
+    background: var(--pt-07);
 }
 
 .ad-cta-content {
@@ -419,7 +419,7 @@ body::before {
     width: 40px;
     height: 40px;
     margin: 0 auto var(--space-sm);
-    background: rgba(var(--primary-rgb), 0.12);
+    background: var(--pt-12);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -649,7 +649,7 @@ body::before {
     font-weight: 700;
     color: var(--primary);
     padding: 5px 14px;
-    background: rgba(var(--primary-rgb), 0.15);
+    background: var(--pt-15);
     border-radius: var(--radius-full);
     white-space: nowrap;
 }
@@ -710,7 +710,7 @@ body::before {
     align-items: center;
     gap: var(--space-md);
     padding: var(--space-md);
-    background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.1) 0%, rgba(var(--primary-rgb), 0.18) 100%);
+    background: linear-gradient(135deg, var(--pt-10) 0%, var(--pt-18) 100%);
     border-bottom: 1px solid rgba(var(--primary-rgb), 0.28);
 }
 
@@ -1011,32 +1011,6 @@ body::before {
 /* ========================================
    Reconnect Section — Per-Theme Overrides
    ======================================== */
-
-/* slate_gray: primary is near-neutral gray so the tinted header barely reads
-   against white. Use info-blue (matching the admin portal preview) — reconnect
-   is a utility action, not commerce, so blue reads correctly here. */
-[data-theme="slate_gray"] .reconnect-section {
-    border-color: #60a5fa; /* blue-400 — same as admin portal preview */
-    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.14);
-}
-
-[data-theme="slate_gray"] .reconnect-header {
-    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); /* blue-50 → blue-100 */
-    border-bottom: 1px solid rgba(96, 165, 250, 0.2);
-}
-
-[data-theme="slate_gray"] .reconnect-header-title {
-    color: var(--text); /* plain dark text — same as admin */
-}
-
-[data-theme="slate_gray"] .reconnect-btn {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); /* blue-500 → blue-600 */
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-}
-
-[data-theme="slate_gray"] .reconnect-btn:hover {
-    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
-}
 
 /* ========================================
    Voucher Section
@@ -1841,7 +1815,7 @@ body::before {
 
 /* Processing Details Card */
 .processing-details-card {
-    background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.05) 0%, rgba(var(--primary-rgb), 0.1) 100%);
+    background: linear-gradient(135deg, var(--pt-05) 0%, var(--pt-10) 100%);
     border-radius: var(--radius-lg);
     padding: var(--space-lg);
     margin-bottom: var(--space-lg);

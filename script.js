@@ -799,8 +799,23 @@ function applyTheme(themeName) {
         const h = hex.replace('#', '');
         return `${parseInt(h.slice(0,2),16)}, ${parseInt(h.slice(2,4),16)}, ${parseInt(h.slice(4,6),16)}`;
     };
-    root.style.setProperty('--primary-rgb', hexRgb(palette.primary));
+    const rgb = hexRgb(palette.primary);
+    root.style.setProperty('--primary-rgb', rgb);
     root.style.setProperty('--accent-rgb',  hexRgb(palette.accent));
+
+    // Precomputed tint variables — slate_gray's primary is near-neutral so we
+    // scale opacity up (2.8×) to achieve the same visual weight as saturated
+    // primaries.  All other themes use 1× (unchanged).  CSS background tints
+    // reference these vars so the whole page adapts automatically.
+    const tintScale = (themeName === 'slate_gray') ? 2.8 : 1;
+    const tint = (base) => `rgba(${rgb}, ${Math.min(+(base * tintScale).toFixed(3), 0.42)})`;
+    root.style.setProperty('--pt-03', tint(0.03));
+    root.style.setProperty('--pt-05', tint(0.05));
+    root.style.setProperty('--pt-07', tint(0.07));
+    root.style.setProperty('--pt-10', tint(0.10));
+    root.style.setProperty('--pt-12', tint(0.12));
+    root.style.setProperty('--pt-15', tint(0.15));
+    root.style.setProperty('--pt-18', tint(0.18));
 
     document.documentElement.dataset.theme = themeName;
 }
