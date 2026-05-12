@@ -5385,3 +5385,50 @@ body::before {
     margin: 0;
 }
 
+/* =====================================================
+   DESKTOP / LAPTOP — captive portal as a centred card
+   On mobile the portal fills the full screen as normal.
+   On wider screens it floats as a phone-sized card so
+   the hero header doesn't stretch across a 1400 px
+   display while the content below sits in a 600 px strip.
+   ===================================================== */
+@media (min-width: 768px) {
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 40px 24px 60px;
+    }
+
+    .app {
+        width: 100%;
+        max-width: 480px;
+        min-height: calc(100vh - 100px);
+        border-radius: 20px;
+        box-shadow:
+            0 24px 64px rgba(0, 0, 0, 0.14),
+            0 8px 24px rgba(0, 0, 0, 0.08);
+        /*
+         * overflow: clip — clips the hero background image and content to the
+         * rounded card corners WITHOUT creating a scroll container, so
+         * position: sticky on .header / .portal-header--standard still works.
+         */
+        overflow: clip;
+        align-self: flex-start;
+        background: var(--bg, #FFFCF2);
+    }
+
+    /* A bit more height feels right when the hero is inside a card */
+    .portal-header--hero {
+        min-height: 280px;
+    }
+
+    .hero-title    { font-size: 28px; }
+    .hero-subtitle { font-size: 15px; }
+
+    /* The card handles centering — main fills its full width */
+    .main {
+        max-width: 100%;
+    }
+}
+
