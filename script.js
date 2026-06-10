@@ -2376,6 +2376,10 @@ async function handlePayment(e) {
         if (paymentResponse && paymentResponse.payment_in_progress) {
             console.log('⏳ Resuming wait on in-flight payment (no second charge)');
             showPaymentPendingMessage(phoneNumber, selectedPlan);
+            // They already entered their PIN — show confirmation copy instead
+            if (processingSubtext) {
+                processingSubtext.textContent = 'Your payment is being confirmed. Please do not pay again — you will be connected automatically as soon as M-Pesa confirms.';
+            }
             hideSection(paymentSection);
             showSection(processingSection);
             window.scrollTo({ top: 0, behavior: 'smooth' });
