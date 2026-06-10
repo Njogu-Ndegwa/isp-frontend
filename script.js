@@ -120,7 +120,10 @@ let routerSupportPhone = '0795635364'; // Default — updated from portal/router
 
 // Payment polling configuration
 const PAYMENT_POLL_INTERVAL = 3000; // Poll every 3 seconds
-const PAYMENT_POLL_MAX_ATTEMPTS = 20; // Max 60 seconds (20 * 3s)
+// Max 120 seconds (40 * 3s). The backend rescues lost Safaricom callbacks at
+// ~30-50s (on-demand STK query during status polling) and ~60-150s (background
+// sweep) — giving up at 60s made customers think payment failed and pay again.
+const PAYMENT_POLL_MAX_ATTEMPTS = 40;
 
 // TEMPORARY: Use CORS proxy for development/testing ONLY if backend CORS is not configured
 // Remove this in production once backend adds proper CORS headers!
@@ -2367,8 +2370,19 @@ async function handlePayment(e) {
         // Step 1: Initiate payment
         const paymentResponse = await processPayment(phoneNumber, selectedPlan);
         console.log('✅ Payment initiated:', paymentResponse);
-        
-        
+
+        // Backend refused a duplicate charge (409) — resume waiting on the
+        // existing in-flight payment instead of treating it as an error
+        if (paymentResponse && paymentResponse.payment_in_progress) {
+            console.log('⏳ Resuming wait on in-flight payment (no second charge)');
+            showPaymentPendingMessage(phoneNumber, selectedPlan);
+            hideSection(paymentSection);
+            showSection(processingSection);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            await pollPaymentStatusAndLogin(paymentResponse.customer_id, phoneNumber, selectedPlan);
+            return;
+        }
+
         // If backend returned RADIUS credentials immediately (already-active customer),
         // skip polling and go straight to auto-login
         if (paymentResponse.radius_username && paymentResponse.radius_password && paymentResponse.status === 'active') {
@@ -2513,7 +2527,21 @@ async function processPayment(phoneNumber, plan) {
             console.error('🚨 This indicates the backend might be overriding the router_id');
         }
         console.log('═══════════════════════════════════════════════════════');
-    
+
+        // 409 = backend refused a duplicate charge (payment already in flight).
+        // Not an error — the caller should resume waiting on the existing payment.
+        if (response.status === 409) {
+            const detail = responseData.detail || {};
+            if (detail.status === 'payment_in_progress' && detail.customer_id) {
+                console.log('⏳ Payment already in progress for customer', detail.customer_id);
+                return {
+                    payment_in_progress: true,
+                    customer_id: detail.customer_id,
+                    message: detail.message,
+                };
+            }
+        }
+
     if (!response.ok) {
             throw new Error(responseData.message || responseData.error || 'Payment failed. Please try again.');
         }
@@ -2812,7 +2840,7 @@ function showPaymentPendingMessage(phoneNumber, plan) {
         processingTitle.textContent = 'Check Your Phone';
     }
     if (processingSubtext) {
-        processingSubtext.textContent = 'Enter your M-Pesa PIN to complete payment';
+        processingSubtext.textContent = 'Enter your M-Pesa PIN to complete payment. Confirmation can take up to a minute or two — please do not pay again.';
     }
     
     // Update plan info card
