@@ -368,9 +368,12 @@
         }
 
         // The router has whitelisted the MAC — the device is already online.
-        // We don't auto-redirect: the existing "Start Browsing" button on the
-        // success screen handles that, mirroring how the M-Pesa / voucher
-        // flows behave.
+        // Auto-fire the "Start Browsing" action (same as the M-Pesa / voucher
+        // flows) so the captive sheet dismisses without a manual tap. The
+        // visible button remains as a fallback. Helper is defined in script.js.
+        if (typeof window.scheduleAutoStartBrowsing === 'function') {
+            window.scheduleAutoStartBrowsing();
+        }
     }
 
     function renderConnectionDetails(data) {

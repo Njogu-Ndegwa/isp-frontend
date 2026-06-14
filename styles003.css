@@ -1960,6 +1960,26 @@ body::before {
     font-weight: 600;
 }
 
+/* Auto "Start Browsing" progress bar — fills over the redirect delay so the
+   automatic navigation to the captive-portal escape URL never feels abrupt. */
+.auto-browse-progress {
+    width: 100%;
+    max-width: 320px;
+    height: 4px;
+    margin: var(--space-md) auto 0;
+    background: rgba(0, 0, 0, 0.08);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.auto-browse-progress-fill {
+    width: 0;
+    height: 100%;
+    background: var(--success);
+    border-radius: 999px;
+    transition: width 1500ms linear;
+}
+
 /* Connection Card */
 .connection-card {
     background: var(--surface);

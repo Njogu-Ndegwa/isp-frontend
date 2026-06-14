@@ -1986,6 +1986,7 @@ async function handleVoucherRedeem() {
         showSection(successSection);
         showVoucherSuccessDetails(data);
         window.scrollTo({ top: 0, behavior: 'smooth' });
+        scheduleAutoStartBrowsing();
 
     } catch (err) {
         console.error('❌ [VOUCHER] Redeem failed:', err.message);
@@ -2249,9 +2250,11 @@ function showReconnectSuccess(data) {
     result.classList.remove('hidden');
 
     // RADIUS auto-login if credentials present
+    let radiusRedirecting = false;
     if (data.radius_username && data.radius_password) {
         const loginUrl = buildRadiusLoginUrl(mikrotikParams.gw, data.radius_username, data.radius_password, mikrotikParams.dst);
         if (loginUrl) {
+            radiusRedirecting = true;
             try {
                 localStorage.setItem('bitwave_last_radius_login', JSON.stringify({
                     loginUrl, username: data.radius_username,
@@ -2266,6 +2269,9 @@ function showReconnectSuccess(data) {
             setTimeout(() => { window.location.href = loginUrl; }, 2500);
         }
     }
+
+    // DIRECT_API reconnect: no RADIUS redirect in play, so auto-fire "Start Browsing".
+    if (!radiusRedirecting) scheduleAutoStartBrowsing();
 }
 
 function showReconnectError(message) {
@@ -2669,7 +2675,11 @@ async function pollPaymentStatusAndLogin(customerId, phoneNumber, plan) {
                     
                     // Show final success message (for non-RADIUS or if auto-login not possible)
                     showAuthenticatedMessage(phoneNumber, plan, data);
-                    
+
+                    // DIRECT_API only: device is already authorised, so auto-fire
+                    // the "Start Browsing" action (RADIUS handles its own redirect).
+                    if (!isRadiusRouter) scheduleAutoStartBrowsing();
+
                     resolve(data);
                 } else if (data.status === 'pending') {
                     // Payment is still pending
@@ -2822,6 +2832,58 @@ function showSection(section) {
 function hideSection(section) {
     section.classList.add('hidden');
 }
+
+// ========================================
+// AUTO "START BROWSING" — after a DIRECT_API success the device MAC is already
+// authorised, so we replicate the manual "Start Browsing" tap automatically:
+// navigating to a normal http URL makes the phone's OS detect connectivity and
+// dismiss the captive-portal sheet (landing the user on Wi-Fi settings).  The
+// visible button is kept as a fallback in case the OS blocks auto-navigation.
+// One-shot guarded so it can never double-fire across success paths.
+// ========================================
+let _autoBrowseScheduled = false;
+function scheduleAutoStartBrowsing(delayMs = 1500) {
+    if (_autoBrowseScheduled) return;
+    _autoBrowseScheduled = true;
+
+    // Single-source the URL from whichever success button is on screen.
+    const btn = document.getElementById('startBrowsingBtn')
+             || document.querySelector('.reconnect-browse-btn');
+
+    // Thin progress bar so the auto-redirect doesn't feel abrupt — it fills over
+    // the same delay, then we navigate. Sits under the success headline on the
+    // main card, or just above the button on the reconnect card.
+    if (!document.getElementById('autoBrowseProgress')) {
+        const bar = document.createElement('div');
+        bar.id = 'autoBrowseProgress';
+        bar.className = 'auto-browse-progress';
+        bar.setAttribute('role', 'progressbar');
+        bar.setAttribute('aria-label', 'Connecting you to the internet');
+        const fill = document.createElement('div');
+        fill.className = 'auto-browse-progress-fill';
+        bar.appendChild(fill);
+
+        const heroAnchor = document.querySelector('#successSection:not(.hidden) .success-hero .success-subtext');
+        if (heroAnchor && heroAnchor.parentNode) {
+            heroAnchor.parentNode.insertBefore(bar, heroAnchor.nextSibling);
+        } else if (btn && btn.parentNode) {
+            btn.parentNode.insertBefore(bar, btn);
+        }
+
+        // Kick off the fill on the next frame so the CSS transition animates.
+        requestAnimationFrame(() => {
+            fill.style.transitionDuration = delayMs + 'ms';
+            fill.style.width = '100%';
+        });
+    }
+
+    setTimeout(() => {
+        const target = (btn && btn.getAttribute('href')) || 'http://google.com';
+        console.log('📶 [AUTO-BROWSE] Redirecting to dismiss captive portal:', target);
+        window.location.href = target;
+    }, delayMs);
+}
+window.scheduleAutoStartBrowsing = scheduleAutoStartBrowsing;
 
 function setLoadingState(isLoading) {
     if (isLoading) {
