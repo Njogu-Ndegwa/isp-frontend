@@ -67,8 +67,7 @@ window.dumpRadiusLogin = function() {
 let planFlags = {
     has_emergency_plans: false,
     has_special_offers: false,
-    emergency_mode_active: false,
-    sharing_enabled: false
+    emergency_mode_active: false
 };
 
 // Portal settings — populated from portal API response
@@ -103,7 +102,6 @@ const ROUTER_LOOKUP_ENDPOINT = `${API_BASE_URL}/routers/by-identity`;
 // Voucher endpoints (public, no auth)
 const VOUCHER_VERIFY_ENDPOINT = `${API_BASE_URL}/public/voucher/verify`;
 const VOUCHER_REDEEM_ENDPOINT = `${API_BASE_URL}/public/voucher/redeem`;
-const SHARE_CODE_REDEEM_ENDPOINT = `${API_BASE_URL}/public/device/share-subscription/code/redeem`;
 // Reconnect endpoint (public, no auth)
 const RECONNECT_ENDPOINT = `${API_BASE_URL}/public/reconnect`;
 
@@ -633,7 +631,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 planFlags = data.plan_flags;
                 console.log('✅ [PORTAL] Plan flags:', planFlags);
                 applyPlanFlags(planFlags);
-                applyPaymentMethods(routerPaymentMethods);
             }
 
             // ---- Portal Settings (must run BEFORE plans so flags like
@@ -1204,8 +1201,6 @@ function updateBranding() {
 function applyPaymentMethods(methods) {
     const hasMpesa   = methods.includes('mpesa');
     const hasVoucher = methods.includes('voucher');
-    const hasShareCode = Boolean(planFlags && planFlags.sharing_enabled);
-    const showCodeSection = hasVoucher || hasShareCode;
 
     const voucherSection  = document.getElementById('voucherSection');
     const mpesaSection    = document.getElementById('mpesaSection');
@@ -1214,7 +1209,7 @@ function applyPaymentMethods(methods) {
 
     // Voucher section
     if (voucherSection) {
-        voucherSection.classList.toggle('hidden', !showCodeSection);
+        voucherSection.classList.toggle('hidden', !hasVoucher);
     }
 
     // M-Pesa plans + quick steps
@@ -1227,10 +1222,10 @@ function applyPaymentMethods(methods) {
 
     // "OR" divider only when both methods are active
     if (paymentDivider) {
-        paymentDivider.classList.toggle('hidden', !(hasMpesa && showCodeSection));
+        paymentDivider.classList.toggle('hidden', !(hasMpesa && hasVoucher));
     }
 
-    console.log('💳 Payment methods applied:', methods, '| mpesa:', hasMpesa, '| voucher:', hasVoucher, '| share code:', hasShareCode);
+    console.log('💳 Payment methods applied:', methods, '| mpesa:', hasMpesa, '| voucher:', hasVoucher);
 }
 
 // ========================================
@@ -1822,59 +1817,6 @@ async function redeemVoucher(code, macAddress, rId) {
 }
 
 // ========================================
-// SHARE CODE: REDEEM FROM VOUCHER FIELD
-// POST /api/public/device/share-subscription/code/redeem
-// ========================================
-const SHARE_CODE_REGEX = /^[A-Z0-9]{6}$/;
-
-function cleanShareCode(value) {
-    return String(value || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-}
-
-function isShareCode(value) {
-    return SHARE_CODE_REGEX.test(cleanShareCode(value));
-}
-
-async function redeemShareCode(code, macAddress, rId) {
-    const normalizedCode = cleanShareCode(code);
-    console.log('🔗 [SHARE] Redeeming share code:', normalizedCode);
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
-
-    const requestBody = {
-        code: normalizedCode,
-        router_id: rId,
-        device_mac: macAddress,
-        device_type: 'other'
-    };
-
-    console.log('📤 [SHARE] Redeem request:', requestBody);
-
-    const response = await fetch(getProxiedUrl(SHARE_CODE_REDEEM_ENDPOINT), {
-        method: 'POST',
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        },
-        mode: 'cors',
-        body: JSON.stringify(requestBody),
-        signal: controller.signal
-    });
-
-    clearTimeout(timeoutId);
-
-    const data = await response.json();
-
-    if (!response.ok) {
-        throw new Error(data.detail || data.message || 'Failed to redeem share code');
-    }
-
-    console.log('✅ [SHARE] Redeem result:', data);
-    return data;
-}
-
-// ========================================
 // VOUCHER: UI SETUP & HANDLERS
 // ========================================
 let verifiedVoucher = null; // stores the verified voucher data
@@ -1891,7 +1833,6 @@ function setupVoucherUI() {
     // Auto-format: allow alphanumeric and dashes
     input.addEventListener('input', () => {
         input.value = input.value.replace(/[^a-zA-Z0-9\-]/g, '');
-        if (verifyText) verifyText.textContent = isShareCode(input.value) ? 'Connect' : 'Verify';
         if (result) result.classList.add('hidden');
         verifiedVoucher = null;
     });
@@ -1919,14 +1860,6 @@ function setupVoucherUI() {
         verifiedVoucher = null;
 
         try {
-            if (isShareCode(code)) {
-                const macAddress = mikrotikParams.mac || 'AA:BB:CC:DD:EE:FF';
-                const rId = routerId || FALLBACK_ROUTER_ID;
-                const data = await redeemShareCode(code, macAddress, rId);
-                showShareCodeSuccess(data);
-                return;
-            }
-
             const data = await verifyVoucher(code);
             verifiedVoucher = data;
             showVoucherValid(data);
@@ -1938,18 +1871,6 @@ function setupVoucherUI() {
             if (verifyLoader) verifyLoader.classList.add('hidden');
         }
     });
-}
-
-function showShareCodeSuccess(data) {
-    hideSection(plansSection);
-    showSection(successSection);
-    showVoucherSuccessDetails({
-        ...data,
-        plan_name: data.plan_name || 'Shared Subscription',
-        redemption_method: 'Share Code'
-    });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    scheduleAutoStartBrowsing();
 }
 
 function showVoucherValid(data) {
@@ -2094,7 +2015,7 @@ function showVoucherSuccessDetails(data) {
         </div>
         <div class="detail-row">
             <span class="detail-label">Method</span>
-            <span class="detail-value">${data.redemption_method || 'Voucher Code'}</span>
+            <span class="detail-value">Voucher Code</span>
         </div>
         <div class="detail-row">
             <span class="detail-label">Valid Until</span>
