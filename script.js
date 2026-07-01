@@ -919,11 +919,10 @@ function renderHeroHeader(settings) {
             <img src="images/presets/${preset}.jpg" alt="" aria-hidden="true" decoding="async" fetchpriority="high">
         </picture>`;
 
-    const supportHtml = settings.portal_support_whatsapp
-        ? `<a href="https://wa.me/${settings.portal_support_whatsapp}" class="hero-support-btn hero-support-btn--whatsapp" target="_blank" rel="noopener">
-               <span>💬</span> WhatsApp
-           </a>`
-        : `<a href="${settings.portal_support_phone ? 'tel:' + settings.portal_support_phone : '#'}" class="hero-support-btn">
+    // Always offer Call Support — never WhatsApp. WhatsApp deep-links are
+    // unreliable behind the captive-portal walled garden, so we ignore
+    // settings.portal_support_whatsapp even when the reseller has one set.
+    const supportHtml = `<a href="${settings.portal_support_phone ? 'tel:' + settings.portal_support_phone : '#'}" class="hero-support-btn">
                <span>📞</span> Call Support
            </a>`;
 
