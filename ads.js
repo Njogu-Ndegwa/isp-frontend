@@ -422,7 +422,10 @@ function hideAdSections() {
     if (window._portalShowAds === false) {
         if (showcaseSection) showcaseSection.style.display = 'none';
         const inlinePromo = document.querySelector('.inline-promo');
-        if (inlinePromo) inlinePromo.style.display = 'none';
+        if (inlinePromo) {
+            inlinePromo.dataset.hiddenByAds = 'true';
+            inlinePromo.style.display = 'none';
+        }
         const paymentAd = document.querySelector('.payment-ad');
         if (paymentAd) paymentAd.style.display = 'none';
         const successAds = document.querySelector('.success-ads');
@@ -445,11 +448,17 @@ function hideAdSections() {
         if (showcaseTitle) showcaseTitle.textContent = '📢 Advertise Here';
         
         console.log('📢 Showing CTA card for advertisers');
+        // The "Your Ad Here" card is a tel: link to the reseller — re-apply the
+        // number (and hide the card if the reseller has none on file).
+        if (window.refreshSupportLinks) window.refreshSupportLinks();
     }
-    
+
     const inlinePromo = document.querySelector('.inline-promo');
-    if (inlinePromo) inlinePromo.style.display = 'none';
-    
+    if (inlinePromo) {
+        inlinePromo.dataset.hiddenByAds = 'true';
+        inlinePromo.style.display = 'none';
+    }
+
     const paymentAd = document.querySelector('.payment-ad');
     if (paymentAd) paymentAd.style.display = 'none';
     
@@ -481,14 +490,21 @@ function showAdSections() {
     }
     
     const inlinePromo = document.querySelector('.inline-promo');
-    if (inlinePromo) inlinePromo.style.display = '';
-    
+    if (inlinePromo) {
+        inlinePromo.dataset.hiddenByAds = 'false';
+        inlinePromo.style.display = '';
+    }
+
     const paymentAd = document.querySelector('.payment-ad');
     if (paymentAd) paymentAd.style.display = '';
-    
+
     const successAds = document.querySelector('.success-ads');
     if (successAds) successAds.style.display = '';
-    
+
+    // Ad sections just became visible — re-apply the reseller's support number
+    // so the home-install promo / "Your Ad Here" card never show without one.
+    if (window.refreshSupportLinks) window.refreshSupportLinks();
+
     console.log('👁️ All ad sections visible');
 }
 

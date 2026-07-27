@@ -47,7 +47,9 @@
                         <span class="tagline">Public WiFi</span>
                     </div>
                 </a>
-                <a href="tel:0795635364" class="help-btn">
+                <!-- Phone comes from the reseller's portal settings — never hardcode it.
+                     Hidden until refreshSupportLinks() resolves a number. -->
+                <a href="#" class="help-btn" data-support-link style="display:none">
                     <span class="help-icon">📞</span>
                     <span class="help-text">Help</span>
                 </a>
@@ -102,7 +104,7 @@
                             </div>
                         </div>
 
-                        <a href="tel:0795635364" class="product-card ad-cta-card">
+                        <a href="#" class="product-card ad-cta-card" data-support-link style="display:none">
                             <div class="ad-cta-content">
                                 <div class="ad-cta-icon">+</div>
                                 <span class="ad-cta-text">Your Ad Here</span>
@@ -221,15 +223,16 @@
                     </div>
                 </div>
 
-                <!-- Floating Ad Banner - Inline with experience -->
-                <div class="inline-promo">
+                <!-- Home-installation promo — the whole banner is a call-to-call, so it
+                     stays hidden until the reseller's support phone is known. -->
+                <div class="inline-promo" data-support-section style="display:none">
                     <div class="promo-content">
                         <div class="promo-icon">🏠</div>
                         <div class="promo-text">
                             <strong>Need Home WiFi?</strong>
                             <span>Professional installation from KSH 2,000/month</span>
                         </div>
-                        <a href="tel:0795635364" class="promo-action" id="promo-call-btn" data-i18n="callNow">Call Now</a>
+                        <a href="#" class="promo-action" id="promo-call-btn" data-support-link data-i18n="callNow">Call Now</a>
                     </div>
                 </div>
 
@@ -606,7 +609,7 @@
 
                 <!-- Support Link -->
                 <div class="processing-support">
-                    <a href="tel:0795635364" class="support-link-alt">
+                    <a href="#" class="support-link-alt" data-support-link style="display:none">
                         <span>📞</span>
                         <span>Need help? Call Support</span>
                     </a>
@@ -670,7 +673,7 @@
 
                 <!-- Support Link -->
                 <div class="success-support">
-                    <a href="tel:0795635364" class="support-link">
+                    <a href="#" class="support-link" data-support-link style="display:none">
                         <span>📞</span>
                         <span>Need help? Call Support</span>
                     </a>
@@ -720,7 +723,7 @@
                         <span>🔄</span>
                         <span>Try Again</span>
                     </button>
-                    <a href="tel:0795635364" class="error-btn error-btn-secondary">
+                    <a href="#" class="error-btn error-btn-secondary" data-support-link style="display:none">
                         <span>📞</span>
                         <span>Call Support</span>
                     </a>

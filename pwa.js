@@ -26,8 +26,68 @@ const API_BASE_URL = PRIMARY_PWA_API_BASE;
 const SPEED_TEST_ENDPOINT = `${API_BASE_URL}/speed-tests`;
 const ADS_ENDPOINT = `${API_BASE_URL}/ads`;
 
-// WhatsApp support number
-const WHATSAPP_NUMBER = '254795635364';
+// ========================================
+// SUPPORT CONTACTS — reseller-specific, never hardcoded
+// ========================================
+// The number belongs to whichever reseller owns the hotspot the user is on.
+// The captive portal (script.js) caches that reseller's portal settings in
+// localStorage on this same origin, so the PWA reads them from there. If no
+// number is on file, support CTAs are hidden rather than pointing somewhere wrong.
+function getCachedPortalSettings() {
+    try {
+        return JSON.parse(localStorage.getItem('_cached_portal_settings') || '{}') || {};
+    } catch {
+        return {};
+    }
+}
+
+function getSupportPhone() {
+    return String(getCachedPortalSettings().portal_support_phone || '').trim();
+}
+
+// Kenyan MSISDN in wa.me format (2547XXXXXXXX, no + and no leading zero)
+function toWhatsAppNumber(phone) {
+    const digits = String(phone || '').replace(/\D/g, '');
+    if (!digits) return '';
+    if (digits.startsWith('254')) return digits;
+    if (digits.startsWith('0')) return `254${digits.slice(1)}`;
+    if (digits.length === 9) return `254${digits}`;
+    return digits;
+}
+
+function getSupportWhatsApp() {
+    const settings = getCachedPortalSettings();
+    return toWhatsAppNumber(settings.portal_support_whatsapp || settings.portal_support_phone || '');
+}
+
+// Fills every [data-support-link] anchor with the reseller's number and hides
+// the ones that have nothing to dial. [data-support-number] spans show it as text.
+function applySupportContacts() {
+    const phone = getSupportPhone();
+
+    document.querySelectorAll('[data-support-link]').forEach(link => {
+        if (phone) {
+            link.href = `tel:${phone}`;
+            link.style.display = '';
+        } else {
+            link.removeAttribute('href');
+            link.style.display = 'none';
+        }
+    });
+
+    document.querySelectorAll('[data-support-number]').forEach(el => {
+        el.textContent = phone;
+    });
+
+    // The support form only does anything if there is a WhatsApp target
+    const supportAlt = document.querySelector('.support-alt');
+    if (supportAlt) supportAlt.style.display = phone ? '' : 'none';
+
+    const whatsappBtn = document.querySelector('.whatsapp-btn');
+    if (whatsappBtn) whatsappBtn.style.display = getSupportWhatsApp() ? '' : 'none';
+
+    console.log('📞 PWA support contacts:', phone || '(none — support CTAs hidden)');
+}
 
 // ========================================
 // STATE MANAGEMENT
@@ -89,6 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
     initSpeedTest();
     initSupport();
+    applySupportContacts();
     initAdModal();
     initInstallPrompt();
     loadAds();
@@ -517,7 +578,13 @@ function initSupport() {
 
 function handleSupportSubmit(e) {
     e.preventDefault();
-    
+
+    const whatsappNumber = getSupportWhatsApp();
+    if (!whatsappNumber) {
+        showToast('Support contact is not set up for this network yet.', 'error');
+        return;
+    }
+
     const formData = new FormData(e.target);
     const name = formData.get('name');
     const phone = formData.get('phone');
@@ -542,7 +609,7 @@ function handleSupportSubmit(e) {
     );
     
     // Open WhatsApp
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${whatsappMessage}`, '_blank');
+    window.open(`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`, '_blank');
     
     showToast('Opening WhatsApp...', 'success');
     e.target.reset();

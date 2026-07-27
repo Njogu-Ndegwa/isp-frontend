@@ -118,7 +118,10 @@ let routerId = null; // Will be set after lookup
 let routerAuthMethod = 'DIRECT_API'; // Will be set after lookup ('DIRECT_API' or 'RADIUS')
 let routerBusinessName = null; // Will be set after lookup from backend
 let routerPaymentMethods = ['mpesa', 'voucher']; // Default — updated from portal/router API
-let routerSupportPhone = '0795635364'; // Default — updated from portal/router API
+// Support phone is reseller-specific and comes from the backend ONLY.
+// Never hardcode a number here — a stale default sends customers to the
+// wrong person. Empty means "unknown", and every support link stays hidden.
+let routerSupportPhone = ''; // from router API (data.router.support_phone)
 
 // Payment polling configuration
 const PAYMENT_POLL_INTERVAL = 3000; // Poll every 3 seconds
@@ -574,9 +577,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // feature flags) so returning users see the correct UI on the very first
     // paint — before the API responds.  Falls back to a neutral slate_gray theme
     // on a first visit so there is no sunset-orange flash.
+    // Only reused when the cache was written for THIS router — otherwise a
+    // device that connected to another reseller's hotspot would briefly show
+    // that reseller's branding and support number.
     try {
         const rawSettings = localStorage.getItem('_cached_portal_settings');
-        if (rawSettings) {
+        const cachedRouter = localStorage.getItem('_cached_portal_settings_router');
+        if (rawSettings && cachedRouter === (mikrotikParams.router || '')) {
             applyPortalSettings(JSON.parse(rawSettings));
         } else {
             applyTheme('slate_gray');
@@ -856,8 +863,7 @@ function renderStandardHeader(settings) {
     // If the header was previously rendered as a hero (e.g. from cached settings
     // that have since been changed to standard), rebuild the standard HTML.
     if (header.classList.contains('portal-header--hero')) {
-        const name  = escapeHtml(settings.welcome_title || '');
-        const phone = settings.portal_support_phone || '';
+        const name = escapeHtml(settings.welcome_title || '');
         header.className = 'header';
         header.innerHTML = `
             <div class="header-inner">
@@ -868,22 +874,22 @@ function renderStandardHeader(settings) {
                         <span class="tagline">Public WiFi</span>
                     </div>
                 </a>
-                <a href="${phone ? 'tel:' + phone : '#'}" class="help-btn">
+                <a href="#" class="help-btn" data-support-link style="display:none">
                     <span class="help-icon">📞</span>
                     <span class="help-text" data-i18n="helpBtn">Help</span>
                 </a>
             </div>`;
         // Re-attach the brand-link reset behaviour after innerHTML was replaced
         setupBrandLink();
+        refreshSupportLinks();
         return;
     }
 
-    // Standard header already rendered — just update the phone link
-    const phone = settings.portal_support_phone;
-    if (phone) {
-        const helpBtn = header.querySelector('.help-btn');
-        if (helpBtn) helpBtn.href = `tel:${phone}`;
-    }
+    // Standard header already rendered — make sure the Help button is opted in
+    // to the support-phone wiring (refreshSupportLinks fills in the number).
+    const helpBtn = header.querySelector('.help-btn');
+    if (helpBtn) helpBtn.setAttribute('data-support-link', '');
+    refreshSupportLinks();
 }
 
 function renderHeroHeader(settings) {
@@ -922,7 +928,8 @@ function renderHeroHeader(settings) {
     // Always offer Call Support — never WhatsApp. WhatsApp deep-links are
     // unreliable behind the captive-portal walled garden, so we ignore
     // settings.portal_support_whatsapp even when the reseller has one set.
-    const supportHtml = `<a href="${settings.portal_support_phone ? 'tel:' + settings.portal_support_phone : '#'}" class="hero-support-btn">
+    // The number itself is filled in by refreshSupportLinks() below.
+    const supportHtml = `<a href="#" class="hero-support-btn" data-support-link style="display:none">
                <span>📞</span> Call Support
            </a>`;
 
@@ -941,6 +948,8 @@ function renderHeroHeader(settings) {
             </div>
             ${supportHtml}
         </div>`;
+
+    refreshSupportLinks();
 
     const img = header.querySelector('.hero-bg-img img');
     if (img) {
@@ -1042,10 +1051,8 @@ function applyBranding(settings) {
     const footer = document.getElementById('portal-footer-text');
     if (footer) footer.textContent = settings.footer_text || `© ${new Date().getFullYear()} Bitwave Technologies. All rights reserved.`;
 
-    const promoCallBtn = document.getElementById('promo-call-btn');
-    if (promoCallBtn && settings.portal_support_phone) {
-        promoCallBtn.href = `tel:${settings.portal_support_phone}`;
-    }
+    // The home-installation promo and every other "call us" CTA get their
+    // number from refreshSupportLinks() — see applyPortalSettings().
 }
 
 // ========================================
@@ -1142,11 +1149,18 @@ function applyPortalSettings(settings) {
     // Persist the full settings object so the next page load renders
     // the correct theme, header style, branding, and feature flags
     // instantly — before the API responds (stale-while-revalidate).
-    try { localStorage.setItem('_cached_portal_settings', JSON.stringify(settings)); } catch {}
+    // Tagged with the router identity: the same device can hop between two
+    // resellers' hotspots on this portal, and a cross-reseller cache hit would
+    // show the wrong support number on first paint.
+    try {
+        localStorage.setItem('_cached_portal_settings', JSON.stringify(settings));
+        localStorage.setItem('_cached_portal_settings_router', mikrotikParams.router || '');
+    } catch {}
     renderHeader(settings);
     applyFeatureFlags(settings);
     applyBranding(settings);
     applyLanguage(settings.portal_language || 'en');
+    refreshSupportLinks(); // reseller's number into every call CTA
 }
 
 // ========================================
@@ -1233,18 +1247,57 @@ function applyPaymentMethods(methods) {
 }
 
 // ========================================
-// SUPPORT PHONE — update all tel: links from router config
+// SUPPORT PHONE — single source of truth for every "call us" link
 // ========================================
-function updateSupportPhone(phone) {
-    if (!phone) return;
-    routerSupportPhone = phone;
+// The number belongs to the reseller who owns this router, so it is always
+// resolved from the backend: portal_settings.portal_support_phone first
+// (what the reseller typed in the admin portal), then the router record's
+// support_phone. There is deliberately NO hardcoded fallback — if neither is
+// set, support links are hidden rather than pointing at somebody else's phone.
+function getSupportPhone() {
+    const fromSettings = portalSettings && portalSettings.portal_support_phone;
+    return String(fromSettings || routerSupportPhone || '').trim();
+}
 
-    // Update every tel: link in the page
-    document.querySelectorAll('a[href^="tel:"]').forEach(link => {
-        link.href = `tel:${phone}`;
+// Marks up every support CTA in the page from the resolved number.
+// Elements opt in with [data-support-link] (the anchor itself) or
+// [data-support-section] (a whole banner that only exists to trigger a call).
+// Safe to call repeatedly — ads.js re-runs it after it toggles ad sections.
+function refreshSupportLinks() {
+    const phone = getSupportPhone();
+
+    document.querySelectorAll('[data-support-link]').forEach(link => {
+        if (phone) {
+            link.href = `tel:${phone}`;
+            link.removeAttribute('aria-hidden');
+            if (link.style.display === 'none') link.style.display = '';
+        } else {
+            link.removeAttribute('href');
+            link.style.display = 'none';
+            link.setAttribute('aria-hidden', 'true');
+        }
     });
 
-    console.log('📞 Support phone updated to:', phone);
+    document.querySelectorAll('[data-support-section]').forEach(section => {
+        // Sections can also be hidden by other rules (e.g. ads disabled) —
+        // only take responsibility for the no-phone case.
+        if (!phone) {
+            section.style.display = 'none';
+        } else if (section.dataset.hiddenByAds !== 'true' && section.style.display === 'none') {
+            section.style.display = '';
+        }
+    });
+
+    return phone;
+}
+// ads.js runs in its own file — expose the refresher so it can re-apply the
+// number after re-showing ad banners.
+window.refreshSupportLinks = refreshSupportLinks;
+
+function updateSupportPhone(phone) {
+    if (phone) routerSupportPhone = String(phone).trim();
+    const resolved = refreshSupportLinks();
+    console.log('📞 Support phone resolved to:', resolved || '(none — support links hidden)');
 }
 
 // ========================================
@@ -3082,8 +3135,8 @@ function validatePhoneNumber(phoneNumber) {
 // ========================================
 function formatPhoneForMpesa(phoneNumber) {
     // Convert Kenyan format to international format
-    // Input: 0795635364 or 795635364 or 0112345678 or 112345678
-    // Output: 254795635364 or 254112345678
+    // Input: 0712345678 or 712345678 or 0112345678 or 112345678
+    // Output: 254712345678 or 254112345678
     
     // Remove any spaces, dashes, or special characters
     let cleaned = phoneNumber.replace(/[\s\-\(\)]/g, '');

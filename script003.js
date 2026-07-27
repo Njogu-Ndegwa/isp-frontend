@@ -243,18 +243,20 @@ function renderMarketplaceAds(ads) {
         </div>
     `).join('');
     
-    // Keep the CTA card at the end
+    // Keep the CTA card at the end. The number is the reseller's, resolved by
+    // script.js from portal settings — never hardcoded here.
+    const supportPhone = window.refreshSupportLinks ? window.refreshSupportLinks() : '';
     const ctaCard = `
         <div class="product-card cta-card">
             <div class="cta-content">
                 <span class="cta-icon">📢</span>
                 <h4>Advertise Here!</h4>
                 <p>Show your products to thousands of customers</p>
-                <span class="cta-link">Call 0795635364</span>
+                ${supportPhone ? `<a class="cta-link" href="tel:${supportPhone}">Call ${supportPhone}</a>` : ''}
             </div>
         </div>
     `;
-    
+
     showcase.innerHTML = adsHTML + ctaCard;
 }
 
