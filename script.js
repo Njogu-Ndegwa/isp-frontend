@@ -143,6 +143,36 @@ function getProxiedUrl(url) {
 }
 
 // ========================================
+// PLANS FAILURE BEACON
+// When a customer ends up staring at "Couldn't load plans", fire one tiny GET
+// whose query string lands in the server's access log — the endpoint 404s and
+// that's fine, the log line IS the record. Apache logs the request even while
+// the app behind it is down, so the only unreported case is a phone that
+// cannot reach the server at all.
+// ========================================
+const _pageLoadTs = Date.now();
+let _plansFailureReported = false;
+function reportPlansFailure(stage, err) {
+    try {
+        if (_plansFailureReported) return; // one report per page load
+        if (sessionStorage.getItem('__DEMO_PORTAL__') ||
+            sessionStorage.getItem('__DEV_MOCK_PORTAL__') ||
+            window.__MOCK_PORTAL_DATA) return;
+        _plansFailureReported = true;
+        const params = new URLSearchParams({
+            router: mikrotikParams.router || 'unknown',
+            stage: stage, // 'empty' | 'fallback' | 'reload'
+            err: String((err && err.message) || err || 'unknown').slice(0, 120),
+            t: String(Date.now() - _pageLoadTs) // ms from page load to failure
+        });
+        fetch(`${API_BASE_URL}/public/plans-fail-beacon?${params.toString()}`, {
+            method: 'GET', mode: 'no-cors', keepalive: true, cache: 'no-store'
+        }).catch(() => {});
+        console.warn('📡 [BEACON] Plans failure reported:', stage);
+    } catch (_) { /* telemetry must never break the page */ }
+}
+
+// ========================================
 // ROUTER IDENTITY LOOKUP
 // ========================================
 async function getRouterId(identity) {
@@ -662,6 +692,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 displayPlans(data.plans);
                 console.log('✅ [PORTAL] Plans loaded:', data.plans.length);
             } else {
+                reportPlansFailure('empty', 'portal response had no plans');
                 showPlansError();
             }
 
@@ -691,6 +722,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 displayPlans(freshPlans);
             } catch (err) {
                 console.warn('⚠️ Plans fallback failed:', err.message);
+                reportPlansFailure('fallback',
+                    'portal: ' + (error && error.message) + ' | plans: ' + err.message);
                 showPlansError();
             }
         })
@@ -1440,6 +1473,7 @@ async function loadPlans(rId) {
         console.log('✅ Plans loaded from API:', freshPlans.length);
     } catch (error) {
         console.warn('⚠️ API plan fetch failed:', error.message);
+        reportPlansFailure('reload', error);
         showPlansError();
     }
 }
