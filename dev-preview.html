@@ -570,23 +570,6 @@
             letter-spacing: 1px;
         }
 
-        /* Promo */
-        #portal-inner .pp-promo { margin-bottom: 14px; }
-        #portal-inner .pp-promo-inner {
-            display: flex; align-items: center; gap: 10px; padding: 12px;
-            background: linear-gradient(135deg, color-mix(in srgb, var(--p-primary) 8%, transparent) 0%, color-mix(in srgb, var(--p-accent) 6%, transparent) 100%);
-            border-radius: 12px; border: 1px solid color-mix(in srgb, var(--p-primary) 15%, transparent);
-        }
-        #portal-inner .pp-promo-icon { font-size: 1.4rem; flex-shrink: 0; }
-        #portal-inner .pp-promo-text { flex: 1; min-width: 0; }
-        #portal-inner .pp-promo-text strong { display: block; font-size: .78rem; font-weight: 700; color: var(--p-text); }
-        #portal-inner .pp-promo-text span { font-size: .62rem; color: var(--p-text-sec); }
-        #portal-inner .pp-promo-btn {
-            flex-shrink: 0; padding: 6px 12px; background: var(--p-primary);
-            color: #fff; border-radius: 9999px; font-size: .68rem;
-            font-weight: 700; text-decoration: none;
-        }
-
         /* Footer */
         #portal-inner .pp-footer {
             text-align: center; padding: 14px; font-size: .62rem; color: var(--p-text-sec);
@@ -1062,18 +1045,6 @@ function renderPortal(mockData, overrideTheme) {
         <div class="pp-plans-grid">${planCards || '<p style="text-align:center;color:var(--p-text-sec);font-size:.8rem;padding:20px 0">No hotspot plans available</p>'}</div>
     </div>`;
 
-    // ── Promo
-    const promoHtml = `<div class="pp-promo">
-        <div class="pp-promo-inner">
-            <div class="pp-promo-icon">🏠</div>
-            <div class="pp-promo-text">
-                <strong>Need Home WiFi?</strong>
-                <span>Professional installation from KSH 2,000/month</span>
-            </div>
-            <a href="tel:${phone}" class="pp-promo-btn">Call Now</a>
-        </div>
-    </div>`;
-
     // ── Footer
     const footerText = s.footer_text || `© ${new Date().getFullYear()} Bitwave Technologies. All rights reserved.`;
     const footerHtml = `<div class="pp-footer">${footerText}</div>`;
@@ -1095,7 +1066,6 @@ function renderPortal(mockData, overrideTheme) {
             ${voucherHtml}
             ${dividerHtml}
             <div style="margin-bottom:20px">${plansHtml}</div>
-            ${promoHtml}
             ${footerHtml}
         </div>`;
 

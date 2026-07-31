@@ -1320,61 +1320,6 @@ body::before {
 }
 
 /* ========================================
-   Inline Promo
-   ======================================== */
-.inline-promo {
-    background: linear-gradient(135deg, #1A1A1A 0%, #333 100%);
-    border-radius: var(--radius-lg);
-    padding: var(--space-md);
-    margin-bottom: var(--space-lg);
-    /* Prevent layout shift */
-    min-height: 80px;
-}
-
-.promo-content {
-    display: flex;
-    align-items: center;
-    gap: var(--space-md);
-}
-
-.promo-icon {
-    font-size: 2rem;
-    flex-shrink: 0;
-}
-
-.promo-text {
-    flex: 1;
-    color: var(--text-inverse);
-}
-
-.promo-text strong {
-    display: block;
-    font-size: 0.95rem;
-    margin-bottom: 2px;
-}
-
-.promo-text span {
-    font-size: 0.75rem;
-    opacity: 0.8;
-}
-
-.promo-action {
-    flex-shrink: 0;
-    background: var(--accent);
-    color: var(--text);
-    padding: var(--space-sm) var(--space-md);
-    border-radius: var(--radius-full);
-    font-weight: 700;
-    font-size: 0.8rem;
-    text-decoration: none;
-    transition: transform 0.2s ease;
-}
-
-.promo-action:active {
-    transform: scale(0.95);
-}
-
-/* ========================================
    Payment Section
    ======================================== */
 .payment-section {

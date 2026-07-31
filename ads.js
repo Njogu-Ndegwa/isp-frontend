@@ -421,11 +421,6 @@ function hideAdSections() {
     // When the portal explicitly disables ads, hide the entire showcase — no CTA card shown.
     if (window._portalShowAds === false) {
         if (showcaseSection) showcaseSection.style.display = 'none';
-        const inlinePromo = document.querySelector('.inline-promo');
-        if (inlinePromo) {
-            inlinePromo.dataset.hiddenByAds = 'true';
-            inlinePromo.style.display = 'none';
-        }
         const paymentAd = document.querySelector('.payment-ad');
         if (paymentAd) paymentAd.style.display = 'none';
         const successAds = document.querySelector('.success-ads');
@@ -453,15 +448,9 @@ function hideAdSections() {
         if (window.refreshSupportLinks) window.refreshSupportLinks();
     }
 
-    const inlinePromo = document.querySelector('.inline-promo');
-    if (inlinePromo) {
-        inlinePromo.dataset.hiddenByAds = 'true';
-        inlinePromo.style.display = 'none';
-    }
-
     const paymentAd = document.querySelector('.payment-ad');
     if (paymentAd) paymentAd.style.display = 'none';
-    
+
     const successAds = document.querySelector('.success-ads');
     if (successAds) successAds.style.display = 'none';
     
@@ -489,12 +478,6 @@ function showAdSections() {
         if (scrollHint) scrollHint.style.display = '';
     }
     
-    const inlinePromo = document.querySelector('.inline-promo');
-    if (inlinePromo) {
-        inlinePromo.dataset.hiddenByAds = 'false';
-        inlinePromo.style.display = '';
-    }
-
     const paymentAd = document.querySelector('.payment-ad');
     if (paymentAd) paymentAd.style.display = '';
 
