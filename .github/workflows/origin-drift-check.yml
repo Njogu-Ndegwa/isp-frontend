@@ -1,0 +1,72 @@
+name: Origin drift check
+
+# Switching between Vercel and Hetzner is only safe if BOTH origins are serving
+# the same commit. If one pipeline silently failed, "switch back" would land
+# users on a stale build - a worse outcome than whatever you were rolling back
+# from. This job exists to make that impossible to miss.
+#
+# Runs over SSH rather than over the public hostname so it works before the
+# Cloudflare DNS slots exist.
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure SSH
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "${{ secrets.HETZNER_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "${{ secrets.HETZNER_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Compare origins
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -uo pipefail
+
+          MASTER=$(git rev-parse origin/master)
+          echo "master head : $MASTER"
+
+          HETZNER=$(ssh -o BatchMode=yes \
+            "${{ secrets.HETZNER_USER }}@${{ secrets.HETZNER_HOST }}" \
+            "curl -sS http://127.0.0.1:8081/__origin.json" \
+            | sed -n 's/.*"sha":"\([a-f0-9]*\)".*/\1/p')
+          echo "hetzner live: ${HETZNER:-<unreachable>}"
+
+          # Best-effort: Vercel's git integration records a GitHub Deployment.
+          VERCEL=$(gh api "repos/${{ github.repository }}/deployments" --paginate \
+            --jq '[.[] | select(.environment | ascii_downcase | startswith("production"))][0].sha' \
+            2>/dev/null || true)
+          echo "vercel live : ${VERCEL:-<could not determine>}"
+          echo
+
+          fail=0
+          if [ -z "$HETZNER" ]; then
+            echo "::error::Hetzner origin did not report a commit - it may be down."
+            fail=1
+          elif [ "$HETZNER" != "$MASTER" ]; then
+            echo "::error::Hetzner is serving $HETZNER but master is $MASTER."
+            echo "::error::Re-run the Deploy to Hetzner workflow before switching to it."
+            fail=1
+          fi
+
+          if [ -n "$VERCEL" ] && [ "$VERCEL" != "$MASTER" ]; then
+            echo "::error::Vercel is serving $VERCEL but master is $MASTER."
+            echo "::error::Vercel is the fallback origin - do not rely on it until this clears."
+            fail=1
+          elif [ -z "$VERCEL" ]; then
+            echo "::warning::Could not read Vercel's deployed commit from the GitHub Deployments API; checked Hetzner only."
+          fi
+
+          [ "$fail" = "0" ] && echo "Both origins agree on $MASTER"
+          exit $fail

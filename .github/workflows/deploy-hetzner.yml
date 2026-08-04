@@ -1,0 +1,91 @@
+name: Deploy to Hetzner
+
+# Runs ALONGSIDE the existing Vercel git integration, which this workflow does
+# not touch. One push to master publishes the same commit to both origins, so
+# either one can serve traffic at any time and switching between them is never
+# a deploy.
+#
+# Required repo secrets:
+#   HETZNER_HOST     91.98.238.12
+#   HETZNER_USER     deploy
+#   HETZNER_SSH_KEY  private half of the github-actions-frontend-deploy keypair
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: hetzner-portal
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure SSH
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "${{ secrets.HETZNER_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "${{ secrets.HETZNER_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Build release tarball
+        run: |
+          # Tracked files only - mirrors exactly what Vercel serves from this
+          # commit, with no build step and no working-tree noise.
+          git archive HEAD --format=tar.gz -o /tmp/portal.tgz
+          ls -lh /tmp/portal.tgz
+
+      - name: Upload
+        run: |
+          scp -o BatchMode=yes /tmp/portal.tgz \
+            "${{ secrets.HETZNER_USER }}@${{ secrets.HETZNER_HOST }}:/tmp/portal-${{ github.sha }}.tgz"
+
+      - name: Publish release
+        run: |
+          ssh -o BatchMode=yes "${{ secrets.HETZNER_USER }}@${{ secrets.HETZNER_HOST }}" \
+            "bash -s" <<'REMOTE'
+          set -euo pipefail
+          SHA="${{ github.sha }}"
+          SHORT="${SHA:0:7}"
+          REL="/srv/releases/portal-$SHORT"
+
+          rm -rf "$REL"
+          mkdir -p "$REL"
+          tar -xzf "/tmp/portal-$SHA.tgz" -C "$REL"
+          rm -f "/tmp/portal-$SHA.tgz"
+
+          # Origin marker: lets the switch script and the drift check answer
+          # "which origin am I on, and at what commit?" with a single curl.
+          printf '{"origin":"hetzner","app":"portal","sha":"%s"}\n' "$SHA" > "$REL/__origin.json"
+
+          # Atomic swap. Caddy resolves the symlink per request, so this needs
+          # no reload and leaves no window where the site is missing.
+          ln -sfn "$REL" /srv/portal/current.new
+          mv -Tf /srv/portal/current.new /srv/portal/current
+
+          # Keep the last 5 releases so a rollback is a symlink swap away.
+          ls -1dt /srv/releases/portal-* | tail -n +6 | xargs -r rm -rf
+          echo "published $SHORT"
+          REMOTE
+
+      - name: Verify
+        run: |
+          ssh -o BatchMode=yes "${{ secrets.HETZNER_USER }}@${{ secrets.HETZNER_HOST }}" \
+            "bash -s" <<'REMOTE'
+          set -euo pipefail
+          code=$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:8081/)
+          served=$(curl -sS http://127.0.0.1:8081/__origin.json)
+          echo "index.html: HTTP $code"
+          echo "marker:     $served"
+          [ "$code" = "200" ] || { echo "FAIL: portal not serving"; exit 1; }
+          case "$served" in
+            *"${{ github.sha }}"*) echo "OK: live commit matches this build" ;;
+            *) echo "FAIL: live commit does not match ${{ github.sha }}"; exit 1 ;;
+          esac
+          REMOTE
