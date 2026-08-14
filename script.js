@@ -78,7 +78,10 @@ let portalSettings = {};
 // API CONFIGURATION (with fallback)
 // ========================================
 const PRIMARY_API_BASE = 'https://isp.bitwavetechnologies.com/api';
-const FALLBACK_API_BASE = 'https://isp.bitwavetechnologies.com/api';
+// Same-origin proxy (api/bw/[...path].js on this origin). A phone that loaded
+// this page can reach this origin by definition, even when the walled garden
+// or its own DNS setup breaks the path to the primary API host.
+const FALLBACK_API_BASE = '/api/bw';
 const API_BASE_URL = PRIMARY_API_BASE;
 
 // Shared fallback state — ads.js and pwa.js read this to rewrite their URLs too
@@ -167,6 +170,12 @@ function reportPlansFailure(stage, err) {
         });
         fetch(`${API_BASE_URL}/public/plans-fail-beacon?${params.toString()}`, {
             method: 'GET', mode: 'no-cors', keepalive: true, cache: 'no-store'
+        }).catch(() => {});
+        // Second copy via the same-origin proxy: reaches the server even when
+        // the phone cannot reach the primary API host at all — previously the
+        // exact failures we most needed to see were the ones never reported.
+        fetch(`${FALLBACK_API_BASE}/public/plans-fail-beacon?${params.toString()}`, {
+            method: 'GET', keepalive: true, cache: 'no-store'
         }).catch(() => {});
         console.warn('📡 [BEACON] Plans failure reported:', stage);
     } catch (_) { /* telemetry must never break the page */ }

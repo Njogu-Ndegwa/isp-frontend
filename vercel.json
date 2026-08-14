@@ -1,0 +1,11 @@
+{
+  "regions": ["iad1"],
+  "functions": {
+    "api/bw.js": {
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
+    { "source": "/api/bw/:path*", "destination": "/api/bw?path=:path*" }
+  ]
+}
