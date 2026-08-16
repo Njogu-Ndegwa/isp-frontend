@@ -114,9 +114,13 @@ const RECONNECT_ENDPOINT = `${API_BASE_URL}/public/reconnect`;
 const RADIUS_PAYMENT_ENDPOINT = `${API_BASE_URL}/radius/hotspot/register-and-pay`;
 const RADIUS_PAYMENT_STATUS_ENDPOINT = `${API_BASE_URL}/radius/hotspot/payment-status`;
 
-// Router ID - Will be looked up dynamically from router identity
-// Fallback used only if lookup fails
-const FALLBACK_ROUTER_ID = 2;
+// Router ID - Will be looked up dynamically from router identity.
+// There is deliberately NO numeric fallback: the old FALLBACK_ROUTER_ID = 2
+// pointed at a router that no longer exists (guaranteed 404 — see the
+// "plans: API 404" beacons), and if it ever HAD resolved it would have shown
+// another reseller's plans and routed payments against the wrong router.
+// null makes every downstream path fail fast and visibly instead.
+const FALLBACK_ROUTER_ID = null;
 let routerId = null; // Will be set after lookup
 let routerAuthMethod = 'DIRECT_API'; // Will be set after lookup ('DIRECT_API' or 'RADIUS')
 let routerBusinessName = null; // Will be set after lookup from backend
@@ -1434,6 +1438,9 @@ function showPlansError() {
 }
 
 async function fetchPlansFromAPI(rId) {
+    if (!rId) {
+        throw new Error('no router id — cannot fetch plans');
+    }
     const url = getPlansUrl(rId);
     console.log('📡 Fetching plans from:', url);
 
