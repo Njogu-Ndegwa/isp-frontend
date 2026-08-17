@@ -65,12 +65,24 @@ module.exports = async (req, res) => {
       typeof req.body === 'string' ? req.body : JSON.stringify(req.body ?? {});
   }
 
+  // One retry on transport failure or upstream 5xx — GET/HEAD ONLY. Retrying a
+  // POST could double-fire an STK push if the backend processed the first
+  // attempt and only the response was lost. Cloudflare occasionally rejects a
+  // first request from datacenter IPs (seen live: Router-0829, 2026-08-17 —
+  // "Fallback Portal API 502" while the backend was healthy).
+  const canRetry = req.method === 'GET' || req.method === 'HEAD';
   let upstream;
-  try {
-    upstream = await fetch(target, init);
-  } catch (err) {
-    res.status(502).json({ error: 'upstream unreachable', detail: String(err).slice(0, 200) });
-    return;
+  for (let attempt = 0; ; attempt++) {
+    try {
+      upstream = await fetch(target, init);
+      if (!canRetry || upstream.status < 500 || attempt >= 1) break;
+    } catch (err) {
+      if (!canRetry || attempt >= 1) {
+        res.status(502).json({ error: 'upstream unreachable', detail: String(err).slice(0, 200) });
+        return;
+      }
+    }
+    await new Promise((r) => setTimeout(r, 400));
   }
 
   const text = await upstream.text();
