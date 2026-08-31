@@ -121,6 +121,7 @@ let routerId = null; // Will be set after lookup
 let routerAuthMethod = 'DIRECT_API'; // Will be set after lookup ('DIRECT_API' or 'RADIUS')
 let routerBusinessName = null; // Will be set after lookup from backend
 let routerPaymentMethods = ['mpesa', 'voucher']; // Default — updated from portal/router API
+let routerPaymentProvider = 'mpesa'; // Collection gateway assigned to this router
 // Support phone is reseller-specific and comes from the backend ONLY.
 // Never hardcode a number here — a stale default sends customers to the
 // wrong person. Empty means "unknown", and every support link stays hidden.
@@ -254,6 +255,7 @@ async function getRouterId(identity) {
             applyPaymentMethods(routerPaymentMethods);
             console.log('💳 [ROUTER DEBUG] Payment methods:', routerPaymentMethods);
         }
+        setPaymentProvider(data.payment_provider);
 
         updateSupportPhone(data.support_phone);
         
@@ -637,6 +639,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const rawMethods = localStorage.getItem('_cached_payment_methods');
         if (rawMethods) applyPaymentMethods(JSON.parse(rawMethods));
     } catch { /* ignore — HTML defaults (mpesa visible, voucher hidden) are safe */ }
+    try {
+        setPaymentProvider(localStorage.getItem('_cached_payment_provider'));
+    } catch { /* ignore — M-Pesa is the safe default */ }
 
     // Check for saved RADIUS credentials from a previous payment session
     checkSavedRadiusLogin();
@@ -667,10 +672,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 routerBusinessName = data.router.business_name || null;
                 window._routerBusinessName = routerBusinessName;
                 routerPaymentMethods = data.router.payment_methods || ['mpesa', 'voucher'];
+                setPaymentProvider(data.router.payment_provider);
                 console.log('✅ [PORTAL] Router resolved — id:', routerId, 'auth:', routerAuthMethod, 'methods:', routerPaymentMethods);
                 updateBranding();
                 applyPaymentMethods(routerPaymentMethods);
                 try { localStorage.setItem('_cached_payment_methods', JSON.stringify(routerPaymentMethods)); } catch {}
+                try { localStorage.setItem('_cached_payment_provider', routerPaymentProvider); } catch {}
                 updateSupportPhone(data.router.support_phone);
             }
 
@@ -1282,6 +1289,65 @@ function applyPaymentMethods(methods) {
     console.log('💳 Payment methods applied:', methods, '| mpesa:', hasMpesa, '| voucher:', hasVoucher, '| share code:', hasShareCode);
 }
 
+function normalizePaymentProvider(provider) {
+    const normalized = String(provider || '').trim().toLowerCase();
+    return ['fapshi', 'zenopay', 'mtn_momo'].includes(normalized) ? normalized : 'mpesa';
+}
+
+function getPaymentProviderLabel() {
+    if (routerPaymentProvider === 'fapshi') return 'Mobile Money';
+    if (routerPaymentProvider === 'mtn_momo') return 'MTN MoMo';
+    if (routerPaymentProvider === 'zenopay') return 'Mobile Money';
+    return 'M-Pesa';
+}
+
+function getPaymentCurrencyCode() {
+    return routerPaymentProvider === 'fapshi' ? 'XAF' : 'KSH';
+}
+
+function setPaymentProvider(provider) {
+    routerPaymentProvider = normalizePaymentProvider(provider || routerPaymentProvider);
+    const isFapshi = routerPaymentProvider === 'fapshi';
+    const label = getPaymentProviderLabel();
+    const phoneInput = document.getElementById('phoneNumber');
+    const prefix = document.getElementById('phoneInputPrefix');
+    const hint = document.getElementById('phoneInputHint');
+    const prompt = document.getElementById('paymentPromptText');
+    const security = document.getElementById('paymentSecurityNote');
+    const confirmation = document.getElementById('paymentConfirmationHint');
+    const balance = document.getElementById('paymentBalanceHint');
+    const payText = document.querySelector('#submitButton .button-text');
+    const reconnectHint = document.getElementById('reconnectHint');
+    const devicePhoneInput = document.getElementById('devicePhoneInput');
+    const devicePrefix = document.querySelector('.device-phone-prefix');
+    const deviceTitle = document.querySelector('#deviceStep3 .device-step-title');
+    const devicePayText = document.getElementById('devicePayText');
+    const deviceSecurity = document.querySelector('.device-security-note');
+    const deviceProcessingSub = document.getElementById('deviceProcessingSub');
+
+    if (phoneInput) {
+        phoneInput.maxLength = isFapshi ? 14 : 10;
+        phoneInput.placeholder = isFapshi ? '6XXXXXXXX or 2376XXXXXXXX' : '7XXXXXXXX or 07XXXXXXXX';
+    }
+    if (prefix) prefix.textContent = isFapshi ? '+237' : '+254';
+    if (hint) hint.textContent = isFapshi ? 'E.g., 670000000 or 237670000000' : 'E.g., 0712345678 or 712345678';
+    if (prompt) prompt.textContent = `You'll receive a ${label} prompt`;
+    if (payText) payText.textContent = `Pay with ${label}`;
+    if (security) security.innerHTML = `<span>🔒</span> Secure payment via ${label}`;
+    if (confirmation) confirmation.textContent = `Confirmation can take up to a minute or two. Please do not pay again — you will be connected automatically as soon as ${label} confirms.`;
+    if (balance) balance.textContent = `Check your ${label} balance`;
+    if (reconnectHint) reconnectHint.textContent = `Enter your ${label} phone number or voucher code`;
+    if (devicePhoneInput) {
+        devicePhoneInput.maxLength = isFapshi ? 14 : 10;
+        devicePhoneInput.placeholder = isFapshi ? '6XXXXXXXX or 2376XXXXXXXX' : '7XXXXXXXX';
+    }
+    if (devicePrefix) devicePrefix.textContent = isFapshi ? '+237' : '+254';
+    if (deviceTitle) deviceTitle.textContent = `Pay with ${label}`;
+    if (devicePayText) devicePayText.textContent = `Pay with ${label}`;
+    if (deviceSecurity) deviceSecurity.innerHTML = `<span>🔒</span> Secure payment via ${label}`;
+    if (deviceProcessingSub) deviceProcessingSub.textContent = `Check your phone for the ${label} prompt and approve it.`;
+}
+
 // ========================================
 // SUPPORT PHONE — single source of truth for every "call us" link
 // ========================================
@@ -1517,7 +1583,8 @@ function transformPlansData(apiPlans) {
 
     const transformedPlans = visiblePlans.map((plan) => {
         const duration = formatDuration(plan.duration_value, plan.duration_unit);
-        const price = `KSH ${plan.price}/-`;
+        const currency = getPaymentCurrencyCode();
+        const price = `${currency} ${plan.price}${currency === 'KSH' ? '/-' : ''}`;
         const speed = formatSpeed(plan.speed);
 
         const isEmergency = plan.plan_type === 'emergency';
@@ -1536,7 +1603,7 @@ function transformPlansData(apiPlans) {
         } else if (popular) {
             const hours = convertToHours(plan.duration_value, plan.duration_unit);
             const pricePerDay = (plan.price / (hours / 24)).toFixed(0);
-            valueMessage = `Only KSH ${pricePerDay}/day`;
+            valueMessage = `Only ${currency} ${pricePerDay}/day`;
         }
 
         return {
@@ -1767,7 +1834,8 @@ function createPlanCard(plan) {
     // Original price strikethrough for discounted plans
     let originalPriceHtml = '';
     if (plan.originalPrice) {
-        originalPriceHtml = `<div class="plan-original-price">KSH ${plan.originalPrice}/-</div>`;
+        const currency = getPaymentCurrencyCode();
+        originalPriceHtml = `<div class="plan-original-price">${currency} ${plan.originalPrice}${currency === 'KSH' ? '/-' : ''}</div>`;
     }
 
     // Countdown for time-limited offers
@@ -1805,8 +1873,8 @@ function createPlanCard(plan) {
 // FORMAT PRICE - Make currency code smaller
 // ========================================
 function formatPrice(price) {
-    // Split "KSH 30/-" into currency and amount
-    const match = price.match(/^(KSH)\s*(.+)$/);
+    // Split the provider-specific currency code from the amount.
+    const match = price.match(/^(KSH|XAF)\s*(.+)$/);
     if (match) {
         return `<span class="currency-code">${match[1]}</span> ${match[2]}`;
     }
@@ -2045,7 +2113,8 @@ function showVoucherValid(data) {
     const result = document.getElementById('voucherResult');
     if (!result) return;
 
-    const price = data.price != null ? `KSH ${data.price}/-` : 'Free';
+    const currency = getPaymentCurrencyCode();
+    const price = data.price != null ? `${currency} ${data.price}${currency === 'KSH' ? '/-' : ''}` : 'Free';
     const speed = data.speed || '—';
     const duration = data.duration || '—';
 
@@ -2242,7 +2311,7 @@ async function reconnectUser(inputValue) {
             router_id: rId
         };
     } else {
-        const phone = formatPhoneForMpesa(trimmed);
+        const phone = formatPhoneForPaymentProvider(trimmed);
         requestBody = {
             phone: phone,
             mac_address: macAddress,
@@ -2318,7 +2387,7 @@ function setupReconnectUI() {
             hint.classList.add('hint-phone');
             hint.textContent = '📱 Phone number detected';
         } else {
-            hint.textContent = 'Enter your M-Pesa phone number or voucher code';
+            hint.textContent = 'Enter your mobile money phone number or voucher code';
         }
     });
 
@@ -2338,7 +2407,7 @@ function setupReconnectUI() {
 
         // Validate: either a valid phone number or a voucher code
         if (!isVoucherCode(val) && !validatePhoneNumber(val.replace(/[^0-9]/g, ''))) {
-            showReconnectError('Please enter a valid phone number (e.g. 0712345678) or voucher code (e.g. 4839-2910)');
+            showReconnectError(`Please enter a valid ${getPaymentProviderLabel()} phone number or voucher code (e.g. 4839-2910)`);
             return;
         }
 
@@ -2476,9 +2545,9 @@ function setupEventListeners() {
         // Remove all non-numeric characters
         let value = e.target.value.replace(/[^\d]/g, '');
         
-        // Limit to 10 digits (allows both 9-digit and 10-digit formats)
-        if (value.length > 10) {
-            value = value.substring(0, 10);
+        const maxDigits = routerPaymentProvider === 'fapshi' ? 14 : 10;
+        if (value.length > maxDigits) {
+            value = value.substring(0, maxDigits);
         }
         
         e.target.value = value;
@@ -2524,7 +2593,9 @@ async function handlePayment(e) {
     
     // Validate phone number format
     if (!validatePhoneNumber(phoneNumber)) {
-        alert('Please enter a valid phone number (e.g., 0712345678 or 712345678)');
+        alert(routerPaymentProvider === 'fapshi'
+            ? 'Please enter a valid Cameroon phone number (e.g., 670000000 or 237670000000)'
+            : 'Please enter a valid phone number (e.g., 0712345678 or 712345678)');
         phoneNumberInput.focus();
         return;
     }
@@ -2552,7 +2623,7 @@ async function handlePayment(e) {
             showPaymentPendingMessage(phoneNumber, selectedPlan);
             // They already entered their PIN — show confirmation copy instead
             if (processingSubtext) {
-                processingSubtext.textContent = 'Your payment is being confirmed. Please do not pay again — you will be connected automatically as soon as M-Pesa confirms.';
+                processingSubtext.textContent = `Your payment is being confirmed. Please do not pay again — you will be connected automatically as soon as ${getPaymentProviderLabel()} confirms.`;
             }
             hideSection(paymentSection);
             showSection(processingSection);
@@ -2622,8 +2693,7 @@ async function processPayment(phoneNumber, plan) {
     console.log('💳 Processing payment...');
     console.log('📞 Phone (original):', phoneNumber);
     
-    // Format phone number for M-Pesa (convert 07xxx to 2547xxx)
-    const formattedPhone = formatPhoneForMpesa(phoneNumber);
+    const formattedPhone = formatPhoneForPaymentProvider(phoneNumber);
     console.log('📞 Phone (formatted):', formattedPhone);
     
     console.log('📦 Plan:', plan);
@@ -2857,7 +2927,7 @@ async function pollPaymentStatusAndLogin(customerId, phoneNumber, plan) {
                     if (attempts >= PAYMENT_POLL_MAX_ATTEMPTS) {
                         clearInterval(pollInterval);
                         console.warn('⏱️ Polling timeout - max attempts reached');
-                        reject(new Error('Payment verification timeout. Please check your M-Pesa messages and try again, or contact support if payment was deducted.'));
+                        reject(new Error(`Payment verification timeout. Please check your ${getPaymentProviderLabel()} messages and try again, or contact support if payment was deducted.`));
                     }
                 } else if (attempts >= PAYMENT_POLL_MAX_ATTEMPTS) {
                     clearInterval(pollInterval);
@@ -2900,7 +2970,7 @@ function showProcessingPaymentMessage(phoneNumber, plan) {
 // SHOW SUCCESS MESSAGE (PAYMENT CONFIRMED & INTERNET ACCESS GRANTED)
 // ========================================
 function showAuthenticatedMessage(phoneNumber, plan, data, isRadiusAutoLogin = false) {
-    const formattedPhone = formatPhoneForMpesa(phoneNumber);
+    const formattedPhone = formatPhoneForPaymentProvider(phoneNumber);
     
     // Hide processing, show success
     hideSection(processingSection);
@@ -3067,14 +3137,14 @@ function setLoadingState(isLoading) {
 
 function showPaymentPendingMessage(phoneNumber, plan) {
     // Format phone number for display
-    const formattedPhone = formatPhoneForMpesa(phoneNumber);
+    const formattedPhone = formatPhoneForPaymentProvider(phoneNumber);
     
     // Update processing section UI
     if (processingTitle) {
         processingTitle.textContent = 'Check Your Phone';
     }
     if (processingSubtext) {
-        processingSubtext.textContent = 'Enter your M-Pesa PIN to complete payment. Confirmation can take up to a minute or two — please do not pay again.';
+        processingSubtext.textContent = `Approve the ${getPaymentProviderLabel()} prompt to complete payment. Confirmation can take up to a minute or two — please do not pay again.`;
     }
     
     // Update plan info card
@@ -3158,13 +3228,32 @@ function formatCurrency(amount) {
 // - 9 digits without leading 0: 7XXXXXXXX or 1XXXXXXXX
 // ========================================
 function validatePhoneNumber(phoneNumber) {
+    const digits = String(phoneNumber || '').replace(/\D/g, '');
+    if (routerPaymentProvider === 'fapshi') {
+        const local = digits.startsWith('00237')
+            ? digits.substring(5)
+            : (digits.startsWith('237') ? digits.substring(3) : (digits.startsWith('0') ? digits.substring(1) : digits));
+        return /^6[0-9]{8}$/.test(local);
+    }
     // Kenya format - either:
     // 1. 10 digits starting with 07 or 01 (e.g., 0712345678, 0112345678)
     // 2. 9 digits starting with 7 or 1 (e.g., 712345678, 112345678)
     const tenDigitRegex = /^0[17][0-9]{8}$/;  // 0712345678 or 0112345678
     const nineDigitRegex = /^[17][0-9]{8}$/;   // 712345678 or 112345678
     
-    return tenDigitRegex.test(phoneNumber) || nineDigitRegex.test(phoneNumber);
+    return tenDigitRegex.test(digits) || nineDigitRegex.test(digits);
+}
+
+function formatPhoneForPaymentProvider(phoneNumber) {
+    const digits = String(phoneNumber || '').replace(/\D/g, '');
+    if (routerPaymentProvider === 'fapshi') {
+        let local = digits;
+        if (local.startsWith('00237')) local = local.substring(5);
+        else if (local.startsWith('237')) local = local.substring(3);
+        if (local.startsWith('0')) local = local.substring(1);
+        return `237${local}`;
+    }
+    return formatPhoneForMpesa(phoneNumber);
 }
 
 // ========================================

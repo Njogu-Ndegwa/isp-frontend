@@ -159,7 +159,7 @@
                                 <span class="reconnect-btn-text" data-i18n="reconnectBtn">Reconnect</span>
                             </button>
                         </div>
-                        <p class="reconnect-hint" id="reconnectHint">Enter your M-Pesa phone number or voucher code</p>
+                        <p class="reconnect-hint" id="reconnectHint">Enter your mobile money phone number or voucher code</p>
 
                         <!-- Reconnect Result (hidden by default) -->
                         <div class="reconnect-result hidden" id="reconnectResult">
@@ -497,12 +497,12 @@
                     <div class="form-header">
                         <span class="form-icon">📱</span>
                         <h2>Enter Your Number</h2>
-                        <p>You'll receive an M-Pesa prompt</p>
+                        <p id="paymentPromptText">You'll receive an M-Pesa prompt</p>
                     </div>
                     
                     <div class="form-group">
                         <div class="input-wrapper">
-                            <span class="input-prefix">+254</span>
+                            <span class="input-prefix" id="phoneInputPrefix">+254</span>
                             <input 
                                 type="tel" 
                                 id="phoneNumber" 
@@ -514,7 +514,7 @@
                                 maxlength="10"
                             >
                         </div>
-                        <p class="input-hint">E.g., 0712345678 or 712345678</p>
+                        <p class="input-hint" id="phoneInputHint">E.g., 0712345678 or 712345678</p>
                     </div>
 
                     <button type="submit" class="submit-button" id="submitButton">
@@ -525,7 +525,7 @@
                         </span>
                     </button>
 
-                    <div class="security-note">
+                    <div class="security-note" id="paymentSecurityNote">
                         <span>🔒</span> Secure payment via Safaricom M-Pesa
                     </div>
                 </form>
@@ -590,7 +590,7 @@
                     <span class="tip-emoji">💡</span>
                     <div class="tip-text">
                         <strong>Already entered your PIN?</strong>
-                        <p>Confirmation can take up to a minute or two. Please do not pay again — you will be connected automatically as soon as M-Pesa confirms.</p>
+                        <p id="paymentConfirmationHint">Confirmation can take up to a minute or two. Please do not pay again — you will be connected automatically as soon as M-Pesa confirms.</p>
                     </div>
                 </div>
 
@@ -697,7 +697,7 @@
                         <span class="help-title">Common fixes</span>
                     </div>
                     <ul class="help-list">
-                        <li>Check your M-Pesa balance</li>
+                        <li id="paymentBalanceHint">Check your M-Pesa balance</li>
                         <li>Make sure you entered the correct PIN</li>
                         <li>Wait 30 seconds and try again</li>
                         <li>Check your network connection</li>

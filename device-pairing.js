@@ -47,7 +47,7 @@
 
     // ---- Phone helpers (from script.js globals) ----
     function fmtPhone(p) {
-        try { return formatPhoneForMpesa(p); } catch (e) { return p; }
+        try { return formatPhoneForPaymentProvider(p); } catch (e) { return p; }
     }
 
     function validPhone(p) {
@@ -56,7 +56,7 @@
 
     // ---- Price formatter (mirrors script.js) ----
     function fmtPrice(price) {
-        const m = String(price).match(/^(KSH)\s*(.+)$/);
+        const m = String(price).match(/^(KSH|XAF)\s*(.+)$/);
         if (m) return `<span class="currency-code">${m[1]}</span> ${m[2]}`;
         return price;
     }
@@ -314,7 +314,8 @@
 
         if (phoneInput) {
             phoneInput.addEventListener('input', (e) => {
-                e.target.value = e.target.value.replace(/[^\d]/g, '').slice(0, 10);
+                const maxDigits = typeof routerPaymentProvider !== 'undefined' && routerPaymentProvider === 'fapshi' ? 14 : 10;
+                e.target.value = e.target.value.replace(/[^\d]/g, '').slice(0, maxDigits);
             });
         }
 
@@ -350,7 +351,7 @@
             </div>
         `;
 
-        if (payText) payText.textContent = `Pay ${dpSelectedPlan.price} with M-Pesa`;
+        if (payText) payText.textContent = `Pay ${dpSelectedPlan.price} with ${getPaymentProviderLabel()}`;
 
         // Pre-fill phone if saved
         const phoneInput = $('devicePhoneInput');
@@ -472,7 +473,7 @@
             await new Promise(r => setTimeout(r, INTERVAL));
         }
 
-        showDeviceError('Payment verification timed out. Check your M-Pesa messages or look up the device in "My Devices".');
+        showDeviceError(`Payment verification timed out. Check your ${getPaymentProviderLabel()} messages or look up the device in "My Devices".`);
     }
 
     // ========================================
@@ -512,7 +513,7 @@
             <div class="device-summary-row"><span class="device-summary-label">MAC</span><span class="device-summary-value" style="font-family:monospace;font-size:0.8rem;">${mac}</span></div>
             <div class="device-summary-row"><span class="device-summary-label">Plan</span><span class="device-summary-value">${planName}</span></div>
             <div class="device-summary-row"><span class="device-summary-label">Expires</span><span class="device-summary-value">${expiryText}</span></div>
-            <div class="device-summary-row"><span class="device-summary-label">Method</span><span class="device-summary-value">${isVoucher ? 'Voucher' : 'M-Pesa'}</span></div>
+            <div class="device-summary-row"><span class="device-summary-label">Method</span><span class="device-summary-value">${isVoucher ? 'Voucher' : getPaymentProviderLabel()}</span></div>
         `;
     }
 

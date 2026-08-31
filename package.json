@@ -1,8 +1,11 @@
 {
   "scripts": {
-    "dev": "npx serve . --listen 3000 --no-clipboard"
+    "dev": "serve . --listen 3000 --no-clipboard",
+    "test": "playwright test"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "serve": "^14.2.6",
     "sharp": "^0.34.5"
   }
 }
