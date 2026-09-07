@@ -905,6 +905,18 @@ function wifiSvgHtml() {
     </svg>`;
 }
 
+// Device-allowance icon. Inline SVG rather than an emoji: the portal is loaded
+// almost entirely by low-end Android handsets, where emoji font coverage is
+// patchy and a missing glyph renders as a blank box next to the text.
+function devicesSvgHtml() {
+    return `<svg class="plan-devices-icon" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false">
+        <circle cx="5.75" cy="4.5" r="2.5"/>
+        <path d="M5.75 8.25c-2.485 0-4.5 1.455-4.5 3.25v1.25c0 .414.336.75.75.75h7.5a.75.75 0 00.75-.75V11.5c0-1.795-2.015-3.25-4.5-3.25z"/>
+        <circle cx="12" cy="5.75" r="2"/>
+        <path d="M12 9c-.62 0-1.199.1-1.71.276.6.66.96 1.472.96 2.224v1.25c0 .263-.05.515-.14.75h3.14a.75.75 0 00.75-.75v-1C15 10.25 13.68 9 12 9z"/>
+    </svg>`;
+}
+
 function renderStandardHeader(settings) {
     const header = document.getElementById('portal-header');
     if (!header) return;
@@ -1618,6 +1630,7 @@ function transformPlansData(apiPlans) {
             badgeText: plan.badge_text || null,
             originalPrice: plan.original_price || null,
             validUntil: plan.valid_until || null,
+            maxDevices: Math.max(1, parseInt(plan.max_shared_users, 10) || 1),
             originalData: plan
         };
     });
@@ -1821,7 +1834,8 @@ function createPlanCard(plan) {
 
     card.setAttribute('role', 'button');
     card.setAttribute('tabindex', '0');
-    card.setAttribute('aria-label', `Select ${plan.duration} plan for ${plan.price}, ${plan.speed}`);
+    const devicesLabel = plan.maxDevices > 1 ? `, up to ${plan.maxDevices} devices` : '';
+    card.setAttribute('aria-label', `Select ${plan.duration} plan for ${plan.price}, ${plan.speed}${devicesLabel}`);
 
     const formattedPrice = formatPrice(plan.price);
 
@@ -1848,12 +1862,20 @@ function createPlanCard(plan) {
         ? `<div class="plan-speed">${plan.speed}</div>`
         : '';
 
+    // Device allowance. Only shown when the plan actually covers more than one
+    // device — printing "1 device" on every plan of a reseller who never turned
+    // sharing on reads as a new restriction rather than as information.
+    const devicesHtml = plan.maxDevices > 1
+        ? `<div class="plan-devices">${devicesSvgHtml()}<span>Up to ${plan.maxDevices} devices</span></div>`
+        : '';
+
     card.innerHTML = `
         ${badgeHtml}
         <div class="plan-duration">${plan.duration}</div>
         ${originalPriceHtml}
         <div class="plan-price">${formattedPrice}</div>
         ${speedHtml}
+        ${devicesHtml}
         ${plan.valueMessage ? `<div class="plan-value-msg">${plan.valueMessage}</div>` : ''}
         ${countdownHtml}
     `;
@@ -1892,6 +1914,7 @@ function selectPlan(plan) {
         <div class="selected-plan-name">${plan.duration}</div>
         <div class="selected-plan-price">${formatPrice(plan.price)}</div>
         ${portalSettings.show_plan_speed !== false && plan.speed ? `<div class="selected-plan-speed">${plan.speed}</div>` : ''}
+        ${plan.maxDevices > 1 ? `<div class="selected-plan-devices">${devicesSvgHtml()}<span>Up to ${plan.maxDevices} devices</span></div>` : ''}
     `;
     
     // Show payment section, hide plans
