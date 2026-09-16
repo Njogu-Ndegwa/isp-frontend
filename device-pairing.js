@@ -738,7 +738,10 @@
         btn.textContent = '⏳ ...';
 
         try {
-            const resp = await fetch(proxied(`${apiBase()}/public/device/unpair/${pairingId}`), {
+            // Backend requires the router and the phone the device was paired with.
+            const unpairUrl = `${apiBase()}/public/device/unpair/${pairingId}`
+                + `?router_id=${getRouterIdSafe()}&owner_phone=${encodeURIComponent(fmtPhone(ownerPhone))}`;
+            const resp = await fetch(proxied(unpairUrl), {
                 method: 'DELETE',
                 headers: { 'Accept': 'application/json' },
                 mode: 'cors'

@@ -140,7 +140,7 @@
                         <span class="reconnect-header-icon">🔄</span>
                         <div class="reconnect-header-text">
                             <div class="reconnect-header-title" data-i18n="reconnectTitle">Already paid? Reconnect</div>
-                            <div class="reconnect-header-subtitle" data-i18n="reconnectSub">Enter your phone number or voucher code to get back online</div>
+                            <div class="reconnect-header-subtitle" data-i18n="reconnectSub">Enter your phone number or code to reconnect</div>
                         </div>
                     </div>
                     <div class="reconnect-body">
@@ -149,7 +149,8 @@
                                 type="text"
                                 id="reconnectInput"
                                 class="reconnect-input"
-                                placeholder="Phone or voucher e.g. 0712… or 4839-2910"
+                                placeholder="Phone or code e.g. 0712… or ABC-DEF"
+                                data-i18n-placeholder="reconnectPlaceholder"
                                 maxlength="13"
                                 autocomplete="off"
                                 spellcheck="false"
@@ -159,7 +160,7 @@
                                 <span class="reconnect-btn-text" data-i18n="reconnectBtn">Reconnect</span>
                             </button>
                         </div>
-                        <p class="reconnect-hint" id="reconnectHint">Enter your mobile money phone number or voucher code</p>
+                        <p class="reconnect-hint" id="reconnectHint">Enter your phone number or code</p>
 
                         <!-- Reconnect Result (hidden by default) -->
                         <div class="reconnect-result hidden" id="reconnectResult">
@@ -188,13 +189,15 @@
                     <span class="divider-line"></span>
                 </div>
 
-                <!-- Voucher Redeem Section (shown when payment_methods includes "voucher") -->
+                <!-- Voucher / Access Code Section (shown when payment_methods includes "voucher",
+                     a plan allows sharing, or an access code was saved on this device).
+                     One code works on every device the plan covers. -->
                 <div class="voucher-section hidden" id="voucherSection">
                     <div class="voucher-header">
                         <span class="voucher-header-icon">🎟️</span>
                         <div class="voucher-header-text">
-                            <div class="voucher-header-title">Have a Voucher or Share Code?</div>
-                            <div class="voucher-header-subtitle">Enter your code below to get connected</div>
+                            <div class="voucher-header-title" data-i18n="codeTitle">Have a Voucher or access code?</div>
+                            <div class="voucher-header-subtitle" data-i18n="codeSub">Use the same code on every device your plan covers</div>
                         </div>
                     </div>
                     <div class="voucher-body" id="voucherBody">
@@ -203,22 +206,24 @@
                                 type="text"
                                 id="voucherCodeInput"
                                 class="voucher-input"
-                                placeholder="Voucher 4839-2910 or share ABC543"
+                                placeholder="Voucher, access code or receipt"
+                                data-i18n-placeholder="codePlaceholder"
+                                aria-label="Voucher or access code"
                                 maxlength="20"
                                 autocomplete="off"
                                 spellcheck="false"
                             >
                             <button type="button" class="voucher-verify-btn" id="voucherVerifyBtn">
-                                <span class="voucher-verify-text">Verify</span>
+                                <span class="voucher-verify-text" data-i18n="codeConnect">Connect</span>
                                 <span class="voucher-verify-loader hidden" id="voucherVerifyLoader">
                                     <span class="loader-spinner"></span>
                                 </span>
                             </button>
                         </div>
 
-                        <!-- Verification Result (hidden by default) -->
+                        <!-- Result (hidden by default) -->
                         <div class="voucher-result hidden" id="voucherResult">
-                            <!-- Populated by JS on verify success/error -->
+                            <!-- Populated by JS: error message or device-limit panel -->
                         </div>
                     </div>
                 </div>
@@ -850,10 +855,10 @@
     </div>
 
     <!-- Defer scripts to prevent render blocking -->
-    <script src="script.js?v=9" defer></script>
+    <script src="script.js?v=10" defer></script>
     <script src="script003.js" defer></script>
     <script src="ads.js" defer></script>
-    <script src="device-pairing.js" defer></script>
+    <script src="device-pairing.js?v=2" defer></script>
     <script src="access-login.js" defer></script>
     
     <!-- PWA Service Worker & Install Prompt -->

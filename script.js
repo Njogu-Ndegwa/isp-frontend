@@ -103,10 +103,12 @@ function getPlansUrl(rId) {
 const PAYMENT_ENDPOINT = `${API_BASE_URL}/hotspot/register-and-pay`;
 const PAYMENT_STATUS_ENDPOINT = `${API_BASE_URL}/hotspot/payment-status`;
 const ROUTER_LOOKUP_ENDPOINT = `${API_BASE_URL}/routers/by-identity`;
-// Voucher endpoints (public, no auth)
-const VOUCHER_VERIFY_ENDPOINT = `${API_BASE_URL}/public/voucher/verify`;
-const VOUCHER_REDEEM_ENDPOINT = `${API_BASE_URL}/public/voucher/redeem`;
-const SHARE_CODE_REDEEM_ENDPOINT = `${API_BASE_URL}/public/device/share-subscription/code/redeem`;
+// Unified access-code endpoints (public, no auth). One code — voucher,
+// post-payment access code, or M-Pesa receipt — works on every device the
+// plan covers; the backend decides what the code is.
+const ACCESS_CODE_REDEEM_ENDPOINT = `${API_BASE_URL}/public/access-code/redeem`;
+const ACCESS_CODE_DISCONNECT_ENDPOINT = `${API_BASE_URL}/public/access-code/disconnect`;
+const ACCESS_CODE_STORAGE_KEY = 'bitwave_access_code';
 // Reconnect endpoint (public, no auth)
 const RECONNECT_ENDPOINT = `${API_BASE_URL}/public/reconnect`;
 
@@ -1135,7 +1137,39 @@ const I18N = {
         enterPhone: 'Enter Phone Number',
         pay: 'Pay & Connect',
         reconnectTitle: 'Already paid? Reconnect',
-        reconnectSub: 'Enter your phone number or voucher code to reconnect',
+        reconnectSub: 'Enter your phone number or code to reconnect',
+        reconnectHint: 'Enter your {provider} phone number or code',
+        reconnectPlaceholder: 'Phone or code e.g. 0712… or ABC-DEF',
+        reconnectInvalid: 'Please enter a valid {provider} phone number or code (e.g. ABC-DEF or your {provider} receipt)',
+        reconnectPhoneDetected: '📱 Phone number detected',
+        reconnectCodeDetected: '🎟️ Code detected',
+        codeTitle: 'Have a Voucher or access code?',
+        codeSub: 'Use the same code on every device your plan covers',
+        codePlaceholder: 'Voucher, access code or receipt',
+        codeConnect: 'Connect',
+        codeShareHint: 'Use this same code on up to {n} devices',
+        codePlanStarted: 'Your plan has started',
+        codeDeviceAdded: 'Connected. This device is now sharing the plan',
+        codeMainDevice: "You're back online",
+        codeNotFound: 'Code not found. Check it and try again.',
+        codeExpired: 'This plan has expired. Buy a new plan to get back online.',
+        codeTooMany: 'Too many wrong attempts. Please wait a few minutes and try again.',
+        noMac: "We couldn't identify this device. Turn WiFi off and on, reconnect to this network, then open this page again.",
+        limitTitle: 'Device limit reached',
+        limitSub: 'This plan is already in use on {n} devices. Remove one to connect this device.',
+        limitNoCode: 'Enter your access code or {provider} receipt to manage these devices.',
+        limitRemove: 'Remove',
+        limitRemoving: 'Removing…',
+        limitConfirmTitle: 'Remove device?',
+        limitConfirmMsg: '{name} will lose internet.',
+        limitCancel: 'Cancel',
+        mainDevice: 'Main device',
+        deviceLabel: 'Device',
+        thisDevice: 'This device',
+        accessCodeTitle: 'Your access code',
+        accessCodeBody: "Enter it on your other devices (up to {n}) under 'Voucher or access code'.",
+        copy: 'Copy',
+        copied: 'Copied',
         reconnectBtn: 'Reconnect',
         helpBtn: 'Help',
         callSupport: 'Call Support',
@@ -1152,7 +1186,39 @@ const I18N = {
         enterPhone: 'Ingiza Nambari ya Simu',
         pay: 'Lipa & Unganisha',
         reconnectTitle: 'Ulisha lipa? Unganisha tena',
-        reconnectSub: 'Ingiza nambari yako au voucher kuunganisha tena',
+        reconnectSub: 'Ingiza nambari ya simu au msimbo kuunganisha tena',
+        reconnectHint: 'Ingiza nambari ya simu ya {provider} au msimbo',
+        reconnectPlaceholder: 'Simu au msimbo k.m. 0712… au ABC-DEF',
+        reconnectInvalid: 'Ingiza nambari sahihi ya simu ya {provider} au msimbo (k.m. ABC-DEF au risiti ya {provider})',
+        reconnectPhoneDetected: '📱 Nambari ya simu imetambuliwa',
+        reconnectCodeDetected: '🎟️ Msimbo umetambuliwa',
+        codeTitle: 'Una voucher au msimbo wa kuingia?',
+        codeSub: 'Tumia msimbo huo huo kwenye kila kifaa mpango wako unaruhusu',
+        codePlaceholder: 'Voucher, msimbo au risiti',
+        codeConnect: 'Unganisha',
+        codeShareHint: 'Tumia msimbo huu huu kwenye hadi vifaa {n}',
+        codePlanStarted: 'Mpango wako umeanza',
+        codeDeviceAdded: 'Umeunganishwa. Kifaa hiki sasa kinashiriki mpango',
+        codeMainDevice: 'Umerudi mtandaoni',
+        codeNotFound: 'Msimbo haujapatikana. Kagua na ujaribu tena.',
+        codeExpired: 'Mpango huu umeisha. Nunua mpango mpya ili kuunganisha tena.',
+        codeTooMany: 'Majaribio mengi yasiyo sahihi. Subiri dakika chache kisha ujaribu tena.',
+        noMac: 'Hatukuweza kutambua kifaa hiki. Zima na uwashe WiFi, unganisha kwenye mtandao huu tena, kisha fungua ukurasa huu upya.',
+        limitTitle: 'Idadi ya vifaa imefikia kikomo',
+        limitSub: 'Mpango huu tayari unatumika kwenye vifaa {n}. Ondoa kimoja ili kuunganisha kifaa hiki.',
+        limitNoCode: 'Ingiza msimbo wako au risiti ya {provider} ili kusimamia vifaa hivi.',
+        limitRemove: 'Ondoa',
+        limitRemoving: 'Inaondoa…',
+        limitConfirmTitle: 'Ondoa kifaa?',
+        limitConfirmMsg: '{name} kitapoteza intaneti.',
+        limitCancel: 'Ghairi',
+        mainDevice: 'Kifaa kikuu',
+        deviceLabel: 'Kifaa',
+        thisDevice: 'Kifaa hiki',
+        accessCodeTitle: 'Msimbo wako wa kuingia',
+        accessCodeBody: "Uingize kwenye vifaa vyako vingine (hadi {n}) chini ya 'Voucher au msimbo wa kuingia'.",
+        copy: 'Nakili',
+        copied: 'Imenakiliwa',
         reconnectBtn: 'Unganisha',
         helpBtn: 'Msaada',
         callSupport: 'Piga Simu',
@@ -1169,7 +1235,39 @@ const I18N = {
         enterPhone: 'Entrez votre numéro',
         pay: 'Payer & Connecter',
         reconnectTitle: 'Déjà payé? Reconnectez',
-        reconnectSub: 'Entrez votre numéro ou code voucher',
+        reconnectSub: 'Entrez votre numéro ou code',
+        reconnectHint: 'Entrez votre numéro {provider} ou code',
+        reconnectPlaceholder: 'Numéro ou code ex. 0712… ou ABC-DEF',
+        reconnectInvalid: 'Entrez un numéro {provider} valide ou un code (ex. ABC-DEF ou votre reçu {provider})',
+        reconnectPhoneDetected: '📱 Numéro détecté',
+        reconnectCodeDetected: '🎟️ Code détecté',
+        codeTitle: "Vous avez un voucher ou un code d'accès ?",
+        codeSub: 'Utilisez le même code sur chaque appareil couvert par votre forfait',
+        codePlaceholder: "Voucher, code d'accès ou reçu",
+        codeConnect: 'Connecter',
+        codeShareHint: "Utilisez ce même code sur jusqu'à {n} appareils",
+        codePlanStarted: 'Votre forfait a démarré',
+        codeDeviceAdded: 'Connecté. Cet appareil partage maintenant le forfait',
+        codeMainDevice: 'Vous êtes de nouveau en ligne',
+        codeNotFound: 'Code introuvable. Vérifiez-le et réessayez.',
+        codeExpired: 'Ce forfait a expiré. Achetez un nouveau forfait pour vous reconnecter.',
+        codeTooMany: 'Trop de tentatives incorrectes. Patientez quelques minutes puis réessayez.',
+        noMac: "Impossible d'identifier cet appareil. Désactivez puis réactivez le WiFi, reconnectez-vous à ce réseau, puis rouvrez cette page.",
+        limitTitle: "Limite d'appareils atteinte",
+        limitSub: 'Ce forfait est déjà utilisé sur {n} appareils. Retirez-en un pour connecter cet appareil.',
+        limitNoCode: "Entrez votre code d'accès ou votre reçu {provider} pour gérer ces appareils.",
+        limitRemove: 'Retirer',
+        limitRemoving: 'Retrait…',
+        limitConfirmTitle: "Retirer l'appareil ?",
+        limitConfirmMsg: '{name} perdra internet.',
+        limitCancel: 'Annuler',
+        mainDevice: 'Appareil principal',
+        deviceLabel: 'Appareil',
+        thisDevice: 'Cet appareil',
+        accessCodeTitle: "Votre code d'accès",
+        accessCodeBody: "Saisissez-le sur vos autres appareils (jusqu'à {n}) dans « Voucher ou code d'accès ».",
+        copy: 'Copier',
+        copied: 'Copié',
         reconnectBtn: 'Reconnecter',
         helpBtn: 'Aide',
         callSupport: 'Appeler Support',
@@ -1183,8 +1281,20 @@ const I18N = {
     }
 };
 
+let currentLang = 'en';
+
+// Translate a key for the active portal language, filling {placeholders}.
+// {provider} defaults to the router's mobile-money label.
+function tr(key, vars = {}) {
+    const dict = I18N[currentLang] || I18N.en;
+    const template = dict[key] !== undefined ? dict[key] : (I18N.en[key] !== undefined ? I18N.en[key] : key);
+    const values = { provider: getPaymentProviderLabel(), ...vars };
+    return String(template).replace(/\{(\w+)\}/g, (m, name) => (values[name] !== undefined ? String(values[name]) : m));
+}
+
 function applyLanguage(lang) {
-    const t = I18N[lang] || I18N.en;
+    currentLang = I18N[lang] ? lang : 'en';
+    const t = I18N[currentLang];
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.dataset.i18n;
         if (t[key] !== undefined) el.textContent = t[key];
@@ -1193,6 +1303,7 @@ function applyLanguage(lang) {
         const key = el.dataset.i18nPlaceholder;
         if (t[key] !== undefined) el.placeholder = t[key];
     });
+    updateReconnectHint();
 }
 
 // ========================================
@@ -1273,7 +1384,10 @@ function applyPaymentMethods(methods) {
     const hasMpesa   = methods.includes('mpesa');
     const hasVoucher = methods.includes('voucher');
     const hasShareCode = Boolean(planFlags && planFlags.sharing_enabled);
-    const showCodeSection = hasVoucher || hasShareCode;
+    // A saved access code from an earlier multi-device purchase keeps the box
+    // visible so the customer can reuse it on this visit.
+    const hasSavedCode = Boolean(loadSavedAccessCode());
+    const showCodeSection = hasVoucher || hasShareCode || hasSavedCode;
 
     const voucherSection  = document.getElementById('voucherSection');
     const mpesaSection    = document.getElementById('mpesaSection');
@@ -1298,7 +1412,7 @@ function applyPaymentMethods(methods) {
         paymentDivider.classList.toggle('hidden', !(hasMpesa && showCodeSection));
     }
 
-    console.log('💳 Payment methods applied:', methods, '| mpesa:', hasMpesa, '| voucher:', hasVoucher, '| share code:', hasShareCode);
+    console.log('💳 Payment methods applied:', methods, '| mpesa:', hasMpesa, '| voucher:', hasVoucher, '| share code:', hasShareCode, '| saved code:', hasSavedCode);
 }
 
 function normalizePaymentProvider(provider) {
@@ -1348,7 +1462,7 @@ function setPaymentProvider(provider) {
     if (security) security.innerHTML = `<span>🔒</span> Secure payment via ${label}`;
     if (confirmation) confirmation.textContent = `Confirmation can take up to a minute or two. Please do not pay again — you will be connected automatically as soon as ${label} confirms.`;
     if (balance) balance.textContent = `Check your ${label} balance`;
-    if (reconnectHint) reconnectHint.textContent = `Enter your ${label} phone number or voucher code`;
+    if (reconnectHint) updateReconnectHint();
     if (devicePhoneInput) {
         devicePhoneInput.maxLength = isFapshi ? 14 : 10;
         devicePhoneInput.placeholder = isFapshi ? '6XXXXXXXX or 2376XXXXXXXX' : '7XXXXXXXX';
@@ -1931,152 +2045,403 @@ function selectPlan(plan) {
 }
 
 // ========================================
-// VOUCHER: VERIFY CODE
-// GET /api/public/voucher/verify/{code}
+// ACCESS CODE: SHARED HELPERS
+// One purchase = one code that works on every device the plan covers.
+// The customer types the same code everywhere: a voucher (8 digits or legacy
+// XXXX-XXXX), the 6-char access code shown after payment (ABC-DEF), or their
+// M-Pesa receipt. The backend decides which kind it is.
 // ========================================
-async function verifyVoucher(code) {
-    const url = `${VOUCHER_VERIFY_ENDPOINT}/${encodeURIComponent(code.trim())}`;
-    console.log('🎟️ [VOUCHER] Verifying code:', code);
 
+// The device MAC comes from the MikroTik redirect. Without it the backend
+// cannot authorise anything, so we never invent one.
+function getClientMac() {
+    return String(mikrotikParams.mac || '').trim();
+}
+
+function normalizeAccessCode(value) {
+    return String(value || '').trim().replace(/\s+/g, '').toUpperCase();
+}
+
+// Loose shape check only — anything 6-20 alphanumerics (dashes allowed) is
+// sent to the backend, which is the source of truth.
+function looksLikeAccessCode(value) {
+    const cleaned = normalizeAccessCode(value);
+    const alnum = cleaned.replace(/-/g, '');
+    return /^[A-Z0-9-]+$/.test(cleaned) && alnum.length >= 6 && alnum.length <= 20;
+}
+
+// Best-effort label so the device list reads "iPhone" rather than a bare MAC.
+function guessClientDevice() {
+    const ua = navigator.userAgent || '';
+    if (/iPad/i.test(ua)) return { device_name: 'iPad', device_type: 'other' };
+    if (/iPhone/i.test(ua)) return { device_name: 'iPhone', device_type: 'other' };
+    if (/Android/i.test(ua)) {
+        return /Mobile/i.test(ua)
+            ? { device_name: 'Android phone', device_type: 'other' }
+            : { device_name: 'Android tablet', device_type: 'other' };
+    }
+    if (/Windows/i.test(ua)) return { device_name: 'Windows laptop', device_type: 'laptop' };
+    if (/Macintosh|Mac OS X/i.test(ua)) return { device_name: 'Mac', device_type: 'laptop' };
+    if (/CrOS/i.test(ua)) return { device_name: 'Chromebook', device_type: 'laptop' };
+    if (/Linux/i.test(ua)) return { device_name: 'Linux computer', device_type: 'laptop' };
+    return { device_name: 'Device', device_type: 'other' };
+}
+
+// FastAPI errors: detail is a string, an object (device_limit_reached) or a
+// validation array. Turn any of them into an Error carrying status + detail.
+function buildApiError(response, data, fallbackMessage) {
+    const detail = data ? data.detail : undefined;
+    let message = fallbackMessage;
+    if (typeof detail === 'string' && detail) {
+        message = detail;
+    } else if (detail && typeof detail === 'object' && !Array.isArray(detail) && detail.message) {
+        message = detail.message;
+    } else if (Array.isArray(detail) && detail.length) {
+        message = detail.map(d => (d && d.msg) || '').filter(Boolean).join('; ') || fallbackMessage;
+    } else if (data && data.message) {
+        message = data.message;
+    }
+    const err = new Error(message);
+    err.status = response.status;
+    err.detail = detail;
+    return err;
+}
+
+function isDeviceLimitError(err) {
+    return Boolean(err && err.status === 409 && err.detail && typeof err.detail === 'object'
+        && err.detail.error === 'device_limit_reached');
+}
+
+async function postPublicJson(endpoint, body, timeoutMs, fallbackMessage) {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
-
-    const response = await fetch(getProxiedUrl(url), {
-        method: 'GET',
-        headers: { 'Accept': 'application/json' },
-        mode: 'cors',
-        signal: controller.signal
-    });
-
-    clearTimeout(timeoutId);
-
-    const data = await response.json();
-
-    if (!response.ok) {
-        throw new Error(data.detail || 'Invalid voucher code');
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    let response;
+    try {
+        response = await fetch(getProxiedUrl(endpoint), {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            mode: 'cors',
+            body: JSON.stringify(body),
+            signal: controller.signal
+        });
+    } finally {
+        clearTimeout(timeoutId);
     }
 
-    console.log('✅ [VOUCHER] Verification result:', data);
-    return data;
-}
-
-// ========================================
-// VOUCHER: REDEEM CODE
-// POST /api/public/voucher/redeem
-// ========================================
-async function redeemVoucher(code, macAddress, rId) {
-    console.log('🎟️ [VOUCHER] Redeeming code:', code);
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
-
-    const requestBody = {
-        code: code.trim(),
-        mac_address: macAddress,
-        router_id: String(rId)
-    };
-
-    console.log('📤 [VOUCHER] Redeem request:', requestBody);
-
-    const response = await fetch(getProxiedUrl(VOUCHER_REDEEM_ENDPOINT), {
-        method: 'POST',
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        },
-        mode: 'cors',
-        body: JSON.stringify(requestBody),
-        signal: controller.signal
-    });
-
-    clearTimeout(timeoutId);
-
-    const data = await response.json();
+    let data = null;
+    try { data = await response.json(); } catch (e) { data = null; }
 
     if (!response.ok) {
-        throw new Error(data.detail || data.message || 'Failed to redeem voucher');
+        throw buildApiError(response, data, fallbackMessage);
     }
+    return data || {};
+}
 
-    console.log('✅ [VOUCHER] Redeem result:', data);
-    return data;
+// Customer-facing wording for the redeem/reconnect error codes.
+function friendlyAccessCodeError(err) {
+    if (!err) return 'Something went wrong. Please try again.';
+    if (err.name === 'AbortError') return 'The request timed out. Please check your connection and try again.';
+    if (err.status === 404) return tr('codeNotFound');
+    if (err.status === 410) return tr('codeExpired');
+    if (err.status === 429) return tr('codeTooMany');
+    return err.message || 'Something went wrong. Please try again.';
+}
+
+// ---- Saved access code (post-payment) ----
+function loadSavedAccessCode() {
+    try {
+        const raw = localStorage.getItem(ACCESS_CODE_STORAGE_KEY);
+        if (!raw) return null;
+        let saved;
+        try { saved = JSON.parse(raw); } catch (e) { saved = { code: raw }; }
+        if (typeof saved === 'string') saved = { code: saved };
+        if (!saved || !saved.code) return null;
+        // A code only works on the network it was bought on.
+        if (saved.router && mikrotikParams.router && saved.router !== mikrotikParams.router) return null;
+        if (saved.expires_at && new Date(saved.expires_at).getTime() < Date.now()) {
+            localStorage.removeItem(ACCESS_CODE_STORAGE_KEY);
+            return null;
+        }
+        return saved;
+    } catch (e) {
+        return null;
+    }
+}
+
+function saveAccessCode(code, maxDevices, expiresAt) {
+    try {
+        localStorage.setItem(ACCESS_CODE_STORAGE_KEY, JSON.stringify({
+            code: code,
+            max_devices: maxDevices || null,
+            expires_at: expiresAt || null,
+            router: mikrotikParams.router || '',
+            saved_at: new Date().toISOString()
+        }));
+        console.log('💾 [ACCESS CODE] Saved for later visits');
+    } catch (e) {
+        console.warn('⚠️ [ACCESS CODE] Could not save to localStorage:', e);
+    }
+}
+
+async function copyTextToClipboard(text) {
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+            return true;
+        }
+    } catch (e) { /* fall through to the legacy path */ }
+    try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand('copy');
+        ta.remove();
+        return ok;
+    } catch (e) {
+        return false;
+    }
 }
 
 // ========================================
-// SHARE CODE: REDEEM FROM VOUCHER FIELD
-// POST /api/public/device/share-subscription/code/redeem
+// ACCESS CODE: API CALLS
+// POST /api/public/access-code/redeem
+// POST /api/public/access-code/disconnect
 // ========================================
-const SHARE_CODE_REGEX = /^[A-Z0-9]{6}$/;
-
-function cleanShareCode(value) {
-    return String(value || '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-}
-
-function isShareCode(value) {
-    return SHARE_CODE_REGEX.test(cleanShareCode(value));
-}
-
-async function redeemShareCode(code, macAddress, rId) {
-    const normalizedCode = cleanShareCode(code);
-    console.log('[SHARE] Redeeming share code:', normalizedCode);
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
-
+async function redeemAccessCode(code, macAddress, rId) {
     const requestBody = {
-        code: normalizedCode,
+        code: normalizeAccessCode(code),
         router_id: rId,
-        device_mac: macAddress,
-        device_type: 'other'
+        mac_address: macAddress,
+        ...guessClientDevice()
     };
+    console.log('🎟️ [ACCESS CODE] Redeem request:', requestBody);
+    const data = await postPublicJson(ACCESS_CODE_REDEEM_ENDPOINT, requestBody, 30000, 'Could not use this code');
+    console.log('✅ [ACCESS CODE] Redeem result:', data);
+    return data;
+}
 
-    console.log('[SHARE] Redeem request:', requestBody);
-
-    const response = await fetch(getProxiedUrl(SHARE_CODE_REDEEM_ENDPOINT), {
-        method: 'POST',
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        },
-        mode: 'cors',
-        body: JSON.stringify(requestBody),
-        signal: controller.signal
-    });
-
-    clearTimeout(timeoutId);
-
-    const data = await response.json();
-
-    if (!response.ok) {
-        throw new Error(data.detail || data.message || 'Failed to redeem share code');
+async function disconnectAccessCodeDevice(code, device) {
+    const requestBody = {
+        code: normalizeAccessCode(code),
+        router_id: routerId || FALLBACK_ROUTER_ID
+    };
+    if (device.is_main_device || device.pairing_id == null) {
+        requestBody.main_device = true;
+    } else {
+        requestBody.pairing_id = device.pairing_id;
     }
+    const mac = getClientMac();
+    if (mac) requestBody.mac_address = mac;
 
-    console.log('[SHARE] Redeem result:', data);
+    console.log('🔌 [ACCESS CODE] Disconnect request:', requestBody);
+    const data = await postPublicJson(ACCESS_CODE_DISCONNECT_ENDPOINT, requestBody, 20000, 'Could not remove the device');
+    console.log('✅ [ACCESS CODE] Disconnect result:', data);
     return data;
 }
 
 // ========================================
-// VOUCHER: UI SETUP & HANDLERS
+// DEVICE LIMIT PANEL
+// Shown on 409 device_limit_reached (redeem or reconnect). Lists the devices
+// on the plan; removing one retries the original request for this device.
+// device_name is user-controlled — every string goes in via textContent.
 // ========================================
-let verifiedVoucher = null; // stores the verified voucher data
+let pendingDeviceLimitRetry = null; // { code, retry } — remembered for "Remove" → retry
 
+function confirmDeviceRemoval(deviceLabel) {
+    return new Promise(resolve => {
+        const overlay = document.createElement('div');
+        overlay.className = 'device-confirm-overlay';
+
+        const box = document.createElement('div');
+        box.className = 'device-confirm-box';
+
+        const title = document.createElement('div');
+        title.className = 'device-confirm-title';
+        title.textContent = tr('limitConfirmTitle');
+
+        const msg = document.createElement('p');
+        msg.className = 'device-confirm-msg';
+        msg.textContent = tr('limitConfirmMsg', { name: deviceLabel });
+
+        const actions = document.createElement('div');
+        actions.className = 'device-confirm-actions';
+        const cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button';
+        cancelBtn.className = 'device-confirm-cancel';
+        cancelBtn.textContent = tr('limitCancel');
+        const okBtn = document.createElement('button');
+        okBtn.type = 'button';
+        okBtn.className = 'device-confirm-ok';
+        okBtn.textContent = tr('limitRemove');
+        actions.append(cancelBtn, okBtn);
+
+        box.append(title, msg, actions);
+        overlay.appendChild(box);
+
+        const close = (value) => { overlay.remove(); resolve(value); };
+        cancelBtn.addEventListener('click', () => close(false));
+        okBtn.addEventListener('click', () => close(true));
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) close(false); });
+
+        document.body.appendChild(overlay);
+    });
+}
+
+function deviceDisplayName(device) {
+    const name = String(device.device_name || '').trim();
+    if (name) return name;
+    return device.is_main_device ? tr('mainDevice') : tr('deviceLabel');
+}
+
+// container: #voucherResult or #reconnectResult
+// options.code: the code to disconnect with (null when the request used a phone)
+// options.retry: async () => void — re-runs the original request for this device
+function renderDeviceLimitPanel(container, detail, options) {
+    if (!container) return;
+    const code = options && options.code ? options.code : null;
+    pendingDeviceLimitRetry = code ? { code, retry: options.retry } : null;
+
+    const devices = Array.isArray(detail.devices) ? detail.devices : [];
+    const maxDevices = detail.max_devices || devices.length;
+    console.log('🚧 [ACCESS CODE] Device limit reached:', maxDevices, 'devices', devices);
+
+    container.textContent = '';
+
+    const header = document.createElement('div');
+    header.className = 'voucher-result-error';
+    const icon = document.createElement('span');
+    icon.className = 'voucher-error-icon';
+    icon.textContent = '!';
+    const text = document.createElement('span');
+    text.className = 'voucher-error-text';
+    const strong = document.createElement('strong');
+    strong.textContent = tr('limitTitle');
+    text.append(strong, document.createElement('br'),
+        document.createTextNode(tr('limitSub', { n: maxDevices })));
+    header.append(icon, text);
+    container.appendChild(header);
+
+    if (!code) {
+        const note = document.createElement('p');
+        note.className = 'reconnect-hint';
+        note.textContent = tr('limitNoCode');
+        container.appendChild(note);
+    }
+
+    devices.forEach(device => {
+        const label = deviceDisplayName(device);
+
+        const card = document.createElement('div');
+        card.className = 'device-my-card';
+        card.style.marginTop = '10px';
+
+        const cardHeader = document.createElement('div');
+        cardHeader.className = 'device-my-card-header';
+        const cardIcon = document.createElement('span');
+        cardIcon.className = 'device-my-card-icon';
+        cardIcon.textContent = device.is_main_device ? '⭐' : '📱';
+        const cardName = document.createElement('span');
+        cardName.className = 'device-my-card-name';
+        cardName.textContent = device.is_main_device && device.device_name
+            ? `${label} (${tr('mainDevice')})`
+            : label;
+        cardHeader.append(cardIcon, cardName);
+        if (device.is_this_device) {
+            const badge = document.createElement('span');
+            badge.className = 'device-my-card-status active';
+            badge.textContent = tr('thisDevice');
+            cardHeader.appendChild(badge);
+        }
+        card.appendChild(cardHeader);
+
+        const macRow = document.createElement('div');
+        macRow.className = 'device-my-card-detail';
+        const macLabel = document.createElement('span');
+        macLabel.textContent = 'MAC';
+        const macValue = document.createElement('span');
+        macValue.textContent = device.device_mac || '—';
+        macRow.append(macLabel, macValue);
+        card.appendChild(macRow);
+
+        if (code && !device.is_this_device) {
+            const actions = document.createElement('div');
+            actions.className = 'device-my-card-actions';
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'device-my-action-btn danger';
+            removeBtn.textContent = `🗑 ${tr('limitRemove')}`;
+            removeBtn.addEventListener('click', () => handleDeviceLimitRemove(removeBtn, device, label));
+            actions.appendChild(removeBtn);
+            card.appendChild(actions);
+        }
+
+        container.appendChild(card);
+    });
+
+    container.classList.remove('hidden');
+}
+
+async function handleDeviceLimitRemove(btn, device, label) {
+    const pending = pendingDeviceLimitRetry;
+    if (!pending) return;
+
+    const confirmed = await confirmDeviceRemoval(label);
+    if (!confirmed) return;
+
+    btn.disabled = true;
+    btn.textContent = `⏳ ${tr('limitRemoving')}`;
+
+    try {
+        await disconnectAccessCodeDevice(pending.code, device);
+    } catch (err) {
+        console.error('❌ [ACCESS CODE] Disconnect failed:', err.message);
+        btn.disabled = false;
+        btn.textContent = `🗑 ${tr('limitRemove')}`;
+        alert(friendlyAccessCodeError(err));
+        return;
+    }
+
+    // Slot freed — connect this device with the same code.
+    console.log('🔁 [ACCESS CODE] Device removed, retrying for this device');
+    pendingDeviceLimitRetry = null;
+    await pending.retry();
+}
+
+// ========================================
+// VOUCHER / ACCESS CODE BOX: UI SETUP & HANDLERS
+// Every code goes straight to /public/access-code/redeem. There is no verify
+// preview any more: /voucher/verify reports an already-redeemed voucher as
+// "used", which is exactly the code customers now type on their 2nd device.
+// ========================================
 function setupVoucherUI() {
     const input = document.getElementById('voucherCodeInput');
     const verifyBtn = document.getElementById('voucherVerifyBtn');
-    const verifyText = verifyBtn?.querySelector('.voucher-verify-text');
-    const verifyLoader = document.getElementById('voucherVerifyLoader');
     const result = document.getElementById('voucherResult');
 
     if (!input || !verifyBtn) return;
 
+    // Prefill the access code saved after an earlier multi-device purchase.
+    const saved = loadSavedAccessCode();
+    if (saved && !input.value) {
+        input.value = saved.code;
+        console.log('🎟️ [ACCESS CODE] Prefilled saved code');
+    }
+
     // Auto-format: allow alphanumeric and dashes
     input.addEventListener('input', () => {
         input.value = input.value.replace(/[^a-zA-Z0-9\-]/g, '');
-        if (verifyText) verifyText.textContent = isShareCode(input.value) ? 'Connect' : 'Verify';
         if (result) result.classList.add('hidden');
-        verifiedVoucher = null;
+        pendingDeviceLimitRetry = null;
     });
 
-    // Enter key triggers verify
+    // Enter key triggers connect
     input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
@@ -2084,103 +2449,95 @@ function setupVoucherUI() {
         }
     });
 
-    // Verify button click
-    verifyBtn.addEventListener('click', async () => {
-        const code = input.value.trim();
+    verifyBtn.addEventListener('click', () => {
+        const code = normalizeAccessCode(input.value);
         if (!code) {
             input.focus();
             return;
         }
-
-        verifyBtn.disabled = true;
-        if (verifyText) verifyText.classList.add('hidden');
-        if (verifyLoader) verifyLoader.classList.remove('hidden');
-        result.classList.add('hidden');
-        verifiedVoucher = null;
-
-        try {
-            if (isShareCode(code)) {
-                const macAddress = mikrotikParams.mac || 'AA:BB:CC:DD:EE:FF';
-                const rId = routerId || FALLBACK_ROUTER_ID;
-                const data = await redeemShareCode(code, macAddress, rId);
-                showShareCodeSuccess(data);
-                return;
-            }
-
-            const data = await verifyVoucher(code);
-            verifiedVoucher = data;
-            showVoucherValid(data);
-        } catch (err) {
-            showVoucherError(err.message);
-        } finally {
-            verifyBtn.disabled = false;
-            if (verifyText) verifyText.classList.remove('hidden');
-            if (verifyLoader) verifyLoader.classList.add('hidden');
+        if (!looksLikeAccessCode(code)) {
+            showVoucherError(tr('codeNotFound'));
+            return;
         }
+        submitAccessCode(code);
     });
 }
 
-function showShareCodeSuccess(data) {
+function setVoucherLoading(isLoading) {
+    const verifyBtn = document.getElementById('voucherVerifyBtn');
+    const verifyText = verifyBtn?.querySelector('.voucher-verify-text');
+    const verifyLoader = document.getElementById('voucherVerifyLoader');
+    if (verifyBtn) verifyBtn.disabled = isLoading;
+    if (verifyText) verifyText.classList.toggle('hidden', isLoading);
+    if (verifyLoader) verifyLoader.classList.toggle('hidden', !isLoading);
+}
+
+async function submitAccessCode(code) {
+    const result = document.getElementById('voucherResult');
+    const macAddress = getClientMac();
+    if (!macAddress) {
+        console.warn('⚠️ [ACCESS CODE] No client MAC — not sending a request');
+        showVoucherError(tr('noMac'));
+        return;
+    }
+
+    setVoucherLoading(true);
+    if (result) result.classList.add('hidden');
+
+    try {
+        const rId = routerId || FALLBACK_ROUTER_ID;
+        const data = await redeemAccessCode(code, macAddress, rId);
+        handleAccessCodeSuccess(data, code, macAddress);
+    } catch (err) {
+        if (isDeviceLimitError(err)) {
+            renderDeviceLimitPanel(result, err.detail, {
+                code,
+                retry: () => submitAccessCode(code)
+            });
+        } else {
+            console.error('❌ [ACCESS CODE] Redeem failed:', err.message);
+            showVoucherError(friendlyAccessCodeError(err));
+        }
+    } finally {
+        setVoucherLoading(false);
+    }
+}
+
+function handleAccessCodeSuccess(data, code, macAddress) {
+    console.log('✅ [ACCESS CODE] Outcome:', data.outcome);
+    const expiry = data.expires_at || data.expiry;
+
+    // RADIUS auto-login if credentials returned
+    if (data.radius_username && data.radius_password) {
+        const loginUrl = buildRadiusLoginUrl(mikrotikParams.gw, data.radius_username, data.radius_password, mikrotikParams.dst);
+        if (loginUrl) {
+            try {
+                localStorage.setItem('bitwave_last_radius_login', JSON.stringify({
+                    loginUrl, username: data.radius_username,
+                    password: data.radius_password, gateway: mikrotikParams.gw,
+                    dst: mikrotikParams.dst, mac: macAddress,
+                    planName: data.plan_name || 'Voucher Plan',
+                    expiry: expiry,
+                    savedAt: new Date().toISOString()
+                }));
+            } catch (e) { /* ignore */ }
+
+            hideSection(plansSection);
+            showSection(successSection);
+            showVoucherSuccessDetails(data);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            setTimeout(() => { window.location.href = loginUrl; }, 2000);
+            return;
+        }
+    }
+
+    // Non-RADIUS success: show success screen
     hideSection(plansSection);
     showSection(successSection);
-    showVoucherSuccessDetails({
-        ...data,
-        plan_name: data.plan_name || 'Shared Subscription',
-        redemption_method: 'Share Code'
-    });
+    showVoucherSuccessDetails(data);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     scheduleAutoStartBrowsing();
-}
-
-function showVoucherValid(data) {
-    const result = document.getElementById('voucherResult');
-    if (!result) return;
-
-    const currency = getPaymentCurrencyCode();
-    const price = data.price != null ? `${currency} ${data.price}${currency === 'KSH' ? '/-' : ''}` : 'Free';
-    const speed = data.speed || '—';
-    const duration = data.duration || '—';
-
-    result.innerHTML = `
-        <div class="voucher-result-valid">
-            <div class="voucher-plan-header">
-                <span class="voucher-plan-check">✓</span>
-                <div>
-                    <div class="voucher-plan-label">Valid Voucher</div>
-                    <div class="voucher-plan-name">${data.plan_name || 'Internet Plan'}</div>
-                </div>
-            </div>
-            <div class="voucher-plan-details">
-                <div class="voucher-plan-stat">
-                    <span class="voucher-plan-stat-label">Duration</span>
-                    <span class="voucher-plan-stat-value">${duration}</span>
-                </div>
-                <div class="voucher-plan-stat">
-                    <span class="voucher-plan-stat-label">Speed</span>
-                    <span class="voucher-plan-stat-value">${speed}</span>
-                </div>
-                <div class="voucher-plan-stat">
-                    <span class="voucher-plan-stat-label">Value</span>
-                    <span class="voucher-plan-stat-value">${price}</span>
-                </div>
-            </div>
-            <button type="button" class="voucher-redeem-btn" id="voucherRedeemBtn">
-                <span>📶</span>
-                <span class="voucher-redeem-text">Redeem & Connect</span>
-                <span class="voucher-redeem-loader hidden" id="voucherRedeemLoader">
-                    <span class="loader-spinner"></span> Activating...
-                </span>
-            </button>
-        </div>
-    `;
-
-    result.classList.remove('hidden');
-
-    // Wire up redeem button
-    const redeemBtn = document.getElementById('voucherRedeemBtn');
-    if (redeemBtn) {
-        redeemBtn.addEventListener('click', handleVoucherRedeem);
-    }
 }
 
 function showVoucherError(message) {
@@ -2190,98 +2547,73 @@ function showVoucherError(message) {
     result.innerHTML = `
         <div class="voucher-result-error">
             <span class="voucher-error-icon">✕</span>
-            <span class="voucher-error-text">${message}</span>
+            <span class="voucher-error-text"></span>
         </div>
     `;
+    result.querySelector('.voucher-error-text').textContent = message;
 
     result.classList.remove('hidden');
 }
 
-async function handleVoucherRedeem() {
-    if (!verifiedVoucher) return;
+// Headline for a redeem/reconnect outcome, or '' when the backend sent none.
+function accessCodeOutcomeMessage(data) {
+    if (data.outcome === 'device_added') return tr('codeDeviceAdded');
+    if (data.outcome === 'main_device') return tr('codeMainDevice');
+    if (data.outcome === 'plan_started') return tr('codePlanStarted');
+    return '';
+}
 
-    const redeemBtn = document.getElementById('voucherRedeemBtn');
-    const redeemText = redeemBtn?.querySelector('.voucher-redeem-text');
-    const redeemLoader = document.getElementById('voucherRedeemLoader');
-
-    // Loading state
-    if (redeemBtn) redeemBtn.disabled = true;
-    if (redeemText) redeemText.classList.add('hidden');
-    if (redeemLoader) redeemLoader.classList.remove('hidden');
-
-    try {
-        const macAddress = mikrotikParams.mac || 'AA:BB:CC:DD:EE:FF';
-        const rId = routerId || verifiedVoucher.router_id || FALLBACK_ROUTER_ID;
-        const data = await redeemVoucher(verifiedVoucher.code, macAddress, rId);
-
-        console.log('✅ [VOUCHER] Redeemed successfully:', data);
-
-        // RADIUS auto-login if credentials returned
-        if (data.radius_username && data.radius_password) {
-            const loginUrl = buildRadiusLoginUrl(mikrotikParams.gw, data.radius_username, data.radius_password, mikrotikParams.dst);
-            if (loginUrl) {
-                try {
-                    localStorage.setItem('bitwave_last_radius_login', JSON.stringify({
-                        loginUrl, username: data.radius_username,
-                        password: data.radius_password, gateway: mikrotikParams.gw,
-                        dst: mikrotikParams.dst, mac: macAddress,
-                        planName: verifiedVoucher.plan_name || 'Voucher Plan',
-                        expiry: data.expiry,
-                        savedAt: new Date().toISOString()
-                    }));
-                } catch (e) { /* ignore */ }
-
-                hideSection(plansSection);
-                showSection(successSection);
-                showVoucherSuccessDetails(data);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-
-                setTimeout(() => { window.location.href = loginUrl; }, 2000);
-                return;
-            }
-        }
-
-        // Non-RADIUS success: show success screen
-        hideSection(plansSection);
-        showSection(successSection);
-        showVoucherSuccessDetails(data);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        scheduleAutoStartBrowsing();
-
-    } catch (err) {
-        console.error('❌ [VOUCHER] Redeem failed:', err.message);
-        showVoucherError(err.message);
-    } finally {
-        if (redeemBtn) redeemBtn.disabled = false;
-        if (redeemText) redeemText.classList.remove('hidden');
-        if (redeemLoader) redeemLoader.classList.add('hidden');
+function accessCodeShareHint(data) {
+    const maxDevices = Number(data.max_devices) || 0;
+    if (data.outcome === 'plan_started' && data.sharing_enabled && maxDevices > 1) {
+        return tr('codeShareHint', { n: maxDevices });
     }
+    return '';
 }
 
 function showVoucherSuccessDetails(data) {
     const connectionDetails = document.getElementById('connectionDetails');
     if (!connectionDetails) return;
 
-    const expiryDate = data.expiry ? new Date(data.expiry) : null;
+    const expiry = data.expires_at || data.expiry;
+    const expiryDate = expiry ? new Date(expiry) : null;
     const expiryText = expiryDate ? expiryDate.toLocaleDateString('en-KE', {
         weekday: 'short', month: 'short', day: 'numeric',
         hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Nairobi'
     }) : 'N/A';
 
+    const outcomeMessage = accessCodeOutcomeMessage(data);
+    const subtext = document.querySelector('#successSection .success-subtext');
+    if (subtext && outcomeMessage) subtext.textContent = outcomeMessage;
+
+    const method = data.outcome === 'device_added' ? 'Shared plan'
+        : (data.redemption_method || 'Voucher / access code');
+
     let html = `
         <div class="detail-row">
             <span class="detail-label">Plan</span>
-            <span class="detail-value">${data.plan_name || verifiedVoucher?.plan_name || 'Voucher Plan'}</span>
+            <span class="detail-value">${escapeHtml(data.plan_name || 'Internet Plan')}</span>
         </div>
         <div class="detail-row">
             <span class="detail-label">Method</span>
-            <span class="detail-value">${data.redemption_method || 'Voucher Code'}</span>
+            <span class="detail-value">${escapeHtml(method)}</span>
         </div>
         <div class="detail-row">
             <span class="detail-label">Valid Until</span>
-            <span class="detail-value">${expiryText}</span>
+            <span class="detail-value">${escapeHtml(expiryText)}</span>
         </div>
     `;
+
+    const shareHint = accessCodeShareHint(data);
+    if (shareHint) {
+        html += `
+        <div class="detail-row" style="margin-top: 14px; padding: 12px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 8px; color: #fff;">
+            <div style="width:100%;">
+                <div style="font-weight: 600;">📱 ${escapeHtml(shareHint)}</div>
+                ${data.access_code ? `<div style="font-size: 13px; opacity: 0.9; margin-top: 4px;">Code: <strong>${escapeHtml(data.access_code)}</strong></div>` : ''}
+            </div>
+        </div>`;
+    }
 
     if (data.radius_username && data.radius_password) {
         const loginUrl = buildRadiusLoginUrl(mikrotikParams.gw, data.radius_username, data.radius_password, mikrotikParams.dst);
@@ -2289,11 +2621,11 @@ function showVoucherSuccessDetails(data) {
         <div class="detail-row" style="margin-top: 14px; padding: 12px; background: #111827; border-radius: 8px; color: #fff;">
             <div style="width:100%;">
                 <div style="font-weight: 600; margin-bottom: 6px;">Login Credentials</div>
-                <div style="font-size: 13px; opacity: 0.85;">Username: <strong>${data.radius_username}</strong></div>
-                <div style="font-size: 13px; opacity: 0.85;">Password: <strong>${data.radius_password}</strong></div>
+                <div style="font-size: 13px; opacity: 0.85;">Username: <strong>${escapeHtml(data.radius_username)}</strong></div>
+                <div style="font-size: 13px; opacity: 0.85;">Password: <strong>${escapeHtml(data.radius_password)}</strong></div>
                 ${loginUrl ? `
                 <div style="margin-top: 10px;">
-                    <a href="${loginUrl}" style="display: inline-block; padding: 8px 12px; background: #10b981; color: #fff; border-radius: 6px; text-decoration: none; font-weight: 600;">Tap to Connect</a>
+                    <a href="${escapeHtml(loginUrl)}" style="display: inline-block; padding: 8px 12px; background: #10b981; color: #fff; border-radius: 6px; text-decoration: none; font-weight: 600;">Tap to Connect</a>
                 </div>` : ''}
             </div>
         </div>`;
@@ -2307,8 +2639,64 @@ function showVoucherSuccessDetails(data) {
 }
 
 // ========================================
+// ACCESS CODE CARD — after an M-Pesa payment for a multi-device plan
+// payment-status returns access_code (e.g. "ABC-DEF") for the paying device.
+// ========================================
+function renderAccessCodeCard(container, accessCode, maxDevices) {
+    if (!container || !accessCode) return;
+
+    const card = document.createElement('div');
+    card.className = 'detail-row access-code-card';
+    card.style.cssText = 'margin-top: 14px; padding: 14px; background: linear-gradient(135deg, var(--primary, #E85D04) 0%, var(--primary-dark, #DC2F02) 100%); border-radius: 10px; color: #fff; display: block;';
+
+    const title = document.createElement('div');
+    title.style.cssText = 'font-size: 13px; opacity: 0.9;';
+    title.textContent = tr('accessCodeTitle');
+
+    const row = document.createElement('div');
+    row.style.cssText = 'display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 6px 0;';
+
+    const codeEl = document.createElement('strong');
+    codeEl.style.cssText = 'font-size: 28px; letter-spacing: 3px; font-family: monospace; user-select: all;';
+    codeEl.textContent = accessCode;
+
+    const copyBtn = document.createElement('button');
+    copyBtn.type = 'button';
+    copyBtn.style.cssText = 'padding: 8px 14px; border: none; border-radius: 6px; background: #fff; color: #111827; font-weight: 700; cursor: pointer; font-family: inherit;';
+    copyBtn.textContent = `📋 ${tr('copy')}`;
+    copyBtn.addEventListener('click', async () => {
+        const ok = await copyTextToClipboard(accessCode);
+        if (ok) {
+            copyBtn.textContent = `✓ ${tr('copied')}`;
+            setTimeout(() => { copyBtn.textContent = `📋 ${tr('copy')}`; }, 2000);
+        } else {
+            // Clipboard blocked (common in captive-portal webviews): select the
+            // code so the customer can long-press → copy.
+            try {
+                const range = document.createRange();
+                range.selectNodeContents(codeEl);
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+            } catch (e) { /* ignore */ }
+        }
+    });
+
+    row.append(codeEl, copyBtn);
+
+    const body = document.createElement('div');
+    body.style.cssText = 'font-size: 13px; opacity: 0.95;';
+    body.textContent = tr('accessCodeBody', { n: maxDevices || '—' });
+
+    card.append(title, row, body);
+    container.appendChild(card);
+}
+
+// ========================================
 // RECONNECT: API CALL
 // POST /api/public/reconnect
+// voucher_code accepts any code (voucher / access code / receipt); the
+// response has the same shape as access-code/redeem.
 // ========================================
 const VOUCHER_CODE_REGEX = /^\d{4}-\d{4}$/;
 
@@ -2316,59 +2704,46 @@ function isVoucherCode(value) {
     return VOUCHER_CODE_REGEX.test(value.trim());
 }
 
+// Phone = only phone characters (digits, spaces, +, dashes, brackets) with at
+// least 9 digits, and not the XXXX-XXXX voucher shape. Everything else —
+// 8-digit vouchers, ABC-DEF access codes, SIG7X2ABCD receipts — is a code.
 function isPhoneInput(value) {
-    const digits = value.replace(/[^0-9]/g, '');
-    return digits.length >= 4 && !isVoucherCode(value);
+    const trimmed = value.trim();
+    if (!/^\+?[\d\s()\-]+$/.test(trimmed) || isVoucherCode(trimmed)) return false;
+    return trimmed.replace(/[^0-9]/g, '').length >= 9;
+}
+
+function isReconnectCodeInput(value) {
+    return !isPhoneInput(value) && looksLikeAccessCode(value);
 }
 
 async function reconnectUser(inputValue) {
-    const macAddress = mikrotikParams.mac || 'AA:BB:CC:DD:EE:FF';
+    const macAddress = getClientMac();
+    if (!macAddress) {
+        const err = new Error(tr('noMac'));
+        err.status = 0;
+        throw err;
+    }
     const rId = routerId || FALLBACK_ROUTER_ID;
     const trimmed = inputValue.trim();
 
     let requestBody;
-    if (isVoucherCode(trimmed)) {
+    if (isPhoneInput(trimmed)) {
         requestBody = {
-            voucher_code: trimmed,
+            phone: formatPhoneForPaymentProvider(trimmed),
             mac_address: macAddress,
             router_id: rId
         };
     } else {
-        const phone = formatPhoneForPaymentProvider(trimmed);
         requestBody = {
-            phone: phone,
+            voucher_code: normalizeAccessCode(trimmed),
             mac_address: macAddress,
             router_id: rId
         };
     }
 
     console.log('🔄 [RECONNECT] Sending request:', requestBody);
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 20000);
-
-    const response = await fetch(getProxiedUrl(RECONNECT_ENDPOINT), {
-        method: 'POST',
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        },
-        mode: 'cors',
-        body: JSON.stringify(requestBody),
-        signal: controller.signal
-    });
-
-    clearTimeout(timeoutId);
-
-    const data = await response.json();
-
-    if (!response.ok) {
-        const msg = data.detail || data.message || 'Reconnection failed';
-        const err = new Error(msg);
-        err.status = response.status;
-        throw err;
-    }
-
+    const data = await postPublicJson(RECONNECT_ENDPOINT, requestBody, 20000, 'Reconnection failed');
     console.log('✅ [RECONNECT] Success:', data);
     return data;
 }
@@ -2376,11 +2751,24 @@ async function reconnectUser(inputValue) {
 // ========================================
 // RECONNECT: UI SETUP & HANDLERS
 // ========================================
+function updateReconnectHint() {
+    const hint = document.getElementById('reconnectHint');
+    const input = document.getElementById('reconnectInput');
+    if (!hint) return;
+    const val = input ? input.value : '';
+    if (val && isPhoneInput(val)) {
+        hint.textContent = tr('reconnectPhoneDetected');
+    } else if (val && isReconnectCodeInput(val)) {
+        hint.textContent = tr('reconnectCodeDetected');
+    } else {
+        hint.textContent = tr('reconnectHint');
+    }
+}
+
 function setupReconnectUI() {
     const input = document.getElementById('reconnectInput');
     const btn = document.getElementById('reconnectBtn');
     const btnText = btn?.querySelector('.reconnect-btn-text');
-    const btnLoader = document.getElementById('reconnectBtnLoader');
     const hint = document.getElementById('reconnectHint');
     const result = document.getElementById('reconnectResult');
 
@@ -2400,18 +2788,16 @@ function setupReconnectUI() {
         input.classList.remove('input-phone', 'input-voucher');
         hint.classList.remove('hint-phone', 'hint-voucher');
         if (result) result.classList.add('hidden');
+        pendingDeviceLimitRetry = null;
 
-        if (isVoucherCode(val)) {
-            input.classList.add('input-voucher');
-            hint.classList.add('hint-voucher');
-            hint.textContent = '🎟️ Voucher code detected';
-        } else if (isPhoneInput(val)) {
+        if (isPhoneInput(val)) {
             input.classList.add('input-phone');
             hint.classList.add('hint-phone');
-            hint.textContent = '📱 Phone number detected';
-        } else {
-            hint.textContent = 'Enter your mobile money phone number or voucher code';
+        } else if (isReconnectCodeInput(val)) {
+            input.classList.add('input-voucher');
+            hint.classList.add('hint-voucher');
         }
+        updateReconnectHint();
     });
 
     input.addEventListener('keydown', (e) => {
@@ -2421,20 +2807,7 @@ function setupReconnectUI() {
         }
     });
 
-    btn.addEventListener('click', async () => {
-        const val = input.value.trim();
-        if (!val) {
-            input.focus();
-            return;
-        }
-
-        // Validate: either a valid phone number or a voucher code
-        if (!isVoucherCode(val) && !validatePhoneNumber(val.replace(/[^0-9]/g, ''))) {
-            showReconnectError(`Please enter a valid ${getPaymentProviderLabel()} phone number or voucher code (e.g. 4839-2910)`);
-            return;
-        }
-
-        // Show loading state
+    const runReconnect = async (val) => {
         btn.disabled = true;
         btnText.textContent = 'Reconnecting...';
         if (result) result.classList.add('hidden');
@@ -2443,19 +2816,42 @@ function setupReconnectUI() {
             const data = await reconnectUser(val);
             showReconnectSuccess(data);
         } catch (err) {
-            let message = err.message;
+            if (isDeviceLimitError(err)) {
+                const code = isPhoneInput(val) ? null : normalizeAccessCode(val);
+                renderDeviceLimitPanel(result, err.detail, {
+                    code,
+                    retry: () => runReconnect(val)
+                });
+                return;
+            }
+            let message = friendlyAccessCodeError(err);
             if (err.status === 404) {
                 message = 'No active subscription found. Please check your input or purchase a new plan.';
             } else if (err.status === 409) {
-                message = 'This device is already registered to another active account.';
-            } else if (err.status === 429) {
-                message = 'Too many attempts. Please wait a moment and try again.';
+                message = err.message || 'This device is already registered to another active account.';
             }
             showReconnectError(message);
         } finally {
             btn.disabled = false;
-            btnText.textContent = 'Reconnect';
+            btnText.textContent = tr('reconnectBtn');
         }
+    };
+
+    btn.addEventListener('click', () => {
+        const val = input.value.trim();
+        if (!val) {
+            input.focus();
+            return;
+        }
+
+        // Validate: either a valid phone number or something shaped like a code
+        const validPhone = isPhoneInput(val) && validatePhoneNumber(val.replace(/[^0-9]/g, ''));
+        if (!validPhone && !isReconnectCodeInput(val)) {
+            showReconnectError(tr('reconnectInvalid'));
+            return;
+        }
+
+        runReconnect(val);
     });
 }
 
@@ -2475,28 +2871,36 @@ function showReconnectSuccess(data) {
             : `${Math.round(data.remaining_hours * 10) / 10}h`)
         : '';
 
+    const headline = accessCodeOutcomeMessage(data) || 'Welcome back!';
+    const shareHint = accessCodeShareHint(data);
+
     result.innerHTML = `
         <div class="reconnect-result-success">
             <div class="reconnect-success-header">
                 <span class="reconnect-success-check">✓</span>
                 <div>
-                    <div class="reconnect-success-label">Welcome back!</div>
-                    <div class="reconnect-success-name">${data.customer_name || 'Customer'}</div>
+                    <div class="reconnect-success-label">${escapeHtml(headline)}</div>
+                    <div class="reconnect-success-name">${escapeHtml(data.customer_name || data.plan_name || 'Customer')}</div>
                 </div>
             </div>
             <div class="reconnect-details">
                 <div class="reconnect-detail-row">
                     <span class="reconnect-detail-label">Plan</span>
-                    <span class="reconnect-detail-value">${data.plan_name || '—'}</span>
+                    <span class="reconnect-detail-value">${escapeHtml(data.plan_name || '—')}</span>
                 </div>
                 <div class="reconnect-detail-row">
                     <span class="reconnect-detail-label">Expires</span>
-                    <span class="reconnect-detail-value">${expiryText}</span>
+                    <span class="reconnect-detail-value">${escapeHtml(expiryText)}</span>
                 </div>
                 ${remaining ? `
                 <div class="reconnect-detail-row">
                     <span class="reconnect-detail-label">Remaining</span>
-                    <span class="reconnect-detail-value">${remaining}</span>
+                    <span class="reconnect-detail-value">${escapeHtml(remaining)}</span>
+                </div>` : ''}
+                ${shareHint ? `
+                <div class="reconnect-detail-row">
+                    <span class="reconnect-detail-label">📱</span>
+                    <span class="reconnect-detail-value">${escapeHtml(shareHint)}</span>
                 </div>` : ''}
             </div>
             <a href="http://google.com" class="reconnect-browse-btn">
@@ -2541,9 +2945,10 @@ function showReconnectError(message) {
     result.innerHTML = `
         <div class="reconnect-result-error">
             <span class="reconnect-error-icon">✕</span>
-            <span class="reconnect-error-text">${message}</span>
+            <span class="reconnect-error-text"></span>
         </div>
     `;
+    result.querySelector('.reconnect-error-text').textContent = message;
 
     result.classList.remove('hidden');
 }
@@ -2857,7 +3262,12 @@ async function pollPaymentStatusAndLogin(customerId, phoneNumber, plan) {
             console.log(`🔍 Polling attempt ${attempts}/${PAYMENT_POLL_MAX_ATTEMPTS}...`);
             
             try {
-                const statusUrl = `${statusEndpoint}/${customerId}`;
+                // mac lets the backend return the multi-device access_code
+                // only to the device that paid.
+                const clientMac = getClientMac();
+                const statusUrl = clientMac
+                    ? `${statusEndpoint}/${customerId}?mac=${encodeURIComponent(clientMac)}`
+                    : `${statusEndpoint}/${customerId}`;
                 const response = await fetch(getProxiedUrl(statusUrl), {
                     method: 'GET',
                     headers: {
@@ -2881,6 +3291,16 @@ async function pollPaymentStatusAndLogin(customerId, phoneNumber, plan) {
                     console.log('🎉 Customer status is active! Plan activated!');
                     console.log('📡 Plan:', data.plan_name);
                     console.log('⏰ Expiry:', data.expiry);
+
+                    // Multi-device plan: remember the access code so it can be
+                    // prefilled on later visits.
+                    const hasAccessCode = Boolean(data.access_code);
+                    if (hasAccessCode) {
+                        console.log('🎟️ [ACCESS CODE] Received for multi-device plan, max devices:', data.max_devices);
+                        saveAccessCode(data.access_code, data.max_devices, data.expiry);
+                    }
+                    // Give the customer time to note the code before navigating away.
+                    const radiusRedirectDelayMs = hasAccessCode ? 12000 : 2000;
                     
                     // RADIUS auto-login: redirect to MikroTik login with credentials
                     if (isRadiusRouter && data.radius_username && data.radius_password) {
@@ -2918,13 +3338,13 @@ async function pollPaymentStatusAndLogin(customerId, phoneNumber, plan) {
                             }
                             
                             // Show success message briefly, then redirect
-                            showAuthenticatedMessage(phoneNumber, plan, data, true); // true = isRadius
+                            showAuthenticatedMessage(phoneNumber, plan, data, true, radiusRedirectDelayMs); // true = isRadius
                             
                             // Redirect to MikroTik login after a short delay
                             setTimeout(() => {
                                 console.log('🔐 [RADIUS] Redirecting to MikroTik login...');
                                 window.location.href = loginUrl;
-                            }, 2000); // 2 second delay to show success message
+                            }, radiusRedirectDelayMs); // longer when an access code is on screen
                             
                             resolve(data);
                             return;
@@ -2939,7 +3359,10 @@ async function pollPaymentStatusAndLogin(customerId, phoneNumber, plan) {
 
                     // DIRECT_API only: device is already authorised, so auto-fire
                     // the "Start Browsing" action (RADIUS handles its own redirect).
-                    if (!isRadiusRouter) scheduleAutoStartBrowsing();
+                    // Skipped when an access code is on screen: auto-navigating
+                    // would hide it before the customer can copy it (captive
+                    // portal webviews often wipe localStorage too).
+                    if (!isRadiusRouter && !hasAccessCode) scheduleAutoStartBrowsing();
 
                     resolve(data);
                 } else if (data.status === 'pending') {
@@ -2992,7 +3415,7 @@ function showProcessingPaymentMessage(phoneNumber, plan) {
 // ========================================
 // SHOW SUCCESS MESSAGE (PAYMENT CONFIRMED & INTERNET ACCESS GRANTED)
 // ========================================
-function showAuthenticatedMessage(phoneNumber, plan, data, isRadiusAutoLogin = false) {
+function showAuthenticatedMessage(phoneNumber, plan, data, isRadiusAutoLogin = false, redirectDelayMs = 2000) {
     const formattedPhone = formatPhoneForPaymentProvider(phoneNumber);
     
     // Hide processing, show success
@@ -3047,7 +3470,7 @@ function showAuthenticatedMessage(phoneNumber, plan, data, isRadiusAutoLogin = f
                     <span style="font-size: 20px;">🔐</span>
                     <span style="font-weight: 600;">Connecting you automatically...</span>
                 </div>
-                <div style="font-size: 13px; opacity: 0.9; margin-top: 4px;">You will be redirected to login in 2 seconds</div>
+                <div style="font-size: 13px; opacity: 0.9; margin-top: 4px;">You will be redirected to login in ${Math.round(redirectDelayMs / 1000)} seconds</div>
             </div>
             `;
         }
@@ -3075,6 +3498,10 @@ function showAuthenticatedMessage(phoneNumber, plan, data, isRadiusAutoLogin = f
         }
 
         connectionDetails.innerHTML = detailsHtml;
+
+        if (data && data.access_code) {
+            renderAccessCodeCard(connectionDetails, data.access_code, data.max_devices);
+        }
     }
     
     // Populate success page ads from the global ads data

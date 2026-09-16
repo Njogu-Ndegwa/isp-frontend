@@ -963,12 +963,12 @@ function renderPortal(mockData, overrideTheme) {
             <span class="pp-reconnect-icon">🔄</span>
             <div>
                 <div class="pp-reconnect-title">Already paid? Reconnect</div>
-                <div class="pp-reconnect-sub">Enter your phone number or voucher code to get back online</div>
+                <div class="pp-reconnect-sub">Enter your phone number or code to reconnect</div>
             </div>
         </div>
         <div class="pp-reconnect-body">
             <div class="pp-reconnect-row">
-                <input class="pp-reconnect-input" placeholder="Phone or voucher e.g. 0712…" readonly>
+                <input class="pp-reconnect-input" placeholder="Phone or code e.g. 0712… or ABC-DEF" readonly>
                 <button class="pp-reconnect-btn">Reconnect</button>
             </div>
         </div>
@@ -986,14 +986,14 @@ function renderPortal(mockData, overrideTheme) {
             <div class="pp-voucher-head" style="background:${voucherHeadBg};border-bottom-color:${hexToRgba(p.accent, 0.2)}">
                 <span class="pp-voucher-icon">🎟️</span>
                 <div>
-                    <div class="pp-voucher-title">Have a Voucher?</div>
-                    <div class="pp-voucher-sub">Enter your code below to get connected</div>
+                    <div class="pp-voucher-title">Have a Voucher or access code?</div>
+                    <div class="pp-voucher-sub">Use the same code on every device your plan covers</div>
                 </div>
             </div>
             <div class="pp-voucher-body">
                 <div class="pp-voucher-row">
-                    <input class="pp-voucher-input" placeholder="Enter code e.g. 4839-2910" readonly>
-                    <button class="pp-voucher-btn" style="background:${voucherBtnBg};box-shadow:0 4px 12px ${hexToRgba(p.primary, 0.3)}">Verify</button>
+                    <input class="pp-voucher-input" placeholder="Voucher, access code or receipt" readonly>
+                    <button class="pp-voucher-btn" style="background:${voucherBtnBg};box-shadow:0 4px 12px ${hexToRgba(p.primary, 0.3)}">Connect</button>
                 </div>
             </div>
         </div>` : '';
