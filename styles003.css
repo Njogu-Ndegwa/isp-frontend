@@ -659,12 +659,84 @@ body::before {
     padding-bottom: 50px;
 }
 
+/* Package name — printed verbatim from the admin panel, so it has to be free
+   to wrap onto as many lines as it needs. `overflow-wrap: anywhere` matters
+   because .plan-card sets overflow:hidden: a name typed without spaces, like
+   "SUPERFAST24HRUNLIMITED", would otherwise run off the card and be clipped
+   mid-word — which is the exact complaint this line exists to fix. Grid rows
+   stretch every card to the tallest, so a three-line name keeps the row level. */
+.plan-name {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.25;
+    margin-bottom: 2px;
+    /* break-word, not anywhere: `anywhere` also lets the browser split
+       ordinary words to reach a narrower minimum ("Unlimite/d"), which shreds
+       a normal name. break-word only splits a word that cannot fit a line on
+       its own — the no-spaces case this is here for. */
+    overflow-wrap: break-word;
+    /* Even out the ragged right edge so a wrapped name reads as one block
+       rather than a long line with an orphan under it. Ignored by browsers
+       that don't support it, which just get today's greedy wrapping. */
+    text-wrap: balance;
+}
+
+/* Type scale by name length — set in planNameSizeClass(). A longer name gets
+   smaller type so the card keeps its proportions instead of growing a tall
+   ragged column. Every character still prints. */
+.plan-name--sm {
+    font-size: 0.95rem;
+    line-height: 1.22;
+}
+
+.plan-name--xs {
+    font-size: 0.85rem;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+}
+
+.plan-name--xxs {
+    font-size: 0.78rem;
+    line-height: 1.18;
+    letter-spacing: -0.01em;
+    /* The floor. Past four lines at this size nothing the portal does saves
+       the card, so the name is clipped here and shown in full on the payment
+       screen, where there is room for it. */
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* "⭐ Best Value" / "🔥 Hot" are rotated ribbons pinned across the card's
+   top-right corner. The old first line was a short centred duration that
+   cleared them; a full package name runs the whole width and would be read
+   through the ribbon, so it starts below the corner on those cards. */
+.plan-card.popular .plan-name,
+.plan-card.bestseller .plan-name,
+.plan-card.special-offer .plan-name,
+.plan-card.emergency .plan-name {
+    padding-top: 22px;
+}
+
 .plan-duration {
     font-family: 'Outfit', sans-serif;
     font-size: 1.1rem;
     font-weight: 700;
     color: var(--text);
     margin-bottom: var(--space-xs);
+}
+
+/* With a package name above it, the duration becomes the supporting line so
+   the name reads as the card's heading. */
+.plan-duration.has-name {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 0.02em;
 }
 
 .plan-price {
@@ -1386,6 +1458,15 @@ body::before {
     font-size: 1rem;
     font-weight: 600;
     opacity: 0.9;
+    margin-bottom: var(--space-xs);
+    overflow-wrap: anywhere;
+}
+
+/* Duration beneath the package name on the payment screen. */
+.selected-plan-duration {
+    font-size: 0.8rem;
+    font-weight: 600;
+    opacity: 0.75;
     margin-bottom: var(--space-xs);
 }
 
@@ -2471,20 +2552,42 @@ body::before {
         padding: var(--space-xl) var(--space-lg);
     }
     
+    .plan-name {
+        font-size: 1.15rem;
+    }
+
+    .plan-name--sm {
+        font-size: 1.02rem;
+    }
+
+    .plan-name--xs {
+        font-size: 0.92rem;
+    }
+
+    .plan-name--xxs {
+        font-size: 0.84rem;
+    }
+
     .plan-duration {
         font-size: 1.25rem;
     }
-    
+
+    .plan-duration.has-name {
+        font-size: 0.85rem;
+    }
+
     .plan-price {
         font-size: 2rem;
     }
 }
 
 @media (min-width: 640px) {
-    .plans-grid {
+    /* Three columns only when no card carries a package name — see the
+       .has-names note in renderPlans(). */
+    .plans-grid:not(.has-names) {
         grid-template-columns: repeat(3, 1fr);
     }
-    
+
     .marketplace-showcase {
         margin: var(--space-lg) calc(-1 * var(--space-md)) var(--space-xl);
     }
