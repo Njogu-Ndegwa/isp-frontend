@@ -1734,6 +1734,11 @@ function transformPlansData(apiPlans) {
 
         return {
             id: plan.id,
+            // The package name exactly as the reseller typed it in the admin
+            // panel. Resellers advertise packages by name off-portal ("ask for
+            // Bingwa Night"), so the card has to carry that name verbatim —
+            // never re-worded, never shortened. Empty only for older plans.
+            name: typeof plan.name === 'string' ? plan.name.trim() : '',
             duration: duration,
             price: price,
             speed: speed,
@@ -1893,6 +1898,13 @@ function formatSpeed(speed) {
 function renderPlans(plans) {
     plansGrid.innerHTML = '';
 
+    // Above 640px the grid widens to three columns, which inside the portal's
+    // 480px shell leaves each card about 130px across — fine for "1 Day", far
+    // too narrow for a package name, which would wrap into a tall ragged
+    // column. Resellers who name their packages stay two-up at every width;
+    // resellers who don't keep exactly the layout they have today.
+    plansGrid.classList.toggle('has-names', plans.some(p => planNameLine(p)));
+
     if (window.featuredPlanIds && window.featuredPlanIds.length) {
         plans = applyFeaturedOrder(plans, window.featuredPlanIds);
     }
@@ -1986,6 +1998,45 @@ function startPlanCountdowns() {
 // ========================================
 // CREATE PLAN CARD - Simplified Design
 // ========================================
+// The package name as the reseller typed it, or '' when there is nothing worth
+// printing. The one name we drop is one that merely repeats the duration line
+// ("24 Hours"), which would otherwise print the same words twice on one card.
+// Everything else goes through untouched — no shortening, no title-casing.
+function planNameLine(plan) {
+    const name = plan && typeof plan.name === 'string' ? plan.name.trim() : '';
+    if (!name) return '';
+    if (normalizeText(name) === normalizeText(plan.duration)) return '';
+    return name;
+}
+
+function normalizeText(s) {
+    return String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+// A name the reseller already wrote the duration into ("Siku Nzima 1 Day")
+// doesn't need the duration printed under it as well. Dropping that line buys
+// back a whole row of height on exactly the cards that are tightest.
+function planDurationIsRedundant(plan) {
+    const name = planNameLine(plan);
+    if (!name) return false;
+    return normalizeText(name).includes(normalizeText(plan.duration));
+}
+
+// Fit the type to the name instead of letting the name dictate the card's
+// height. A phone card is ~160px wide, which is roughly 14 characters per line
+// at the base size — so a 40-character name set at the base size is three
+// ragged lines and a card half again as tall as its neighbours. Stepping the
+// size down keeps the card's proportions while still printing every character.
+// Below the smallest step the name is a data problem, not a layout problem:
+// see the admin-side guardrail in the handover notes.
+function planNameSizeClass(name) {
+    const len = name.length;
+    if (len <= 16) return '';
+    if (len <= 28) return ' plan-name--sm';
+    if (len <= 44) return ' plan-name--xs';
+    return ' plan-name--xxs';
+}
+
 function createPlanCard(plan) {
     const card = document.createElement('div');
 
@@ -1999,9 +2050,20 @@ function createPlanCard(plan) {
     card.setAttribute('role', 'button');
     card.setAttribute('tabindex', '0');
     const devicesLabel = plan.maxDevices > 1 ? `, up to ${plan.maxDevices} devices` : '';
-    card.setAttribute('aria-label', `Select ${plan.duration} plan for ${plan.price}, ${plan.speed}${devicesLabel}`);
+    const planName = planNameLine(plan);
+    const spokenName = planName ? `${planName}, ` : '';
+    card.setAttribute('aria-label', `Select ${spokenName}${plan.duration} plan for ${plan.price}, ${plan.speed}${devicesLabel}`);
 
     const formattedPrice = formatPrice(plan.price);
+
+    // Package name headline. Escaped because the text is reseller input.
+    const nameHtml = planName
+        ? `<div class="plan-name${planNameSizeClass(planName)}">${escapeHtml(planName)}</div>`
+        : '';
+
+    const durationHtml = planDurationIsRedundant(plan)
+        ? ''
+        : `<div class="plan-duration${planName ? ' has-name' : ''}">${plan.duration}</div>`;
 
     // Badge ribbon (emergency / special offer / bestseller / best value handled by CSS ::after)
     let badgeHtml = '';
@@ -2035,7 +2097,8 @@ function createPlanCard(plan) {
 
     card.innerHTML = `
         ${badgeHtml}
-        <div class="plan-duration">${plan.duration}</div>
+        ${nameHtml}
+        ${durationHtml}
         ${originalPriceHtml}
         <div class="plan-price">${formattedPrice}</div>
         ${speedHtml}
@@ -2073,9 +2136,12 @@ function formatPrice(price) {
 function selectPlan(plan) {
     selectedPlan = plan;
     
-    // Update selected plan display
+    // Update selected plan display. The buyer is about to be charged, so the
+    // package name they were sold on has to be the thing they can read back.
+    const selectedName = planNameLine(plan);
     selectedPlanInfo.innerHTML = `
-        <div class="selected-plan-name">${plan.duration}</div>
+        <div class="selected-plan-name">${selectedName ? escapeHtml(selectedName) : plan.duration}</div>
+        ${selectedName ? `<div class="selected-plan-duration">${plan.duration}</div>` : ''}
         <div class="selected-plan-price">${formatPrice(plan.price)}</div>
         ${portalSettings.show_plan_speed !== false && plan.speed ? `<div class="selected-plan-speed">${plan.speed}</div>` : ''}
         ${plan.maxDevices > 1 ? `<div class="selected-plan-devices">${devicesSvgHtml()}<span>Up to ${plan.maxDevices} devices</span></div>` : ''}
