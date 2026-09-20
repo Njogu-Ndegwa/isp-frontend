@@ -1749,20 +1749,70 @@ function transformPlansData(apiPlans) {
         };
     });
 
-    // Sort: special_offer → emergency → bestseller → popular → regular (high price first)
+    // Sort: special offers and emergency plans always lead — they are rendered
+    // under their own notice card. Everything after that is the reseller's
+    // choice (portal_settings.plan_sort_order).
     const typeOrder = { special_offer: 0, emergency: 1 };
+    const sortOrder = getPlanSortOrder();
     transformedPlans.sort((a, b) => {
         const ta = typeOrder[a.planType] ?? 2;
         const tb = typeOrder[b.planType] ?? 2;
         if (ta !== tb) return ta - tb;
-        if (a.bestseller && !b.bestseller) return -1;
-        if (!a.bestseller && b.bestseller) return 1;
-        if (a.popular && !b.popular) return -1;
-        if (!a.popular && b.popular) return 1;
-        return b.originalData.price - a.originalData.price;
+        if (sortOrder === 'default') {
+            // Legacy merchandised order: pin what we want people to buy, then
+            // most expensive first.
+            if (a.bestseller && !b.bestseller) return -1;
+            if (!a.bestseller && b.bestseller) return 1;
+            if (a.popular && !b.popular) return -1;
+            if (!a.popular && b.popular) return 1;
+            return b.originalData.price - a.originalData.price;
+        }
+        return comparePlansBy(sortOrder, a.originalData, b.originalData);
     });
 
     return transformedPlans;
+}
+
+// ========================================
+// PLAN SORT ORDER — reseller-configurable
+// ========================================
+// portal_settings.plan_sort_order decides how packages are listed. 'default' is
+// the merchandised order this portal has always used (bestseller/popular pinned,
+// then price high→low) and stays the fallback, so a reseller who never touches
+// the setting sees no change. The backend sorts the payload the same way; this
+// runs anyway because the client re-sorts after its own filtering, and because a
+// cached script.js must not undo the reseller's choice.
+const PLAN_SORT_ORDERS = ['default', 'price_asc', 'price_desc', 'duration_asc', 'duration_desc'];
+
+function getPlanSortOrder() {
+    const raw = portalSettings && portalSettings.plan_sort_order;
+    const order = String(raw || 'default').toLowerCase();
+    return PLAN_SORT_ORDERS.includes(order) ? order : 'default';
+}
+
+function comparePlansBy(sortOrder, a, b) {
+    let diff;
+    switch (sortOrder) {
+        case 'price_asc':
+            diff = a.price - b.price;
+            break;
+        case 'price_desc':
+            diff = b.price - a.price;
+            break;
+        case 'duration_asc':
+            diff = convertToHours(a.duration_value, a.duration_unit)
+                 - convertToHours(b.duration_value, b.duration_unit);
+            break;
+        case 'duration_desc':
+            diff = convertToHours(b.duration_value, b.duration_unit)
+                 - convertToHours(a.duration_value, a.duration_unit);
+            break;
+        default:
+            diff = 0;
+    }
+    // Break ties on id, ascending in both directions, so two packages at the
+    // same price never swap places between page loads.
+    return diff !== 0 ? diff : a.id - b.id;
 }
 
 // ========================================
