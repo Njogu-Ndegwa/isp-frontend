@@ -1151,6 +1151,106 @@ body::before {
     padding: var(--space-md);
 }
 
+/* ========================================
+   Free Trial — "Try free for 30 Minutes"
+   Green, not the theme primary: it has to read as "free" next to the paid
+   cards on every theme. The whole card is the tap target.
+   ======================================== */
+.free-trial-section {
+    margin-bottom: var(--space-md);
+}
+
+.free-trial-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.free-trial-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    width: 100%;
+    min-height: 64px;
+    padding: var(--space-md);
+    background:
+        linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(16, 185, 129, 0.04) 100%),
+        var(--surface);
+    border: 2px solid var(--success);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    color: var(--text);
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.free-trial-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(16, 185, 129, 0.25);
+}
+
+.free-trial-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.free-trial-btn:focus-visible {
+    outline: 3px solid rgba(16, 185, 129, 0.45);
+    outline-offset: 2px;
+}
+
+.free-trial-btn:disabled {
+    opacity: 0.7;
+    cursor: wait;
+}
+
+.free-trial-icon {
+    font-size: 1.75rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.free-trial-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.free-trial-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.free-trial-sub {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    overflow-wrap: anywhere;
+}
+
+.free-trial-arrow,
+.free-trial-loader {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--success);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.free-trial-result {
+    margin-top: var(--space-sm);
+}
+
 /* OR Divider between voucher and plans */
 .section-divider {
     display: flex;

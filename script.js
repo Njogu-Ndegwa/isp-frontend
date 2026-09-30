@@ -111,6 +111,9 @@ const ACCESS_CODE_DISCONNECT_ENDPOINT = `${API_BASE_URL}/public/access-code/disc
 const ACCESS_CODE_STORAGE_KEY = 'bitwave_access_code';
 // Reconnect endpoint (public, no auth)
 const RECONNECT_ENDPOINT = `${API_BASE_URL}/public/reconnect`;
+// Free-trial endpoints (public, no auth). GET takes /{router_id}/{mac}.
+const FREE_TRIAL_ENDPOINT = `${API_BASE_URL}/public/free-trial`;
+const FREE_TRIAL_CLAIM_ENDPOINT = `${API_BASE_URL}/public/free-trial/claim`;
 
 // RADIUS-specific endpoints (used when router auth_method is "RADIUS")
 const RADIUS_PAYMENT_ENDPOINT = `${API_BASE_URL}/radius/hotspot/register-and-pay`;
@@ -505,6 +508,7 @@ console.log('🔧 mikrotikParams.router value:', `"${mikrotikParams.router}"`);
 // ========================================
 let selectedPlan = null;
 let allPlans = [];
+let hotspotOffersFreeTrial = false; // set by displayPlans(); gates loadFreeTrials()
 
 // ========================================
 // DOM ELEMENTS
@@ -751,6 +755,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 submitButton.disabled = false;
                 console.log('🔓 Pay button ENABLED');
             }
+
+            // router_id and the plan list are both known now.
+            loadFreeTrials();
 
             // Safety net: clear the loading shimmer on the standard header
             // and fill in a fallback name so the header never stays blank.
@@ -1180,6 +1187,12 @@ const I18N = {
         ratingsLabel: 'How was your connection?',
         swipeHint: '← Swipe for more deals →',
         adsBadge: 'Soko Deals Today',
+        trialTry: 'Try free for {duration}',
+        trialNoPayment: 'No payment needed',
+        trialStarted: 'Your free trial has started',
+        trialMethod: 'Free trial',
+        trialFailed: "Couldn't start the free trial. Please try again.",
+        trialNotPayable: 'This plan is free. Use the "Try free" button to get it.',
     },
     sw: {
         choosePlan: 'Chagua Mpango',
@@ -1229,6 +1242,12 @@ const I18N = {
         ratingsLabel: 'Muunganiko ulikuwaje?',
         swipeHint: '← Sogeza zaidi →',
         adsBadge: 'Ofa za Leo',
+        trialTry: 'Jaribu bure kwa {duration}',
+        trialNoPayment: 'Hakuna malipo',
+        trialStarted: 'Majaribio yako ya bure yameanza',
+        trialMethod: 'Majaribio ya bure',
+        trialFailed: 'Imeshindikana kuanza majaribio ya bure. Tafadhali jaribu tena.',
+        trialNotPayable: 'Mpango huu ni wa bure. Tumia kitufe cha "Jaribu bure" kuupata.',
     },
     fr: {
         choosePlan: 'Choisissez votre forfait',
@@ -1278,6 +1297,12 @@ const I18N = {
         ratingsLabel: 'Comment était votre connexion?',
         swipeHint: '← Glissez pour plus →',
         adsBadge: 'Offres du Jour',
+        trialTry: 'Essai gratuit : {duration}',
+        trialNoPayment: 'Aucun paiement requis',
+        trialStarted: 'Votre essai gratuit a commencé',
+        trialMethod: 'Essai gratuit',
+        trialFailed: "Impossible de démarrer l'essai gratuit. Veuillez réessayer.",
+        trialNotPayable: 'Ce forfait est gratuit. Utilisez le bouton « Essai gratuit » pour en profiter.',
     }
 };
 
@@ -1602,6 +1627,9 @@ function loadSavedPhoneNumber() {
 // ========================================
 function displayPlans(rawPlans) {
     console.log(`📋 Displaying ${rawPlans.length} plans from API`);
+    // Free trials never join the paid list, but their presence is what tells
+    // us this hotspot offers one — see loadFreeTrials().
+    hotspotOffersFreeTrial = rawPlans.some(isFreeTrialPlan);
     const plans = transformPlansData(rawPlans);
     allPlans = plans;
     renderPlans(plans);
@@ -1689,6 +1717,9 @@ async function forceRefreshPlans() {
 function transformPlansData(apiPlans) {
     const visiblePlans = apiPlans.filter(p => {
         if (p.is_hidden) return false;
+        // Claimed through the "Try free" button, never bought: a KSH 0 card
+        // would start an STK push the backend refuses.
+        if (isFreeTrialPlan(p)) return false;
         if (p.connection_type && p.connection_type !== 'hotspot') return false;
         if (p.plan_type === 'emergency' && !planFlags.emergency_mode_active) return false;
         if (p.plan_type === 'special_offer' && !planFlags.has_special_offers) return false;
@@ -1842,6 +1873,7 @@ function convertToHours(value, unit) {
 function formatDuration(value, unit) {
     // Convert unit to readable format
     const unitMap = {
+        'MINUTES': value === 1 ? 'Minute' : 'Minutes',
         'HOURS': value === 1 ? 'Hour' : 'Hours',
         'DAYS': value === 1 ? 'Day' : 'Days',
         'WEEKS': value === 1 ? 'Week' : 'Weeks',
@@ -2604,7 +2636,7 @@ async function submitAccessCode(code) {
     try {
         const rId = routerId || FALLBACK_ROUTER_ID;
         const data = await redeemAccessCode(code, macAddress, rId);
-        handleAccessCodeSuccess(data, code, macAddress);
+        handleRedeemSuccess(data, macAddress);
     } catch (err) {
         if (isDeviceLimitError(err)) {
             renderDeviceLimitPanel(result, err.detail, {
@@ -2620,7 +2652,13 @@ async function submitAccessCode(code) {
     }
 }
 
-function handleAccessCodeSuccess(data, code, macAddress) {
+// Access granted without a payment to wait on: a redeemed voucher / access
+// code, or a claimed free trial. Both endpoints return the same shape, so both
+// land here: RADIUS auto-login when credentials come back, otherwise the
+// "You're Online!" screen and the auto "Start Browsing".
+// source.method / source.headline / source.planName label the success screen
+// for callers other than the code box.
+function handleRedeemSuccess(data, macAddress, source = {}) {
     console.log('✅ [ACCESS CODE] Outcome:', data.outcome);
     const expiry = data.expires_at || data.expiry;
 
@@ -2633,7 +2671,7 @@ function handleAccessCodeSuccess(data, code, macAddress) {
                     loginUrl, username: data.radius_username,
                     password: data.radius_password, gateway: mikrotikParams.gw,
                     dst: mikrotikParams.dst, mac: macAddress,
-                    planName: data.plan_name || 'Voucher Plan',
+                    planName: data.plan_name || source.planName || 'Voucher Plan',
                     expiry: expiry,
                     savedAt: new Date().toISOString()
                 }));
@@ -2641,7 +2679,7 @@ function handleAccessCodeSuccess(data, code, macAddress) {
 
             hideSection(plansSection);
             showSection(successSection);
-            showVoucherSuccessDetails(data);
+            showVoucherSuccessDetails(data, source);
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
             setTimeout(() => { window.location.href = loginUrl; }, 2000);
@@ -2652,13 +2690,18 @@ function handleAccessCodeSuccess(data, code, macAddress) {
     // Non-RADIUS success: show success screen
     hideSection(plansSection);
     showSection(successSection);
-    showVoucherSuccessDetails(data);
+    showVoucherSuccessDetails(data, source);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     scheduleAutoStartBrowsing();
 }
 
 function showVoucherError(message) {
-    const result = document.getElementById('voucherResult');
+    renderResultError(document.getElementById('voucherResult'), message);
+}
+
+// Red "✕ message" row used under the code box and the free-trial buttons.
+// The message is backend text, so it goes in via textContent.
+function renderResultError(result, message) {
     if (!result) return;
 
     result.innerHTML = `
@@ -2688,7 +2731,7 @@ function accessCodeShareHint(data) {
     return '';
 }
 
-function showVoucherSuccessDetails(data) {
+function showVoucherSuccessDetails(data, source = {}) {
     const connectionDetails = document.getElementById('connectionDetails');
     if (!connectionDetails) return;
 
@@ -2699,12 +2742,12 @@ function showVoucherSuccessDetails(data) {
         hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Nairobi'
     }) : 'N/A';
 
-    const outcomeMessage = accessCodeOutcomeMessage(data);
+    const outcomeMessage = accessCodeOutcomeMessage(data) || source.headline || '';
     const subtext = document.querySelector('#successSection .success-subtext');
     if (subtext && outcomeMessage) subtext.textContent = outcomeMessage;
 
     const method = data.outcome === 'device_added' ? 'Shared plan'
-        : (data.redemption_method || 'Voucher / access code');
+        : (source.method || data.redemption_method || 'Voucher / access code');
 
     let html = `
         <div class="detail-row">
@@ -2807,6 +2850,175 @@ function renderAccessCodeCard(container, accessCode, maxDevices) {
 
     card.append(title, row, body);
     container.appendChild(card);
+}
+
+// ========================================
+// FREE TRIAL — "Try free for 30 Minutes"
+// GET  /api/public/free-trial/{router_id}/{mac} → trials this device may claim
+// POST /api/public/free-trial/claim             → same response as a code redeem
+// A reseller offers a trial by creating a plan with plan_type "free_trial"
+// (price 0). It is never sold: it stays out of the paid list and the backend
+// refuses to charge for it, so the only way in is the button built here.
+// ========================================
+function isFreeTrialPlan(plan) {
+    if (!plan) return false;
+    const type = plan.plan_type || plan.planType
+        || (plan.originalData && plan.originalData.plan_type);
+    return type === 'free_trial';
+}
+
+async function fetchFreeTrials(rId, macAddress) {
+    const url = `${FREE_TRIAL_ENDPOINT}/${encodeURIComponent(rId)}/${encodeURIComponent(macAddress)}`;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    try {
+        const response = await fetch(getProxiedUrl(url), {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' },
+            mode: 'cors',
+            signal: controller.signal
+        });
+        if (!response.ok) throw new Error(`Free trial API ${response.status}`);
+        const data = await response.json();
+        return Array.isArray(data && data.trials) ? data.trials : [];
+    } finally {
+        clearTimeout(timeoutId);
+    }
+}
+
+// Asks the backend only when this hotspot's plans include a trial, so portals
+// of resellers who never set one up make no extra request. Trials this device
+// can't claim (already used a once-only trial, or already online) are left
+// out rather than shown disabled: a button the customer can never press only
+// teases, and the paid plans right below are what they need instead.
+async function loadFreeTrials() {
+    const section = document.getElementById('freeTrialSection');
+    if (!section) return;
+    const macAddress = getClientMac();
+    if (!hotspotOffersFreeTrial || !routerId || !macAddress) {
+        section.classList.add('hidden');
+        return;
+    }
+    try {
+        const trials = await fetchFreeTrials(routerId, macAddress);
+        console.log('🎁 [FREE TRIAL] Eligibility:', trials);
+        renderFreeTrials(trials.filter(t => t && t.eligible));
+    } catch (err) {
+        // A trial is a bonus — its lookup failing must never get in the way
+        // of buying a plan.
+        console.warn('⚠️ [FREE TRIAL] Eligibility check failed:', err.message);
+        section.classList.add('hidden');
+    }
+}
+
+function renderFreeTrials(trials) {
+    const section = document.getElementById('freeTrialSection');
+    const list = document.getElementById('freeTrialList');
+    const result = document.getElementById('freeTrialResult');
+    if (!section || !list) return;
+
+    list.textContent = '';
+    if (result) result.classList.add('hidden');
+    trials.forEach(trial => list.appendChild(createFreeTrialButton(trial)));
+    section.classList.toggle('hidden', trials.length === 0);
+}
+
+// Reseller-typed name and speed go in via textContent.
+function createFreeTrialButton(trial) {
+    const duration = formatDuration(trial.duration_value, trial.duration_unit);
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'free-trial-btn';
+    btn.dataset.planId = String(trial.plan_id);
+
+    const icon = document.createElement('span');
+    icon.className = 'free-trial-icon';
+    icon.setAttribute('aria-hidden', 'true');
+    icon.textContent = '🎁';
+
+    const text = document.createElement('span');
+    text.className = 'free-trial-text';
+    const title = document.createElement('span');
+    title.className = 'free-trial-title';
+    title.textContent = tr('trialTry', { duration });
+    const sub = document.createElement('span');
+    sub.className = 'free-trial-sub';
+    const name = planNameLine({ name: trial.name, duration });
+    const speed = portalSettings.show_plan_speed !== false && trial.speed ? formatSpeed(trial.speed) : '';
+    sub.textContent = [name, speed, tr('trialNoPayment')].filter(Boolean).join(' · ');
+    text.append(title, sub);
+
+    const arrow = document.createElement('span');
+    arrow.className = 'free-trial-arrow';
+    arrow.setAttribute('aria-hidden', 'true');
+    arrow.textContent = '→';
+
+    const loader = document.createElement('span');
+    loader.className = 'free-trial-loader hidden';
+    loader.innerHTML = '<span class="loader-spinner"></span>';
+
+    btn.append(icon, text, arrow, loader);
+    btn.addEventListener('click', () => claimFreeTrial(trial, btn));
+    return btn;
+}
+
+function setFreeTrialLoading(activeBtn, isLoading) {
+    document.querySelectorAll('#freeTrialList .free-trial-btn').forEach(b => {
+        b.disabled = isLoading;
+    });
+    if (!activeBtn) return;
+    activeBtn.querySelector('.free-trial-arrow')?.classList.toggle('hidden', isLoading);
+    activeBtn.querySelector('.free-trial-loader')?.classList.toggle('hidden', !isLoading);
+}
+
+let freeTrialClaimInFlight = false;
+
+async function claimFreeTrial(trial, btn) {
+    if (freeTrialClaimInFlight) return;
+    const result = document.getElementById('freeTrialResult');
+    const macAddress = getClientMac();
+    if (!macAddress) {
+        renderResultError(result, tr('noMac'));
+        return;
+    }
+
+    freeTrialClaimInFlight = true;
+    setFreeTrialLoading(btn, true);
+    if (result) result.classList.add('hidden');
+
+    try {
+        const requestBody = {
+            plan_id: trial.plan_id,
+            mac_address: macAddress,
+            router_id: routerId
+        };
+        // A phone saved from an earlier purchase on this device lets the
+        // backend's once-per-customer rule recognise the same person across
+        // devices. Never asked for here: sent only when already saved.
+        let savedPhone = '';
+        try { savedPhone = (localStorage.getItem('bitwave_phone_number') || '').trim(); } catch (e) { /* storage blocked */ }
+        if (savedPhone) requestBody.phone = savedPhone;
+        console.log('🎁 [FREE TRIAL] Claim request:', requestBody);
+        const data = await postPublicJson(FREE_TRIAL_CLAIM_ENDPOINT, requestBody, 30000, tr('trialFailed'));
+        console.log('✅ [FREE TRIAL] Claimed:', data);
+        handleRedeemSuccess(data, macAddress, {
+            method: tr('trialMethod'),
+            headline: tr('trialStarted'),
+            planName: trial.name
+        });
+    } catch (err) {
+        console.error('❌ [FREE TRIAL] Claim failed:', err.message);
+        // The backend's `detail` explains the refusal ("You have already used
+        // this free trial."); only transport failures get our own wording.
+        let message = err.message || tr('trialFailed');
+        if (err.name === 'AbortError') message = friendlyAccessCodeError(err);
+        else if (err instanceof TypeError) message = tr('trialFailed');
+        renderResultError(result, message);
+    } finally {
+        freeTrialClaimInFlight = false;
+        setFreeTrialLoading(btn, false);
+    }
 }
 
 // ========================================
@@ -3257,6 +3469,14 @@ async function processPayment(phoneNumber, plan) {
     console.log('🆔 Would use fallback:', !routerId);
     console.log('═══════════════════════════════════════════════════════');
     
+    // A free trial (or any KSH 0 plan) must never reach the STK push. They are
+    // filtered out of the paid list; this is the last line if one slips through.
+    const planAmount = Number(plan.originalData ? plan.originalData.price : plan.price);
+    if (isFreeTrialPlan(plan) || !(planAmount > 0)) {
+        console.error('❌ Refusing to charge a free / zero-price plan:', plan.id);
+        throw new Error(tr('trialNotPayable'));
+    }
+
     // Ensure router_id is available
     if (!routerId) {
         console.error('❌ [ROUTER DEBUG] router_id is NOT available at payment time!');
