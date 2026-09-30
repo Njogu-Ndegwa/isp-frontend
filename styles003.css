@@ -64,6 +64,9 @@
 html {
     scroll-behavior: smooth;
     -webkit-tap-highlight-color: transparent;
+    /* Stop mobile browsers from inflating text on their own */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
 }
 
 body {
@@ -1066,10 +1069,6 @@ body::before {
         width: 100%;
     }
 
-    .reconnect-input {
-        font-size: 0.95rem;
-    }
-
     .reconnect-header-title {
         font-size: 0.95rem;
     }
@@ -1085,7 +1084,6 @@ body::before {
 
 @media (max-width: 320px) {
     .reconnect-input {
-        font-size: 0.9rem;
         padding: 10px;
     }
 
@@ -2610,7 +2608,6 @@ body::before {
     }
 
     .voucher-input {
-        font-size: 0.95rem;
         letter-spacing: 1px;
     }
 
@@ -2650,7 +2647,6 @@ body::before {
 
 @media (max-width: 320px) {
     .voucher-input {
-        font-size: 0.9rem;
         letter-spacing: 0.5px;
         padding: 10px;
     }
@@ -5170,7 +5166,7 @@ body::before {
     border: 1.5px solid #e5e5e5;
     border-radius: var(--radius-md);
     font-family: inherit;
-    font-size: 0.95rem;
+    font-size: 1rem;
     color: var(--text);
     background: var(--surface);
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -5533,3 +5529,12 @@ body::before {
     }
 }
 
+/* Mobile browsers (iOS Safari, the captive-portal sign-in sheet) zoom the
+   page in when a focused field's text is under 16px, and stay zoomed after
+   it loses focus. This lifts unstyled fields off the 13px browser default;
+   any class that sets a field's font-size must also stay at 1rem or more. */
+input,
+select,
+textarea {
+    font-size: 16px;
+}

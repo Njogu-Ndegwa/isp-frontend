@@ -2315,6 +2315,7 @@ async function copyTextToClipboard(text) {
         ta.setAttribute('readonly', '');
         ta.style.position = 'fixed';
         ta.style.opacity = '0';
+        ta.style.fontSize = '16px'; // under 16px, iOS zooms the page on select
         document.body.appendChild(ta);
         ta.select();
         const ok = document.execCommand('copy');
