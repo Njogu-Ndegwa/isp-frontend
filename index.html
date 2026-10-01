@@ -32,7 +32,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Outfit:wght@600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <!-- Fallback for no-JS -->
     <noscript><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Outfit:wght@600;700&display=swap" rel="stylesheet"></noscript>
-    <link rel="stylesheet" href="styles003.css?v=15">
+    <link rel="stylesheet" href="styles003.css?v=16">
     
 </head>
 <body>
@@ -166,6 +166,17 @@
                         <div class="reconnect-result hidden" id="reconnectResult">
                             <!-- Populated by JS on reconnect success/error -->
                         </div>
+                    </div>
+                </div>
+
+                <!-- Free Trial: "Try free for 30 Minutes" buttons, one per trial
+                     this device may claim. Filled by loadFreeTrials(); stays hidden
+                     when the hotspot offers none. Sits outside #mpesaSection so a
+                     voucher-only hotspot still shows it. -->
+                <div class="free-trial-section hidden" id="freeTrialSection">
+                    <div class="free-trial-list" id="freeTrialList"></div>
+                    <div class="voucher-result free-trial-result hidden" id="freeTrialResult" role="alert">
+                        <!-- Populated by JS: claim error -->
                     </div>
                 </div>
 
@@ -855,7 +866,7 @@
     </div>
 
     <!-- Defer scripts to prevent render blocking -->
-    <script src="script.js?v=12" defer></script>
+    <script src="script.js?v=13" defer></script>
     <script src="script003.js" defer></script>
     <script src="ads.js" defer></script>
     <script src="device-pairing.js?v=2" defer></script>

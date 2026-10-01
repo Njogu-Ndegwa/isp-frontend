@@ -768,6 +768,7 @@ function convertToHours(value, unit) {
 function transformPlansData(apiPlans, planFlags, BESTSELLER_PLAN_ID) {
     const visible = apiPlans.filter(p => {
         if (p.is_hidden) return false;
+        if (p.plan_type === 'free_trial') return false; // claimed via the "Try free" button, never a paid card
         if (p.connection_type && p.connection_type !== 'hotspot') return false;
         if (p.plan_type === 'emergency'     && !planFlags.emergency_mode_active) return false;
         if (p.plan_type === 'special_offer' && !planFlags.has_special_offers)    return false;
