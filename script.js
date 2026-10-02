@@ -2183,13 +2183,10 @@ function selectPlan(plan) {
     showSection(paymentSection);
     hideSection(plansSection);
     
-    // Scroll to top smoothly
+    // Scroll to top smoothly. The phone field is left unfocused on purpose:
+    // auto-focus pops the keyboard over the selected plan before the
+    // customer has read it, so they tap the field when they're ready.
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    
-    // Focus on phone input
-    setTimeout(() => {
-        phoneNumberInput.focus();
-    }, 300);
 }
 
 // ========================================
