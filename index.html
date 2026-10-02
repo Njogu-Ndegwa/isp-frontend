@@ -3,6 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <script>
+        // iOS's captive-portal sheet ("Captive Wi-Fi") focuses the first text
+        // field as soon as the page loads: the keyboard opens over the hero and
+        // the page zooms in. Runs before <body> so it is in place before that.
+        (function () {
+            // On iOS, maximum-scale stops the zoom-on-focus. Android never zooms
+            // on focus, so it keeps the plain viewport and pinch-zoom.
+            var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+                || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            if (isIOS) {
+                var vp = document.querySelector('meta[name="viewport"]');
+                if (vp) vp.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover');
+            }
+
+            // Undo any field focus that happens before the person has touched
+            // the page; focus they cause themselves (a tap, a plan pick) stays.
+            var touched = false;
+            ['pointerdown', 'touchstart', 'mousedown', 'keydown'].forEach(function (type) {
+                window.addEventListener(type, function () { touched = true; }, { capture: true, passive: true });
+            });
+            document.addEventListener('focusin', function (e) {
+                var el = e.target;
+                if (touched || !el || !/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) return;
+                el.blur();
+                window.scrollTo(0, 0);
+            }, true);
+        })();
+    </script>
     <title>Bitwave Soko Wifi - Get Connected</title>
     
     <!-- PWA Meta Tags -->
