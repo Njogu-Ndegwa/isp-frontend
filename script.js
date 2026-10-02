@@ -339,8 +339,12 @@ async function fetchPortalData(identity) {
     const url = `${PORTAL_ENDPOINT}/${encodeURIComponent(identity)}`;
     console.log('📡 [PORTAL] Fetching all data from:', url);
 
+    // A walled garden that blocks the primary host drops packets silently, so
+    // the fetch hangs instead of failing. The portal normally answers in under
+    // a second, so give the primary 5s before switching to the same-origin
+    // proxy; the proxy itself keeps the full 15s.
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const timeoutId = setTimeout(() => controller.abort(), window.__apiFallback.active ? 15000 : 5000);
 
     try {
         const response = await fetch(getProxiedUrl(url), {
