@@ -1,5 +1,5 @@
 {
-  "regions": ["iad1"],
+  "regions": ["fra1"],
   "functions": {
     "api/bw.js": {
       "maxDuration": 30
