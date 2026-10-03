@@ -2137,6 +2137,14 @@ body::before {
     transition: width 1500ms linear;
 }
 
+/* "Start Browsing" held while the router is still adding the device: an early
+   tap would only bounce off the hotspot back to this portal. */
+.success-btn.is-waiting,
+.reconnect-browse-btn.is-waiting {
+    opacity: 0.55;
+    pointer-events: none;
+}
+
 /* Connection Card */
 .connection-card {
     background: var(--surface);
