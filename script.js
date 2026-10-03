@@ -84,8 +84,11 @@ const PRIMARY_API_BASE = 'https://isp.bitwavetechnologies.com/api';
 const FALLBACK_API_BASE = '/api/bw';
 const API_BASE_URL = PRIMARY_API_BASE;
 
-// Shared fallback state — ads.js and pwa.js read this to rewrite their URLs too
-window.__apiFallback = { primary: PRIMARY_API_BASE, fallback: FALLBACK_API_BASE, active: false };
+// Shared fallback state — ads.js and pwa.js read this to rewrite their URLs too.
+// index.html's early portal request creates it first and may already have
+// switched to the fallback; keep that.
+window.__apiFallback = window.__apiFallback
+    || { primary: PRIMARY_API_BASE, fallback: FALLBACK_API_BASE, active: false };
 
 function activateApiFallback() {
     if (!window.__apiFallback.active) {
@@ -196,6 +199,32 @@ function reportPlansFailure(stage, err) {
             method: 'GET', keepalive: true, cache: 'no-store'
         }).catch(() => {});
         console.warn('📡 [BEACON] Plans failure reported:', stage);
+    } catch (_) { /* telemetry must never break the page */ }
+}
+
+// ========================================
+// PORTAL TIMING BEACON
+// How long real phones wait for the plans. Same trick as the failure beacon:
+// the endpoint 404s and the access-log line is the record. Sampled (1 in 4
+// loads) so it doesn't flood the log; ms are from navigation start.
+// ========================================
+const PORTAL_TIMING_SAMPLE_RATE = 0.25;
+function reportPortalTiming() {
+    try {
+        if (Math.random() >= PORTAL_TIMING_SAMPLE_RATE) return;
+        if (sessionStorage.getItem('__DEMO_PORTAL__') ||
+            sessionStorage.getItem('__DEV_MOCK_PORTAL__') ||
+            window.__MOCK_PORTAL_DATA) return;
+        const nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+        const params = new URLSearchParams({
+            router: mikrotikParams.router || 'unknown',
+            plans: String(Math.round(performance.now())),
+            dcl: nav ? String(Math.round(nav.domContentLoadedEventStart)) : '',
+            via: window.__portalVia || 'late',
+        });
+        fetch(`${API_BASE_URL}/public/portal-timing-beacon?${params.toString()}`, {
+            method: 'GET', mode: 'no-cors', keepalive: true, cache: 'no-store'
+        }).catch(() => {});
     } catch (_) { /* telemetry must never break the page */ }
 }
 
@@ -346,6 +375,17 @@ async function fetchPortalData(identity) {
 
     if (!identity) {
         throw new Error('No router identity for portal lookup');
+    }
+
+    // Already requested from <head> (see index.html). Used once; a later call
+    // asks afresh. Its failures are the ones this function would have thrown.
+    const early = window.__portalEarly;
+    if (early && early.identity === identity) {
+        window.__portalEarly = null;
+        const { data, via } = await early.promise;
+        window.__portalVia = via;
+        console.log(`✅ [PORTAL] Response (early request, via ${via})`);
+        return data;
     }
 
     const url = `${PORTAL_ENDPOINT}/${encodeURIComponent(identity)}`;
@@ -729,6 +769,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 displayPlans(data.plans);
                 console.log('✅ [PORTAL] Plans loaded:', data.plans.length);
+                reportPortalTiming();
             } else {
                 reportPlansFailure('empty', 'portal response had no plans');
                 showPlansError();

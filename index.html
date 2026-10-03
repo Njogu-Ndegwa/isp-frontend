@@ -31,6 +31,89 @@
             }, true);
         })();
     </script>
+    <script>
+        // Ask for this router's plans NOW, before the CSS and scripts download.
+        // script.js only gets to run after all of them have loaded and parsed
+        // (1.5-3 s on a budget phone), and the request itself is a cold
+        // connection to the API; started here, the two overlap.
+        // fetchPortalData() in script.js picks up window.__portalEarly.
+        //
+        // Hedged: the primary API host first; if it hasn't answered in 1.2 s,
+        // the same-origin proxy (/api/bw, edge-cached on Vercel) too, and the
+        // first good answer wins. A network failure on the primary switches the
+        // page to the proxy for every later call, exactly as script.js did after
+        // its old 5 s wait. PRIMARY/FALLBACK must match script.js.
+        (function () {
+            var PRIMARY = 'https://isp.bitwavetechnologies.com/api';
+            var FALLBACK = '/api/bw';
+            var HEDGE_AFTER_MS = 1200;
+            window.__apiFallback = { primary: PRIMARY, fallback: FALLBACK, active: false };
+
+            var identity = null;
+            try { identity = new URLSearchParams(location.search).get('router'); } catch (e) {}
+            if (!identity || !window.fetch || !window.Promise) return;
+            try {
+                if (sessionStorage.getItem('__DEMO_PORTAL__') || sessionStorage.getItem('__DEV_MOCK_PORTAL__')) return;
+            } catch (e) {}
+
+            var path = '/public/portal/' + encodeURIComponent(identity);
+            function get(base, timeoutMs) {
+                var ctl = window.AbortController ? new AbortController() : null;
+                var timer = ctl ? setTimeout(function () { ctl.abort(); }, timeoutMs) : null;
+                return fetch(base + path, {
+                    method: 'GET', headers: { 'Accept': 'application/json' }, mode: 'cors',
+                    signal: ctl ? ctl.signal : undefined
+                }).then(function (r) {
+                    clearTimeout(timer);
+                    if (!r.ok) throw new Error('Portal API ' + r.status + ' ' + r.statusText);
+                    return r.json();
+                }, function (err) {
+                    clearTimeout(timer);
+                    err.network = true; // DNS, walled garden, silent drop, timeout
+                    throw err;
+                });
+            }
+
+            var promise = new Promise(function (resolve, reject) {
+                var settled = false, pending = 1, fallbackStarted = false, hedgeTimer;
+                function win(data, via) {
+                    if (settled) return;
+                    settled = true;
+                    clearTimeout(hedgeTimer);
+                    resolve({ data: data, via: via });
+                }
+                function lose(err) {
+                    pending--;
+                    if (!settled && fallbackStarted && pending === 0) { settled = true; reject(err); }
+                }
+                function startFallback() {
+                    if (fallbackStarted || settled) return;
+                    fallbackStarted = true;
+                    pending++;
+                    get(FALLBACK, 15000).then(function (d) { win(d, 'fallback'); }, lose);
+                }
+                get(PRIMARY, 5000).then(function (d) { win(d, 'primary'); }, function (err) {
+                    if (err.network) {
+                        window.__apiFallback.active = true;
+                        startFallback();
+                    } else if (!fallbackStarted && !settled) {
+                        // A real HTTP answer (unknown router, 5xx): the proxy
+                        // would say the same, so report it as the old code did.
+                        settled = true;
+                        clearTimeout(hedgeTimer);
+                        reject(err);
+                        return;
+                    }
+                    lose(err);
+                });
+                hedgeTimer = setTimeout(startFallback, HEDGE_AFTER_MS);
+            });
+            // Handled by script.js; this stops an "unhandled rejection" warning
+            // if the page never gets that far.
+            promise.catch(function () {});
+            window.__portalEarly = { identity: identity, promise: promise };
+        })();
+    </script>
     <title>Bitwave Soko Wifi - Get Connected</title>
     
     <!-- PWA Meta Tags -->
@@ -50,9 +133,9 @@
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
     
-    <!-- Preload LCP images for faster rendering -->
-    <link rel="preload" href="images/Advertise-Here.webp" as="image" type="image/webp">
-    <link rel="preload" href="images/Internet-Technician.webp" as="image" type="image/webp">
+    <!-- No image preloads: the two default ad images (ads.js) only show after
+         the plans, and preloading them at high priority took ~40 KB of a slow
+         phone's bandwidth away from the CSS and script.js the plans wait on. -->
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -894,7 +977,7 @@
     </div>
 
     <!-- Defer scripts to prevent render blocking -->
-    <script src="script.js?v=16" defer></script>
+    <script src="script.js?v=17" defer></script>
     <script src="script003.js" defer></script>
     <script src="ads.js" defer></script>
     <script src="device-pairing.js?v=2" defer></script>
