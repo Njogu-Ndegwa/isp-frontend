@@ -139,6 +139,18 @@ const PAYMENT_POLL_INTERVAL = 3000; // Poll every 3 seconds
 // sweep) — giving up at 60s made customers think payment failed and pay again.
 const PAYMENT_POLL_MAX_ATTEMPTS = 40;
 
+// "Paid" is not "online": the backend marks the customer active first and only
+// then adds the device on the router (usually 5-20 s later). Browsing before
+// that hits the hotspot, lands the customer back on this portal, and the
+// phone's captive-portal sheet gives up until WiFi is toggled. So the
+// auto "Start Browsing" waits for the router delivery reported in
+// payment-status (delivery.delivery_status) before navigating.
+const ROUTER_ACCESS_POLL_INTERVAL = 2000;
+const ROUTER_ACCESS_MAX_WAIT_MS = 90000;
+// Success responses with no customer id to ask about (reconnect, account
+// sign-in): wait about one typical delivery instead.
+const ROUTER_ACCESS_BLIND_WAIT_MS = 10000;
+
 // TEMPORARY: Use CORS proxy for development/testing ONLY if backend CORS is not configured
 // Remove this in production once backend adds proper CORS headers!
 const USE_CORS_PROXY = false; // Set to true only for local testing
@@ -1197,6 +1209,10 @@ const I18N = {
         trialMethod: 'Free trial',
         trialFailed: "Couldn't start the free trial. Please try again.",
         trialNotPayable: 'This plan is free. Use the "Try free" button to get it.',
+        connectingHeadline: 'Almost there…',
+        connectingSubtext: 'Connecting your device. This usually takes a few seconds.',
+        connectingStatus: 'Connecting…',
+        connectingSlow: "This is taking longer than usual. Wait a minute, then tap Start Browsing. If pages still don't load, turn WiFi off and on.",
     },
     sw: {
         choosePlan: 'Chagua Mpango',
@@ -1252,6 +1268,10 @@ const I18N = {
         trialMethod: 'Majaribio ya bure',
         trialFailed: 'Imeshindikana kuanza majaribio ya bure. Tafadhali jaribu tena.',
         trialNotPayable: 'Mpango huu ni wa bure. Tumia kitufe cha "Jaribu bure" kuupata.',
+        connectingHeadline: 'Karibu tayari…',
+        connectingSubtext: 'Tunaunganisha kifaa chako. Huchukua sekunde chache tu.',
+        connectingStatus: 'Inaunganisha…',
+        connectingSlow: 'Inachukua muda zaidi kuliko kawaida. Subiri dakika moja, kisha bonyeza Start Browsing. Kurasa zikikataa kufunguka, zima WiFi kisha uiwashe tena.',
     },
     fr: {
         choosePlan: 'Choisissez votre forfait',
@@ -1307,6 +1327,10 @@ const I18N = {
         trialMethod: 'Essai gratuit',
         trialFailed: "Impossible de démarrer l'essai gratuit. Veuillez réessayer.",
         trialNotPayable: 'Ce forfait est gratuit. Utilisez le bouton « Essai gratuit » pour en profiter.',
+        connectingHeadline: 'Presque prêt…',
+        connectingSubtext: 'Connexion de votre appareil. Cela prend généralement quelques secondes.',
+        connectingStatus: 'Connexion…',
+        connectingSlow: "Cela prend plus de temps que d'habitude. Patientez une minute, puis touchez « Start Browsing ». Si les pages ne s'ouvrent toujours pas, désactivez puis réactivez le WiFi.",
     }
 };
 
@@ -2693,7 +2717,8 @@ function handleRedeemSuccess(data, macAddress, source = {}) {
     showSection(successSection);
     showVoucherSuccessDetails(data, source);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    scheduleAutoStartBrowsing();
+    // Voucher / trial responses carry the customer id: wait for the router.
+    scheduleAutoStartBrowsing({ customerId: data.customer_id });
 }
 
 function showVoucherError(message) {
@@ -3700,7 +3725,7 @@ async function pollPaymentStatusAndLogin(customerId, phoneNumber, plan) {
                     // Skipped when an access code is on screen: auto-navigating
                     // would hide it before the customer can copy it (captive
                     // portal webviews often wipe localStorage too).
-                    if (!isRadiusRouter && !hasAccessCode) scheduleAutoStartBrowsing();
+                    if (!isRadiusRouter && !hasAccessCode) scheduleAutoStartBrowsing({ customerId });
 
                     resolve(data);
                 } else if (data.status === 'pending') {
@@ -3860,56 +3885,167 @@ function hideSection(section) {
 }
 
 // ========================================
-// AUTO "START BROWSING" — after a DIRECT_API success the device MAC is already
-// authorised, so we replicate the manual "Start Browsing" tap automatically:
-// navigating to a normal http URL makes the phone's OS detect connectivity and
-// dismiss the captive-portal sheet (landing the user on Wi-Fi settings).  The
-// visible button is kept as a fallback in case the OS blocks auto-navigation.
+// AUTO "START BROWSING" — replicate the manual "Start Browsing" tap once the
+// device really has internet: navigating to a normal http URL makes the
+// phone's OS detect connectivity and dismiss the captive-portal sheet
+// (landing the user on Wi-Fi settings). The visible button is kept as a
+// fallback in case the OS blocks auto-navigation.
+//
+// The tap must not come early. The backend reports a payment / voucher /
+// trial as successful before the router has added the device; navigating
+// then gets intercepted by the hotspot and shows this portal again, and the
+// phone stops re-checking until WiFi is toggled. So:
+//   - access.customerId: poll payment-status until the router delivery is
+//     done (delivery_status access_ready / online), then navigate.
+//   - no customerId: wait ROUTER_ACCESS_BLIND_WAIT_MS, then navigate.
+// If delivery fails or runs past ROUTER_ACCESS_MAX_WAIT_MS we don't navigate;
+// the customer is told to wait and tap the button.
 // One-shot guarded so it can never double-fire across success paths.
 // ========================================
 let _autoBrowseScheduled = false;
-function scheduleAutoStartBrowsing(delayMs = 1500) {
+function scheduleAutoStartBrowsing(access = {}, delayMs = 1500) {
     if (_autoBrowseScheduled) return;
     _autoBrowseScheduled = true;
 
     // Single-source the URL from whichever success button is on screen.
     const btn = document.getElementById('startBrowsingBtn')
              || document.querySelector('.reconnect-browse-btn');
+    const fill = ensureAutoBrowseProgress(btn);
 
-    // Thin progress bar so the auto-redirect doesn't feel abrupt — it fills over
-    // the same delay, then we navigate. Sits under the success headline on the
-    // main card, or just above the button on the reconnect card.
-    if (!document.getElementById('autoBrowseProgress')) {
-        const bar = document.createElement('div');
-        bar.id = 'autoBrowseProgress';
-        bar.className = 'auto-browse-progress';
-        bar.setAttribute('role', 'progressbar');
-        bar.setAttribute('aria-label', 'Connecting you to the internet');
-        const fill = document.createElement('div');
-        fill.className = 'auto-browse-progress-fill';
-        bar.appendChild(fill);
-
-        const heroAnchor = document.querySelector('#successSection:not(.hidden) .success-hero .success-subtext');
-        if (heroAnchor && heroAnchor.parentNode) {
-            heroAnchor.parentNode.insertBefore(bar, heroAnchor.nextSibling);
-        } else if (btn && btn.parentNode) {
-            btn.parentNode.insertBefore(bar, btn);
-        }
-
-        // Kick off the fill on the next frame so the CSS transition animates.
-        requestAnimationFrame(() => {
+    const finish = () => {
+        setConnectingState(btn, 'ready');
+        // Fill the rest of the bar over the redirect delay, then navigate.
+        if (fill) {
             fill.style.transitionDuration = delayMs + 'ms';
             fill.style.width = '100%';
+        }
+        setTimeout(() => {
+            const target = (btn && btn.getAttribute('href')) || 'http://google.com';
+            console.log('📶 [AUTO-BROWSE] Redirecting to dismiss captive portal:', target);
+            window.location.href = target;
+        }, delayMs);
+    };
+
+    setConnectingState(btn, 'waiting');
+    // Creep most of the way while we wait, so the bar never looks stuck.
+    if (fill) {
+        requestAnimationFrame(() => {
+            fill.style.transitionDuration = '20000ms';
+            fill.style.width = '85%';
         });
     }
 
-    setTimeout(() => {
-        const target = (btn && btn.getAttribute('href')) || 'http://google.com';
-        console.log('📶 [AUTO-BROWSE] Redirecting to dismiss captive portal:', target);
-        window.location.href = target;
-    }, delayMs);
+    if (access.customerId) {
+        waitForRouterAccess(access.customerId).then((ready) => {
+            if (ready) {
+                finish();
+            } else {
+                console.warn('📶 [AUTO-BROWSE] Router delivery not confirmed; leaving it to the customer');
+                setConnectingState(btn, 'slow');
+                if (fill && fill.parentNode) fill.parentNode.remove();
+            }
+        });
+    } else {
+        setTimeout(finish, ROUTER_ACCESS_BLIND_WAIT_MS);
+    }
 }
 window.scheduleAutoStartBrowsing = scheduleAutoStartBrowsing;
+
+// Thin progress bar under the success headline on the main card, or just
+// above the button on the reconnect card. Returns its fill element.
+function ensureAutoBrowseProgress(btn) {
+    const existing = document.getElementById('autoBrowseProgress');
+    if (existing) return existing.firstElementChild;
+
+    const bar = document.createElement('div');
+    bar.id = 'autoBrowseProgress';
+    bar.className = 'auto-browse-progress';
+    bar.setAttribute('role', 'progressbar');
+    bar.setAttribute('aria-label', 'Connecting you to the internet');
+    const fill = document.createElement('div');
+    fill.className = 'auto-browse-progress-fill';
+    bar.appendChild(fill);
+
+    const heroAnchor = document.querySelector('#successSection:not(.hidden) .success-hero .success-subtext');
+    if (heroAnchor && heroAnchor.parentNode) {
+        heroAnchor.parentNode.insertBefore(bar, heroAnchor.nextSibling);
+    } else if (btn && btn.parentNode) {
+        btn.parentNode.insertBefore(bar, btn);
+    } else {
+        return null;
+    }
+    return fill;
+}
+
+// Ask the backend until the router has the device. Always polls, even when the
+// caller already holds a delivery object: the first "active" response can carry
+// a returning customer's previous (already delivered) attempt, because the
+// payment is committed a moment before the new delivery attempt is.
+async function waitForRouterAccess(customerId) {
+    const mac = getClientMac();
+    const statusUrl = mac
+        ? `${PAYMENT_STATUS_ENDPOINT}/${customerId}?mac=${encodeURIComponent(mac)}`
+        : `${PAYMENT_STATUS_ENDPOINT}/${customerId}`;
+    const deadline = Date.now() + ROUTER_ACCESS_MAX_WAIT_MS;
+
+    while (Date.now() < deadline) {
+        await new Promise((resolve) => setTimeout(resolve, ROUTER_ACCESS_POLL_INTERVAL));
+        try {
+            const response = await fetch(getProxiedUrl(statusUrl), {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' },
+                mode: 'cors'
+            });
+            if (!response.ok) continue;
+            const data = await response.json();
+            const delivery = data.delivery;
+            if (!delivery) {
+                // No delivery record to follow (older path): fall back to a
+                // fixed wait rather than navigating straight away.
+                await new Promise((resolve) => setTimeout(resolve, ROUTER_ACCESS_BLIND_WAIT_MS));
+                return true;
+            }
+            const status = delivery.delivery_status;
+            console.log('📶 [AUTO-BROWSE] Router delivery:', status);
+            if (status === 'access_ready' || status === 'online') return true;
+            if (status === 'needs_attention') return false;
+        } catch (e) {
+            // Letting the device in resets its connections on the router;
+            // just ask again.
+            console.warn('📶 [AUTO-BROWSE] Delivery check failed, retrying:', e);
+        }
+    }
+    return false;
+}
+
+// Success-screen copy while the router catches up. The hero texts are only
+// touched when the main success section is the one on screen.
+const _connectingOriginal = {};
+function setConnectingState(btn, state) {
+    const hero = document.querySelector('#successSection:not(.hidden)');
+    const headline = hero && hero.querySelector('.success-headline');
+    const subtext = hero && hero.querySelector('.success-subtext');
+    const statusText = hero && hero.querySelector('.connection-status .status-text');
+
+    if (state === 'waiting') {
+        if (headline) { _connectingOriginal.headline = headline.textContent; headline.textContent = tr('connectingHeadline'); }
+        if (subtext) { _connectingOriginal.subtext = subtext.textContent; subtext.textContent = tr('connectingSubtext'); }
+        if (statusText) { _connectingOriginal.status = statusText.textContent; statusText.textContent = tr('connectingStatus'); }
+        // An early manual tap would bounce off the hotspot just like the
+        // auto-redirect; hold the button until the router is ready.
+        if (btn) { btn.classList.add('is-waiting'); btn.setAttribute('aria-disabled', 'true'); }
+        return;
+    }
+
+    if (btn) { btn.classList.remove('is-waiting'); btn.removeAttribute('aria-disabled'); }
+    if (state === 'ready') {
+        if (headline && _connectingOriginal.headline !== undefined) headline.textContent = _connectingOriginal.headline;
+        if (subtext && _connectingOriginal.subtext !== undefined) subtext.textContent = _connectingOriginal.subtext;
+        if (statusText && _connectingOriginal.status !== undefined) statusText.textContent = _connectingOriginal.status;
+    } else if (state === 'slow') {
+        if (subtext) subtext.textContent = tr('connectingSlow');
+    }
+}
 
 function setLoadingState(isLoading) {
     if (isLoading) {
