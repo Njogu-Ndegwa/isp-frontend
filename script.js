@@ -2728,6 +2728,12 @@ function handleRedeemSuccess(data, macAddress, source = {}) {
     console.log('✅ [ACCESS CODE] Outcome:', data.outcome);
     const expiry = data.expires_at || data.expiry;
 
+    // A multi-device free trial hands back an access code the customer has
+    // never seen. Treat it like the code after an M-Pesa payment: keep it for
+    // later visits and don't navigate away before they can copy it.
+    const issuedCode = source.showAccessCode ? data.access_code : null;
+    if (issuedCode) saveAccessCode(issuedCode, data.max_devices, expiry);
+
     // RADIUS auto-login if credentials returned
     if (data.radius_username && data.radius_password) {
         const loginUrl = buildRadiusLoginUrl(mikrotikParams.gw, data.radius_username, data.radius_password, mikrotikParams.dst);
@@ -2748,7 +2754,7 @@ function handleRedeemSuccess(data, macAddress, source = {}) {
             showVoucherSuccessDetails(data, source);
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
-            setTimeout(() => { window.location.href = loginUrl; }, 2000);
+            setTimeout(() => { window.location.href = loginUrl; }, issuedCode ? 12000 : 2000);
             return;
         }
     }
@@ -2759,7 +2765,7 @@ function handleRedeemSuccess(data, macAddress, source = {}) {
     showVoucherSuccessDetails(data, source);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     // Voucher / trial responses carry the customer id: wait for the router.
-    scheduleAutoStartBrowsing({ customerId: data.customer_id });
+    if (!issuedCode) scheduleAutoStartBrowsing({ customerId: data.customer_id });
 }
 
 function showVoucherError(message) {
@@ -2809,7 +2815,7 @@ function showVoucherSuccessDetails(data, source = {}) {
         hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Nairobi'
     }) : 'N/A';
 
-    const outcomeMessage = accessCodeOutcomeMessage(data) || source.headline || '';
+    const outcomeMessage = source.headline || accessCodeOutcomeMessage(data) || '';
     const subtext = document.querySelector('#successSection .success-subtext');
     if (subtext && outcomeMessage) subtext.textContent = outcomeMessage;
 
@@ -2831,7 +2837,8 @@ function showVoucherSuccessDetails(data, source = {}) {
         </div>
     `;
 
-    const shareHint = accessCodeShareHint(data);
+    const issuedCode = source.showAccessCode ? data.access_code : null;
+    const shareHint = issuedCode ? '' : accessCodeShareHint(data);
     if (shareHint) {
         html += `
         <div class="detail-row" style="margin-top: 14px; padding: 12px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 8px; color: #fff;">
@@ -2859,6 +2866,7 @@ function showVoucherSuccessDetails(data, source = {}) {
     }
 
     connectionDetails.innerHTML = html;
+    if (issuedCode) renderAccessCodeCard(connectionDetails, issuedCode, data.max_devices);
 
     if (typeof populateSuccessAds === 'function') {
         populateSuccessAds();
@@ -3072,7 +3080,8 @@ async function claimFreeTrial(trial, btn) {
         handleRedeemSuccess(data, macAddress, {
             method: tr('trialMethod'),
             headline: tr('trialStarted'),
-            planName: trial.name
+            planName: trial.name,
+            showAccessCode: true
         });
     } catch (err) {
         console.error('❌ [FREE TRIAL] Claim failed:', err.message);
