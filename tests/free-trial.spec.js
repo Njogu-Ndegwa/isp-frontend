@@ -108,6 +108,30 @@ test('claiming reuses the voucher success screen', async ({ page }) => {
     expect(await page.evaluate(() => window.__autoBrowseCalls)).toBe(1);
 });
 
+test('a multi-device trial shows its access code and stays on screen', async ({ page }) => {
+    await openPortal(page);
+
+    await page.route('**/api/public/free-trial/claim', route => json(route, 200, {
+        success: true, customer_id: 901, attempt_id: 55, auth_method: 'DIRECT_API',
+        expiry: '2030-01-01T10:30:00Z', plan_name: 'Free Taste', message: 'ok',
+        outcome: 'plan_started', sharing_enabled: true, max_devices: 3, access_code: 'ABC-DEF',
+    }));
+
+    await page.locator('#freeTrialList .free-trial-btn').click();
+
+    await expect(page.locator('.success-subtext')).toHaveText('Your free trial has started');
+    const card = page.locator('#connectionDetails .access-code-card');
+    await expect(card).toBeVisible();
+    await expect(card).toContainText('ABC-DEF');
+    await expect(card).toContainText('up to 3');
+    // One place for the code: the card, not the voucher share hint as well.
+    await expect(page.locator('#connectionDetails')).not.toContainText('Use this same code');
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('bitwave_access_code')).code))
+        .toBe('ABC-DEF');
+    // Navigating away would hide the code before it can be copied.
+    expect(await page.evaluate(() => window.__autoBrowseCalls)).toBe(0);
+});
+
 test('a phone saved on this device is sent with the claim', async ({ page }) => {
     await openPortal(page);
     await page.evaluate(() => localStorage.setItem('bitwave_phone_number', '0712345678'));
