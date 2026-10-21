@@ -1077,6 +1077,9 @@ function renderHeroHeader(settings) {
         </div>`;
 
     refreshSupportLinks();
+    // Hero ads (ads.js) turn this header into a carousel; re-mount after
+    // every render because the innerHTML above wipes it.
+    if (window.mountHeroAds) window.mountHeroAds();
 
     const img = header.querySelector('.hero-bg-img img');
     if (img) {
@@ -1107,7 +1110,11 @@ function applyFeatureFlags(settings) {
 
     const adsSection = document.getElementById('ads-section');
     if (adsSection) {
-        const showAds = settings.show_ads && window._portalAds && window._portalAds.length > 0;
+        // With hero ads the login page's ads live in the hero (ads.js), so
+        // the showcase above the plans stays hidden.
+        const portalAds = window._portalAds || [];
+        const heroMode = portalAds.some(ad => ad.placement === 'hero');
+        const showAds = settings.show_ads && !heroMode && portalAds.length > 0;
         adsSection.style.display = showAds ? '' : 'none';
     }
 

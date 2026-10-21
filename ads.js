@@ -742,7 +742,7 @@ async function recordClick(adId, clickType) {
 // RECORD AD IMPRESSION - Analytics
 // POST https://isp.bitwavetechnologies.com/api/ads/impression
 // ========================================
-async function recordImpression(adIds) {
+async function recordImpression(adIds, placement = 'showcase_carousel') {
     console.log(`📊 Recording impression for ${adIds.length} ads`);
     
     // DTO format expected by backend:
@@ -756,7 +756,7 @@ async function recordImpression(adIds) {
         ad_ids: adIds,
         device_id: deviceId,
         session_id: sessionId,
-        placement: 'showcase_carousel'
+        placement
     };
     
     try {
@@ -868,9 +868,11 @@ function setupModalListeners() {
 function populateSuccessAds() {
     const container = document.getElementById('successAdsScroll');
     const successAdsSection = document.querySelector('.success-ads');
-    
+
     if (!container) return;
-    
+
+    if (window._heroAdsActive) renderSuccessSponsor();
+
     // No ads available - hide the section
     if (adsData.length === 0) {
         if (successAdsSection) {
@@ -927,9 +929,16 @@ window.populateSuccessAds = populateSuccessAds;
 function populateMiniProducts() {
     const container = document.getElementById('miniProducts');
     const paymentAdSection = document.querySelector('.payment-ad');
-    
+
     if (!container) return;
-    
+
+    // Hero mode keeps the phone-number form free of ads; the sponsor plays
+    // on the processing screen instead.
+    if (window._heroAdsActive) {
+        if (paymentAdSection) paymentAdSection.style.display = 'none';
+        return;
+    }
+
     // No ads available - hide the section
     if (adsData.length === 0) {
         if (paymentAdSection) {
@@ -977,11 +986,384 @@ function populateMiniProducts() {
 window.populateMiniProducts = populateMiniProducts;
 
 // ========================================
+// HERO ADS
+// The reseller's photo hero rotates: their welcome slide first, then the
+// hero ads (image or muted video), then an open "advertise here" slot.
+// The same sponsor plays on the M-Pesa wait screen and on the success page.
+//
+// Extra ad fields (all optional, older ads keep working as showcase ads):
+//   placement     'hero' | 'local' (default 'local' = showcase / success row)
+//   media_type    'image' | 'video'
+//   video_url, poster_url
+//   image_fit     'cover' (photo) | 'contain' (cut-out product shot)
+//   bg_color      background behind a contained image or while a video loads
+//   slot          'platform' (Bitwave sells) | 'reseller' | 'house' (reseller's own promo)
+//
+// Before login the phone has no internet, so hero and wait-screen ads offer
+// Call (tel:) only — WhatsApp links cannot open behind the walled garden.
+// ========================================
+const HERO_IMAGE_MS = 6000;
+const HERO_VIDEO_MAX_MS = 15000;
+const HERO_IMPRESSION_MS = 1000;   // a slide counts as seen after 1 s on screen
+let heroAds = [];
+const heroRot = { idx: 0, timer: null, seen: new Set(), seenTimer: null, track: null };
+
+function adEsc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function adPlacement(ad) {
+    return ad.placement || 'local';
+}
+
+function heroBrandName() {
+    return window._routerBusinessName
+        || (window.portalSettings && window.portalSettings.welcome_title)
+        || 'This WiFi';
+}
+
+function heroAdLabel(ad) {
+    return ad.slot === 'house' ? 'Promo' : 'Ad';
+}
+
+function heroCallHref(ad) {
+    return ad.phone_number ? `tel:${formatPhoneForCall(ad.phone_number)}` : '';
+}
+
+function heroSlideHtml(ad, i, total) {
+    const n = `${i + 1} of ${total}`;
+    const brand = `<span class="hero-ad-brand">📶 ${adEsc(heroBrandName())}</span>`;
+    const chip = `<span class="hero-ad-chip">${heroAdLabel(ad)}</span>`;
+    const call = heroCallHref(ad)
+        ? `<a class="hero-ad-cta" href="${heroCallHref(ad)}" data-hero-cta="call" data-ad-id="${ad.id}">📞 Call</a>`
+        : '';
+
+    if (ad.media_type === 'video' && ad.video_url) {
+        return `
+        <div class="hero-slide hero-slide--ad hero-slide--video" data-ad-id="${ad.id}" role="group"
+             aria-roledescription="slide" aria-label="${n}: video ad from ${adEsc(ad.seller_name || ad.title)}"
+             style="background:${adEsc(ad.bg_color || '#0f172a')}">
+            <video class="hero-ad-video" muted playsinline preload="none"
+                   poster="${adEsc(ad.poster_url || '')}" data-src="${adEsc(ad.video_url)}"></video>
+            ${brand}${chip}${call}
+            <button type="button" class="hero-ad-mute" aria-label="Turn sound on">🔇</button>
+            <span class="hero-ad-bar"><i></i></span>
+        </div>`;
+    }
+
+    const contain = ad.image_fit === 'contain';
+    return `
+        <div class="hero-slide hero-slide--ad hero-slide--image${contain ? ' hero-slide--contain' : ''}" data-ad-id="${ad.id}" role="group"
+             aria-roledescription="slide" aria-label="${n}: ad from ${adEsc(ad.seller_name || ad.title)}"
+             style="background:${adEsc(ad.bg_color || '#0f172a')}">
+            ${ad.image_url ? `<img class="hero-ad-img" src="${adEsc(ad.image_url)}" alt="" loading="lazy" decoding="async">` : ''}
+            ${brand}${chip}
+            <div class="hero-ad-copy">
+                <div class="hero-ad-title">${adEsc(ad.title)}${ad.price ? ` <span class="hero-ad-price">${adEsc(ad.price)}</span>` : ''}</div>
+                ${ad.seller_name ? `<div class="hero-ad-seller">${adEsc(ad.seller_name)}${ad.seller_location ? ` · ${adEsc(ad.seller_location)}` : ''}</div>` : ''}
+                ${call}
+            </div>
+        </div>`;
+}
+
+function heroOpenSlotHtml(i, total) {
+    return `
+        <div class="hero-slide hero-slide--ad hero-slide--open" role="group" aria-roledescription="slide" aria-label="${i + 1} of ${total}: advertise here">
+            <span class="hero-ad-brand">📶 ${adEsc(heroBrandName())}</span>
+            <span class="hero-ad-chip">Ad space</span>
+            <div class="hero-ad-copy">
+                <div class="hero-ad-title">Your business here</div>
+                <div class="hero-ad-seller">Seen by everyone who connects to this WiFi</div>
+                <a href="#" class="hero-ad-cta" data-support-link style="display:none">📞 Call to advertise</a>
+            </div>
+        </div>`;
+}
+
+// Wraps whatever the header currently shows (the reseller's welcome) into
+// slide 1 and adds the ad slides after it. Safe to call repeatedly: a fresh
+// renderHeroHeader() wipes the carousel and this rebuilds it.
+function mountHeroAds() {
+    if (window._portalShowAds === false || heroAds.length === 0) return;
+    const header = document.getElementById('portal-header');
+    if (!header || !header.classList.contains('portal-header--hero')) return;
+    if (header.querySelector('.hero-track')) return;
+
+    const total = heroAds.length + 2;
+    const track = document.createElement('div');
+    track.className = 'hero-track';
+    const welcome = document.createElement('div');
+    welcome.className = 'hero-slide hero-slide--welcome';
+    welcome.setAttribute('role', 'group');
+    welcome.setAttribute('aria-roledescription', 'slide');
+    welcome.setAttribute('aria-label', `1 of ${total}: welcome`);
+    while (header.firstChild) welcome.appendChild(header.firstChild);
+    track.appendChild(welcome);
+    track.insertAdjacentHTML('beforeend',
+        heroAds.map((ad, i) => heroSlideHtml(ad, i + 1, total)).join('') + heroOpenSlotHtml(total - 1, total));
+
+    const dots = document.createElement('div');
+    dots.className = 'hero-dots';
+    for (let i = 0; i < total; i++) {
+        dots.insertAdjacentHTML('beforeend',
+            `<button type="button" class="hero-dot" data-go="${i}" aria-label="Show slide ${i + 1} of ${total}"${i === 0 ? ' aria-current="true"' : ''}></button>`);
+    }
+
+    header.classList.add('has-hero-ads');
+    header.setAttribute('aria-roledescription', 'carousel');
+    header.appendChild(track);
+    header.appendChild(dots);
+    heroRot.track = track;
+    heroRot.idx = 0;
+
+    dots.addEventListener('click', e => {
+        const b = e.target.closest('.hero-dot');
+        if (b) { heroGo(Number(b.dataset.go)); heroSchedule(); }
+    });
+    track.addEventListener('click', e => {
+        const mute = e.target.closest('.hero-ad-mute');
+        if (mute) {
+            const v = mute.parentNode.querySelector('video');
+            v.muted = !v.muted;
+            mute.textContent = v.muted ? '🔇' : '🔊';
+            mute.setAttribute('aria-label', v.muted ? 'Turn sound on' : 'Turn sound off');
+            return;
+        }
+        const cta = e.target.closest('[data-hero-cta]');
+        if (cta) recordClick(Number(cta.dataset.adId), 'call');
+    });
+    let x0 = null;
+    track.addEventListener('pointerdown', e => { x0 = e.clientX; });
+    track.addEventListener('pointerup', e => {
+        if (x0 === null) return;
+        const dx = e.clientX - x0;
+        x0 = null;
+        if (Math.abs(dx) > 40) { heroGo(heroRot.idx + (dx < 0 ? 1 : -1)); heroSchedule(); }
+    });
+
+    if (window.refreshSupportLinks) window.refreshSupportLinks();
+    heroSchedule();
+}
+window.mountHeroAds = mountHeroAds;
+
+function heroGo(n) {
+    const track = heroRot.track;
+    if (!track || !track.isConnected) return;
+    const slides = track.children;
+    heroRot.idx = (n + slides.length) % slides.length;
+    track.style.transform = `translateX(${-100 * heroRot.idx}%)`;
+    document.querySelectorAll('#portal-header .hero-dot').forEach((d, i) => {
+        if (i === heroRot.idx) d.setAttribute('aria-current', 'true');
+        else d.removeAttribute('aria-current');
+    });
+
+    Array.from(slides).forEach((s, i) => {
+        const v = s.querySelector('video');
+        if (v && i !== heroRot.idx) v.pause();
+    });
+    const active = slides[heroRot.idx];
+    const v = active.querySelector('video');
+    if (v) playAdVideo(v, false);
+    // Fetch the next slide's video while this one shows, never earlier.
+    const next = slides[(heroRot.idx + 1) % slides.length].querySelector('video');
+    if (next && !next.src) { next.src = next.dataset.src; next.preload = 'metadata'; }
+
+    clearTimeout(heroRot.seenTimer);
+    const adId = Number(active.dataset.adId);
+    if (adId && !heroRot.seen.has(adId)) {
+        heroRot.seenTimer = setTimeout(() => {
+            heroRot.seen.add(adId);
+            recordImpression([adId], 'hero');
+        }, HERO_IMPRESSION_MS);
+    }
+}
+
+// The hero only rotates while the plans are on screen. On the phone-number,
+// processing and success screens it rests on the reseller's welcome slide.
+function heroOnPlansPage() {
+    const plans = document.getElementById('plansSection');
+    return !plans || !plans.classList.contains('hidden');
+}
+
+function watchPlansSection() {
+    const plans = document.getElementById('plansSection');
+    if (!plans || !window.MutationObserver || plans.dataset.heroWatched) return;
+    plans.dataset.heroWatched = '1';
+    new MutationObserver(() => {
+        if (!heroRot.track) return;
+        if (heroOnPlansPage()) {
+            heroSchedule();
+        } else {
+            clearTimeout(heroRot.timer);
+            heroGo(0);
+        }
+    }).observe(plans, { attributes: true, attributeFilter: ['class'] });
+}
+
+function heroSchedule() {
+    clearTimeout(heroRot.timer);
+    const track = heroRot.track;
+    if (!track || !track.isConnected || !heroOnPlansPage()) return;
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const v = track.children[heroRot.idx].querySelector('video');
+    const advance = () => { heroGo(heroRot.idx + 1); heroSchedule(); };
+    if (v) {
+        // A video slide stays until the clip ends, capped so a long upload
+        // can't hold the hero.
+        const onEnd = () => { v.removeEventListener('ended', onEnd); clearTimeout(heroRot.timer); advance(); };
+        v.addEventListener('ended', onEnd);
+        heroRot.timer = setTimeout(() => { v.removeEventListener('ended', onEnd); advance(); }, HERO_VIDEO_MAX_MS);
+    } else {
+        heroRot.timer = setTimeout(advance, HERO_IMAGE_MS);
+    }
+}
+
+document.addEventListener('visibilitychange', () => {
+    if (!heroRot.track) return;
+    if (document.hidden) {
+        clearTimeout(heroRot.timer);
+        heroRot.track.querySelectorAll('video').forEach(v => v.pause());
+        return;
+    }
+    heroGo(heroRot.idx);
+    heroSchedule();
+    // Customers flip to the M-Pesa prompt and back; Chrome also pauses
+    // muted video in a background tab. Resume the sponsor on return.
+    const processing = document.getElementById('processingSection');
+    const waitVideo = document.querySelector('.wait-ad video');
+    if (waitVideo && processing && !processing.classList.contains('hidden')) {
+        const p = waitVideo.play();
+        if (p && p.catch) p.catch(() => {});
+    }
+});
+
+function playAdVideo(v, loop) {
+    if (!v.src && v.dataset.src) v.src = v.dataset.src;
+    v.muted = true;
+    v.loop = !!loop;
+    try { v.currentTime = 0; } catch (_) {}
+    const bar = v.parentNode.querySelector('.hero-ad-bar i, .ad-video-bar i');
+    if (bar && !v.dataset.barWired) {
+        v.dataset.barWired = '1';
+        v.addEventListener('timeupdate', () => {
+            if (v.duration) bar.style.width = `${(100 * v.currentTime) / v.duration}%`;
+        });
+    }
+    const p = v.play();
+    if (p && p.catch) p.catch(() => {});
+}
+
+// The sponsor for the wait and success screens: the first platform video ad,
+// else the first hero ad that isn't the reseller's own promo.
+function sponsorAd() {
+    const paid = heroAds.filter(ad => ad.slot !== 'house');
+    return paid.find(ad => ad.media_type === 'video' && ad.video_url) || paid[0] || null;
+}
+
+function sponsorMediaHtml(ad) {
+    if (ad.media_type === 'video' && ad.video_url) {
+        return `
+            <div class="ad-video" style="background:${adEsc(ad.bg_color || '#0f172a')}">
+                <video muted playsinline preload="none" poster="${adEsc(ad.poster_url || '')}" data-src="${adEsc(ad.video_url)}"></video>
+                <span class="ad-video-bar"><i></i></span>
+            </div>`;
+    }
+    return ad.image_url
+        ? `<img class="ad-sponsor-img${ad.image_fit === 'contain' ? ' is-contain' : ''}" src="${adEsc(ad.image_url)}" alt="" style="background:${adEsc(ad.bg_color || '#0f172a')}">`
+        : '';
+}
+
+// "While you wait": the sponsor's video on the M-Pesa processing screen.
+// Plays while the customer enters their PIN; the payment never waits for it.
+function mountWaitAd() {
+    const section = document.getElementById('processingSection');
+    const ad = sponsorAd();
+    if (!section || !ad || window._portalShowAds === false) return;
+    if (!section.querySelector('.wait-ad')) {
+        const box = document.createElement('div');
+        box.className = 'wait-ad';
+        box.innerHTML = `
+            <div class="wait-ad-head"><span>While you wait</span><span class="ads-badge">AD</span></div>
+            <div class="wait-ad-card">
+                ${sponsorMediaHtml(ad)}
+                <div class="wait-ad-foot">
+                    <div class="wait-ad-who"><strong>${adEsc(ad.seller_name || ad.title)}</strong>${ad.price ? `<span>${adEsc(ad.title)} · ${adEsc(ad.price)}</span>` : ''}</div>
+                    ${heroCallHref(ad) ? `<a class="wait-ad-cta" href="${heroCallHref(ad)}" data-ad-id="${ad.id}">📞 Call</a>` : ''}
+                </div>
+            </div>`;
+        // Straight under "Check your phone" so most of it is on the first
+        // screen; the hero still takes the top of the page here. Wide format
+        // for the same reason (a 4:5 clip pushes the steps off screen).
+        const anchor = section.querySelector('.processing-hero');
+        if (anchor && anchor.nextSibling) section.insertBefore(box, anchor.nextSibling);
+        else section.appendChild(box);
+        const cta = box.querySelector('.wait-ad-cta');
+        if (cta) cta.addEventListener('click', () => recordClick(ad.id, 'call'));
+    }
+    const v = section.querySelector('.wait-ad video');
+    if (v) playAdVideo(v, true);
+    recordImpression([ad.id], 'wait_screen');
+}
+
+function watchProcessingSection() {
+    const section = document.getElementById('processingSection');
+    if (!section || !window.MutationObserver) return;
+    new MutationObserver(() => {
+        const visible = !section.classList.contains('hidden');
+        if (visible) mountWaitAd();
+        else section.querySelectorAll('.wait-ad video').forEach(v => v.pause());
+    }).observe(section, { attributes: true, attributeFilter: ['class'] });
+}
+
+// Success page: the sponsor card above the local-shops row. The customer is
+// online now, so WhatsApp works here.
+function renderSuccessSponsor() {
+    const section = document.querySelector('.success-ads');
+    const ad = sponsorAd();
+    if (!section || !ad || window._portalShowAds === false) return;
+    let card = document.getElementById('successSponsor');
+    if (!card) {
+        card = document.createElement('div');
+        card.id = 'successSponsor';
+        card.className = 'success-sponsor';
+        section.parentNode.insertBefore(card, section);
+    }
+    const wa = ad.whatsapp_number || ad.phone_number;
+    card.innerHTML = `
+        <div class="wait-ad-head"><span>Sponsored</span><span class="ads-badge">AD</span></div>
+        <div class="wait-ad-card">
+            ${sponsorMediaHtml(ad)}
+            <div class="wait-ad-foot">
+                <div class="wait-ad-who"><strong>${adEsc(ad.seller_name || ad.title)}</strong>${ad.price ? `<span>${adEsc(ad.title)} · ${adEsc(ad.price)}</span>` : ''}</div>
+                ${wa ? `<a class="wait-ad-cta wait-ad-cta--wa" href="https://wa.me/${formatPhoneForWhatsApp(wa)}" target="_blank" rel="noopener" data-ad-id="${ad.id}">WhatsApp</a>` : ''}
+            </div>
+        </div>`;
+    const cta = card.querySelector('.wait-ad-cta');
+    if (cta) cta.addEventListener('click', () => recordClick(ad.id, 'whatsapp'));
+    const v = card.querySelector('video');
+    if (v) playAdVideo(v, true);
+    recordImpression([ad.id], 'success_page');
+}
+
+// ========================================
 // INITIALIZE ADS FROM PORTAL DATA (called when portal endpoint provides ads)
 // ========================================
 function initAdsFromPortalData(portalAds) {
     if (Array.isArray(portalAds) && portalAds.length > 0) {
-        adsData = applyLocalImages(portalAds);
+        heroAds = portalAds.filter(ad => adPlacement(ad) === 'hero');
+        adsData = applyLocalImages(portalAds.filter(ad => adPlacement(ad) !== 'hero'));
+        if (heroAds.length > 0) {
+            // Hero mode: the login page's only ads are in the hero, so the
+            // showcase above the plans and the mini-ads on the phone-number
+            // form stay hidden. Local ads still show once the customer is online.
+            window._heroAdsActive = true;
+            mountHeroAds();
+            watchPlansSection();
+            watchProcessingSection();
+            const showcase = document.querySelector('.marketplace-showcase');
+            if (showcase) showcase.style.display = 'none';
+            console.log('✅ [ADS] Hero ads:', heroAds.length, '| local ads:', adsData.length);
+            return;
+        }
         showAdSections();
         renderAds(adsData);
         recordImpression(adsData.map(ad => ad.id));

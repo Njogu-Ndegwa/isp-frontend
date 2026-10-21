@@ -73,7 +73,43 @@ const DEMO_ROUTERS = {
                 "valid_until": null, "data_cap_mb": null, "fup_action": null, "fup_throttle_profile": null
             }
         ],
-        "ads": [],
+        // Hero ads (placement "hero") rotate in the photo hero; "local" ads show
+        // on the success page once the customer is online.
+        "ads": [
+            {
+                "id": 501, "placement": "hero", "slot": "platform", "media_type": "video",
+                "title": "Red onions", "price": "KSH 120 / kg",
+                "seller_name": "Wanjiku Greens", "seller_location": "By the matatu stage",
+                "phone_number": "0712000111", "whatsapp_number": "0712000111",
+                "video_url": "images/demo-ads/onions-land.mp4",
+                "poster_url": "images/demo-ads/onions-land.webp",
+                "bg_color": "#14532D", "category": "produce"
+            },
+            {
+                "id": 502, "placement": "hero", "slot": "house", "media_type": "image",
+                "title": "WiFi at home, installed this week", "price": null,
+                "seller_name": "Acme Internet Service", "seller_location": null,
+                "phone_number": "0712345678",
+                "image_url": "images/Internet-Technician.webp", "image_fit": "contain",
+                "bg_color": "#334155", "category": "services"
+            },
+            {
+                "id": 503, "placement": "local", "title": "Red onions",
+                "description": "Fresh from the farm, sold by the kilo.",
+                "image_url": "images/Onions.webp", "price": "KSH 120 / kg",
+                "seller_name": "Wanjiku Greens", "seller_location": "By the matatu stage",
+                "phone_number": "0712000111", "whatsapp_number": "0712000111",
+                "category": "produce", "views_count": 0
+            },
+            {
+                "id": 504, "placement": "local", "title": "Phone screen repair",
+                "description": "Cracked screen fixed while you wait.",
+                "image_url": "images/demo-ads/phone-repair.webp", "price": "From KSH 1,500",
+                "seller_name": "Kim Mobile", "seller_location": "Next to the chemist",
+                "phone_number": "0712000222", "whatsapp_number": "0712000222",
+                "category": "electronics", "views_count": 0
+            }
+        ],
         "plan_flags": {
             "has_emergency_plans": false,
             "has_special_offers": false,
@@ -83,7 +119,7 @@ const DEMO_ROUTERS = {
         "portal_settings": {
             "color_theme": "slate_gray",
             "header_style": "hero",
-            "show_ads": false,
+            "show_ads": true,
             "show_welcome_banner": true,
             "welcome_title": "Acme Internet Service",
             "welcome_subtitle": null,
