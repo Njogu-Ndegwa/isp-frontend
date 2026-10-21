@@ -1006,7 +1006,7 @@ const HERO_IMAGE_MS = 6000;
 const HERO_VIDEO_MAX_MS = 15000;
 const HERO_IMPRESSION_MS = 1000;   // a slide counts as seen after 1 s on screen
 let heroAds = [];
-const heroRot = { idx: 0, timer: null, seen: new Set(), seenTimer: null, track: null };
+const heroRot = { idx: 0, timer: null, seen: new Set(), seenTimer: null, track: null, segs: null };
 
 function adEsc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1030,52 +1030,90 @@ function heroCallHref(ad) {
     return ad.phone_number ? `tel:${formatPhoneForCall(ad.phone_number)}` : '';
 }
 
+const AD_ICONS = {
+    phone: '<svg class="ad-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>',
+    chat: '<svg class="ad-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.8-.9L3 21l1.9-5.2A8.4 8.4 0 1 1 21 11.5z"/></svg>',
+    muted: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>',
+    sound: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>',
+    wifi: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.55a11 11 0 0 1 14 0"/><path d="M8.5 16.1a6 6 0 0 1 7 0"/><path d="M2 8.82a15 15 0 0 1 20 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>'
+};
+
+// Every ad slide has the same frame: the WiFi's name top-left (mute top-right
+// on video), and one bottom bar with who is advertising, the offer and a
+// single Call button. Copy in an advertiser's video should stay in the middle
+// of the frame, clear of the top 20% and the bottom 30%.
+function heroTopHtml(isVideo) {
+    return `
+        <div class="hero-ad-top">
+            <span class="hero-ad-brand">${AD_ICONS.wifi}${adEsc(heroBrandName())}</span>
+            ${isVideo ? `<button type="button" class="hero-ad-mute" aria-label="Turn sound on">${AD_ICONS.muted}</button>` : ''}
+        </div>`;
+}
+
+function heroFootHtml({ tag, name, offer, button, light }) {
+    return `
+        <div class="hero-ad-foot${light ? ' hero-ad-foot--light' : ''}">
+            <div class="hero-ad-info">
+                <div class="hero-ad-who"><span class="hero-ad-tag">${tag}</span><span class="hero-ad-name">${adEsc(name)}</span></div>
+                ${offer ? `<div class="hero-ad-offer">${adEsc(offer)}</div>` : ''}
+            </div>
+            ${button || ''}
+        </div>`;
+}
+
+function heroCallButton(ad) {
+    const href = heroCallHref(ad);
+    if (!href) return '';
+    return `<a class="hero-ad-btn" href="${href}" data-hero-cta="call" data-ad-id="${ad.id}"
+               aria-label="Call ${adEsc(ad.seller_name || ad.title)}">${AD_ICONS.phone}<span>Call</span></a>`;
+}
+
 function heroSlideHtml(ad, i, total) {
     const n = `${i + 1} of ${total}`;
-    const brand = `<span class="hero-ad-brand">📶 ${adEsc(heroBrandName())}</span>`;
-    const chip = `<span class="hero-ad-chip">${heroAdLabel(ad)}</span>`;
-    const call = heroCallHref(ad)
-        ? `<a class="hero-ad-cta" href="${heroCallHref(ad)}" data-hero-cta="call" data-ad-id="${ad.id}">📞 Call</a>`
-        : '';
+    const name = ad.seller_name || ad.title;
+    const offer = [ad.title, ad.price].filter(Boolean).join(' · ');
 
     if (ad.media_type === 'video' && ad.video_url) {
         return `
         <div class="hero-slide hero-slide--ad hero-slide--video" data-ad-id="${ad.id}" role="group"
-             aria-roledescription="slide" aria-label="${n}: video ad from ${adEsc(ad.seller_name || ad.title)}"
+             aria-roledescription="slide" aria-label="${n}: video ad from ${adEsc(name)}"
              style="background:${adEsc(ad.bg_color || '#0f172a')}">
             <video class="hero-ad-video" muted playsinline preload="none"
                    poster="${adEsc(ad.poster_url || '')}" data-src="${adEsc(ad.video_url)}"></video>
-            ${brand}${chip}${call}
-            <button type="button" class="hero-ad-mute" aria-label="Turn sound on">🔇</button>
-            <span class="hero-ad-bar"><i></i></span>
+            ${heroTopHtml(true)}
+            ${heroFootHtml({ tag: heroAdLabel(ad), name, offer, button: heroCallButton(ad) })}
         </div>`;
     }
 
+    // A cut-out product shot sits on the right with the headline beside it;
+    // a full photo carries its own message, so only the bar goes on top.
     const contain = ad.image_fit === 'contain';
     return `
         <div class="hero-slide hero-slide--ad hero-slide--image${contain ? ' hero-slide--contain' : ''}" data-ad-id="${ad.id}" role="group"
-             aria-roledescription="slide" aria-label="${n}: ad from ${adEsc(ad.seller_name || ad.title)}"
+             aria-roledescription="slide" aria-label="${n}: ad from ${adEsc(name)}"
              style="background:${adEsc(ad.bg_color || '#0f172a')}">
             ${ad.image_url ? `<img class="hero-ad-img" src="${adEsc(ad.image_url)}" alt="" loading="lazy" decoding="async">` : ''}
-            ${brand}${chip}
-            <div class="hero-ad-copy">
-                <div class="hero-ad-title">${adEsc(ad.title)}${ad.price ? ` <span class="hero-ad-price">${adEsc(ad.price)}</span>` : ''}</div>
-                ${ad.seller_name ? `<div class="hero-ad-seller">${adEsc(ad.seller_name)}${ad.seller_location ? ` · ${adEsc(ad.seller_location)}` : ''}</div>` : ''}
-                ${call}
-            </div>
+            ${heroTopHtml(false)}
+            ${contain ? `<div class="hero-ad-headline">${adEsc(ad.title)}${ad.price ? ` <span class="hero-ad-price">${adEsc(ad.price)}</span>` : ''}</div>` : ''}
+            ${heroFootHtml({
+                tag: heroAdLabel(ad), name,
+                offer: contain ? (ad.description || ad.seller_location || '') : offer,
+                button: heroCallButton(ad)
+            })}
         </div>`;
 }
 
 function heroOpenSlotHtml(i, total) {
+    // The button is a tel: link to the reseller; refreshSupportLinks() fills
+    // the number in and keeps it hidden when the reseller has none on file.
+    const brand = heroBrandName();
+    const button = `<a href="#" class="hero-ad-btn hero-ad-btn--dark" data-support-link style="display:none"
+                       aria-label="Call ${adEsc(brand)} to advertise">${AD_ICONS.phone}<span>Call</span></a>`;
     return `
         <div class="hero-slide hero-slide--ad hero-slide--open" role="group" aria-roledescription="slide" aria-label="${i + 1} of ${total}: advertise here">
-            <span class="hero-ad-brand">📶 ${adEsc(heroBrandName())}</span>
-            <span class="hero-ad-chip">Ad space</span>
-            <div class="hero-ad-copy">
-                <div class="hero-ad-title">Your business here</div>
-                <div class="hero-ad-seller">Seen by everyone who connects to this WiFi</div>
-                <a href="#" class="hero-ad-cta" data-support-link style="display:none">📞 Call to advertise</a>
-            </div>
+            ${heroTopHtml(false)}
+            <div class="hero-ad-headline">Your business here<span class="hero-ad-sub">Seen by everyone who connects to this WiFi</span></div>
+            ${heroFootHtml({ tag: 'Ad space', name: 'Book this space', offer: `Call ${brand}`, button, light: true })}
         </div>`;
 }
 
@@ -1101,30 +1139,43 @@ function mountHeroAds() {
     track.insertAdjacentHTML('beforeend',
         heroAds.map((ad, i) => heroSlideHtml(ad, i + 1, total)).join('') + heroOpenSlotHtml(total - 1, total));
 
-    const dots = document.createElement('div');
-    dots.className = 'hero-dots';
+    // Story-style segments: which slide this is, and how long it has left.
+    const segs = document.createElement('div');
+    segs.className = 'hero-segs';
     for (let i = 0; i < total; i++) {
-        dots.insertAdjacentHTML('beforeend',
-            `<button type="button" class="hero-dot" data-go="${i}" aria-label="Show slide ${i + 1} of ${total}"${i === 0 ? ' aria-current="true"' : ''}></button>`);
+        segs.insertAdjacentHTML('beforeend',
+            `<button type="button" class="hero-seg" data-go="${i}" aria-label="Show slide ${i + 1} of ${total}"><span><i></i></span></button>`);
     }
 
     header.classList.add('has-hero-ads');
     header.setAttribute('aria-roledescription', 'carousel');
     header.appendChild(track);
-    header.appendChild(dots);
+    header.appendChild(segs);
     heroRot.track = track;
+    heroRot.segs = segs;
     heroRot.idx = 0;
 
-    dots.addEventListener('click', e => {
-        const b = e.target.closest('.hero-dot');
+    // A video slide's segment follows the clip itself.
+    Array.from(track.children).forEach((slide, k) => {
+        const v = slide.querySelector('video');
+        if (!v) return;
+        v.addEventListener('timeupdate', () => {
+            if (heroRot.idx !== k || !v.duration) return;
+            const fill = segs.children[k].querySelector('i');
+            fill.style.width = `${Math.min(100, (100 * v.currentTime) / v.duration)}%`;
+        });
+    });
+
+    segs.addEventListener('click', e => {
+        const b = e.target.closest('.hero-seg');
         if (b) { heroGo(Number(b.dataset.go)); heroSchedule(); }
     });
     track.addEventListener('click', e => {
         const mute = e.target.closest('.hero-ad-mute');
         if (mute) {
-            const v = mute.parentNode.querySelector('video');
+            const v = mute.closest('.hero-slide').querySelector('video');
             v.muted = !v.muted;
-            mute.textContent = v.muted ? '🔇' : '🔊';
+            mute.innerHTML = v.muted ? AD_ICONS.muted : AD_ICONS.sound;
             mute.setAttribute('aria-label', v.muted ? 'Turn sound on' : 'Turn sound off');
             return;
         }
@@ -1141,9 +1192,14 @@ function mountHeroAds() {
     });
 
     if (window.refreshSupportLinks) window.refreshSupportLinks();
+    heroGo(0);
     heroSchedule();
 }
 window.mountHeroAds = mountHeroAds;
+
+function heroReducedMotion() {
+    return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+}
 
 function heroGo(n) {
     const track = heroRot.track;
@@ -1151,17 +1207,31 @@ function heroGo(n) {
     const slides = track.children;
     heroRot.idx = (n + slides.length) % slides.length;
     track.style.transform = `translateX(${-100 * heroRot.idx}%)`;
-    document.querySelectorAll('#portal-header .hero-dot').forEach((d, i) => {
-        if (i === heroRot.idx) d.setAttribute('aria-current', 'true');
-        else d.removeAttribute('aria-current');
-    });
 
-    Array.from(slides).forEach((s, i) => {
-        const v = s.querySelector('video');
-        if (v && i !== heroRot.idx) v.pause();
-    });
     const active = slides[heroRot.idx];
     const v = active.querySelector('video');
+    Array.from(heroRot.segs.children).forEach((seg, i) => {
+        const fill = seg.querySelector('i');
+        fill.style.transition = 'none';
+        fill.style.width = i < heroRot.idx ? '100%' : '0%';
+        if (i === heroRot.idx) seg.setAttribute('aria-current', 'true');
+        else seg.removeAttribute('aria-current');
+    });
+    if (!v) {
+        const fill = heroRot.segs.children[heroRot.idx].querySelector('i');
+        if (heroReducedMotion() || !heroOnPlansPage()) {
+            fill.style.width = '100%';
+        } else {
+            void fill.offsetWidth; // restart the fill from empty
+            fill.style.transition = `width ${HERO_IMAGE_MS}ms linear`;
+            fill.style.width = '100%';
+        }
+    }
+
+    Array.from(slides).forEach((s, i) => {
+        const sv = s.querySelector('video');
+        if (sv && i !== heroRot.idx) sv.pause();
+    });
     if (v) playAdVideo(v, false);
     // Fetch the next slide's video while this one shows, never earlier.
     const next = slides[(heroRot.idx + 1) % slides.length].querySelector('video');
@@ -1203,7 +1273,7 @@ function heroSchedule() {
     clearTimeout(heroRot.timer);
     const track = heroRot.track;
     if (!track || !track.isConnected || !heroOnPlansPage()) return;
-    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (heroReducedMotion()) return;
     const v = track.children[heroRot.idx].querySelector('video');
     const advance = () => { heroGo(heroRot.idx + 1); heroSchedule(); };
     if (v) {
@@ -1241,7 +1311,7 @@ function playAdVideo(v, loop) {
     v.muted = true;
     v.loop = !!loop;
     try { v.currentTime = 0; } catch (_) {}
-    const bar = v.parentNode.querySelector('.hero-ad-bar i, .ad-video-bar i');
+    const bar = v.parentNode.querySelector('.ad-video-bar i');
     if (bar && !v.dataset.barWired) {
         v.dataset.barWired = '1';
         v.addEventListener('timeupdate', () => {
@@ -1260,16 +1330,32 @@ function sponsorAd() {
 }
 
 function sponsorMediaHtml(ad) {
+    const tag = `<span class="hero-ad-tag">${heroAdLabel(ad)}</span>`;
     if (ad.media_type === 'video' && ad.video_url) {
         return `
-            <div class="ad-video" style="background:${adEsc(ad.bg_color || '#0f172a')}">
+            <div class="ad-media ad-video" style="background:${adEsc(ad.bg_color || '#0f172a')}">
                 <video muted playsinline preload="none" poster="${adEsc(ad.poster_url || '')}" data-src="${adEsc(ad.video_url)}"></video>
+                ${tag}
                 <span class="ad-video-bar"><i></i></span>
             </div>`;
     }
-    return ad.image_url
-        ? `<img class="ad-sponsor-img${ad.image_fit === 'contain' ? ' is-contain' : ''}" src="${adEsc(ad.image_url)}" alt="" style="background:${adEsc(ad.bg_color || '#0f172a')}">`
-        : '';
+    if (!ad.image_url) return '';
+    return `
+        <div class="ad-media">
+            <img class="ad-sponsor-img${ad.image_fit === 'contain' ? ' is-contain' : ''}" src="${adEsc(ad.image_url)}" alt="" style="background:${adEsc(ad.bg_color || '#0f172a')}">
+            ${tag}
+        </div>`;
+}
+
+// Who is advertising and what, under the sponsor's video. The Ad tag sits
+// on the media's corner so a long name and a wide WhatsApp button both fit.
+function sponsorWhoHtml(ad) {
+    const offer = [ad.title, ad.price].filter(Boolean).join(' · ');
+    return `
+        <div class="wait-ad-who">
+            <strong class="wait-ad-name">${adEsc(ad.seller_name || ad.title)}</strong>
+            ${offer ? `<span class="wait-ad-offer">${adEsc(offer)}</span>` : ''}
+        </div>`;
 }
 
 // "While you wait": the sponsor's video on the M-Pesa processing screen.
@@ -1282,12 +1368,12 @@ function mountWaitAd() {
         const box = document.createElement('div');
         box.className = 'wait-ad';
         box.innerHTML = `
-            <div class="wait-ad-head"><span>While you wait</span><span class="ads-badge">AD</span></div>
+            <div class="wait-ad-head">While you wait</div>
             <div class="wait-ad-card">
                 ${sponsorMediaHtml(ad)}
                 <div class="wait-ad-foot">
-                    <div class="wait-ad-who"><strong>${adEsc(ad.seller_name || ad.title)}</strong>${ad.price ? `<span>${adEsc(ad.title)} · ${adEsc(ad.price)}</span>` : ''}</div>
-                    ${heroCallHref(ad) ? `<a class="wait-ad-cta" href="${heroCallHref(ad)}" data-ad-id="${ad.id}">📞 Call</a>` : ''}
+                    ${sponsorWhoHtml(ad)}
+                    ${heroCallHref(ad) ? `<a class="wait-ad-cta" href="${heroCallHref(ad)}" data-ad-id="${ad.id}">${AD_ICONS.phone}<span>Call</span></a>` : ''}
                 </div>
             </div>`;
         // Straight under "Check your phone" so most of it is on the first
@@ -1329,12 +1415,12 @@ function renderSuccessSponsor() {
     }
     const wa = ad.whatsapp_number || ad.phone_number;
     card.innerHTML = `
-        <div class="wait-ad-head"><span>Sponsored</span><span class="ads-badge">AD</span></div>
+        <div class="wait-ad-head">Sponsored</div>
         <div class="wait-ad-card">
             ${sponsorMediaHtml(ad)}
             <div class="wait-ad-foot">
-                <div class="wait-ad-who"><strong>${adEsc(ad.seller_name || ad.title)}</strong>${ad.price ? `<span>${adEsc(ad.title)} · ${adEsc(ad.price)}</span>` : ''}</div>
-                ${wa ? `<a class="wait-ad-cta wait-ad-cta--wa" href="https://wa.me/${formatPhoneForWhatsApp(wa)}" target="_blank" rel="noopener" data-ad-id="${ad.id}">WhatsApp</a>` : ''}
+                ${sponsorWhoHtml(ad)}
+                ${wa ? `<a class="wait-ad-cta" href="https://wa.me/${formatPhoneForWhatsApp(wa)}" target="_blank" rel="noopener" data-ad-id="${ad.id}">${AD_ICONS.chat}<span>WhatsApp</span></a>` : ''}
             </div>
         </div>`;
     const cta = card.querySelector('.wait-ad-cta');
