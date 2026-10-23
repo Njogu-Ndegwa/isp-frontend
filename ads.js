@@ -692,7 +692,7 @@ function closeAdDetails() {
 // RECORD AD CLICK - Analytics
 // POST https://isp.bitwavetechnologies.com/api/ads/click
 // ========================================
-async function recordClick(adId, clickType) {
+async function recordClick(adId, clickType, placement = 'local') {
     console.log(`📊 Recording click: Ad #${adId}, Type: ${clickType}`);
     
     // DTO format expected by backend:
@@ -712,7 +712,11 @@ async function recordClick(adId, clickType) {
         user_agent: navigator.userAgent,
         session_id: sessionId,
         referrer: 'wifi_portal',
-        mac_address: mikrotikParams?.mac || null
+        mac_address: mikrotikParams?.mac || null,
+        // Where the tap happened and on which hotspot: what the advertiser
+        // is billed by, and what the reseller's share is worked out from.
+        placement,
+        router_identity: mikrotikParams?.router || null
     };
     
     try {
@@ -756,7 +760,11 @@ async function recordImpression(adIds, placement = 'showcase_carousel') {
         ad_ids: adIds,
         device_id: deviceId,
         session_id: sessionId,
-        placement
+        placement,
+        // The backend counts one view per ad, placement and phone per day;
+        // the MAC is how it knows two loads came from the same phone.
+        mac_address: (typeof mikrotikParams !== 'undefined' && mikrotikParams?.mac) || null,
+        router_identity: (typeof mikrotikParams !== 'undefined' && mikrotikParams?.router) || null
     };
     
     try {
@@ -1180,7 +1188,7 @@ function mountHeroAds() {
             return;
         }
         const cta = e.target.closest('[data-hero-cta]');
-        if (cta) recordClick(Number(cta.dataset.adId), 'call');
+        if (cta) recordClick(Number(cta.dataset.adId), 'call', 'hero');
     });
     let x0 = null;
     track.addEventListener('pointerdown', e => { x0 = e.clientX; });
@@ -1383,7 +1391,7 @@ function mountWaitAd() {
         if (anchor && anchor.nextSibling) section.insertBefore(box, anchor.nextSibling);
         else section.appendChild(box);
         const cta = box.querySelector('.wait-ad-cta');
-        if (cta) cta.addEventListener('click', () => recordClick(ad.id, 'call'));
+        if (cta) cta.addEventListener('click', () => recordClick(ad.id, 'call', 'wait_screen'));
     }
     const v = section.querySelector('.wait-ad video');
     if (v) playAdVideo(v, true);
@@ -1424,7 +1432,7 @@ function renderSuccessSponsor() {
             </div>
         </div>`;
     const cta = card.querySelector('.wait-ad-cta');
-    if (cta) cta.addEventListener('click', () => recordClick(ad.id, 'whatsapp'));
+    if (cta) cta.addEventListener('click', () => recordClick(ad.id, 'whatsapp', 'success_page'));
     const v = card.querySelector('video');
     if (v) playAdVideo(v, true);
     recordImpression([ad.id], 'success_page');
