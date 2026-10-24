@@ -1219,6 +1219,7 @@ const I18N = {
         codeExpired: 'This plan has expired. Buy a new plan to get back online.',
         codeTooMany: 'Too many wrong attempts. Please wait a few minutes and try again.',
         noMac: "We couldn't identify this device. Turn WiFi off and on, reconnect to this network, then open this page again.",
+        planInUseBuy: 'Buy a plan for this device',
         limitTitle: 'Device limit reached',
         limitSub: 'This plan is already in use on {n} devices. Remove one to connect this device.',
         limitNoCode: 'Enter your access code or {provider} receipt to manage these devices.',
@@ -1278,6 +1279,7 @@ const I18N = {
         codeExpired: 'Mpango huu umeisha. Nunua mpango mpya ili kuunganisha tena.',
         codeTooMany: 'Majaribio mengi yasiyo sahihi. Subiri dakika chache kisha ujaribu tena.',
         noMac: 'Hatukuweza kutambua kifaa hiki. Zima na uwashe WiFi, unganisha kwenye mtandao huu tena, kisha fungua ukurasa huu upya.',
+        planInUseBuy: 'Nunua mpango wa kifaa hiki',
         limitTitle: 'Idadi ya vifaa imefikia kikomo',
         limitSub: 'Mpango huu tayari unatumika kwenye vifaa {n}. Ondoa kimoja ili kuunganisha kifaa hiki.',
         limitNoCode: 'Ingiza msimbo wako au risiti ya {provider} ili kusimamia vifaa hivi.',
@@ -1337,6 +1339,7 @@ const I18N = {
         codeExpired: 'Ce forfait a expiré. Achetez un nouveau forfait pour vous reconnecter.',
         codeTooMany: 'Trop de tentatives incorrectes. Patientez quelques minutes puis réessayez.',
         noMac: "Impossible d'identifier cet appareil. Désactivez puis réactivez le WiFi, reconnectez-vous à ce réseau, puis rouvrez cette page.",
+        planInUseBuy: 'Acheter un forfait pour cet appareil',
         limitTitle: "Limite d'appareils atteinte",
         limitSub: 'Ce forfait est déjà utilisé sur {n} appareils. Retirez-en un pour connecter cet appareil.',
         limitNoCode: "Entrez votre code d'accès ou votre reçu {provider} pour gérer ces appareils.",
@@ -2326,6 +2329,43 @@ function isDeviceLimitError(err) {
         && err.detail.error === 'device_limit_reached');
 }
 
+// 409 plan_in_use_on_another_device: every plan on this number/code belongs
+// to another device that is in use (e.g. the TV's plan while the TV is on).
+function isPlanInUseError(err) {
+    return Boolean(err && err.status === 409 && err.detail && typeof err.detail === 'object'
+        && err.detail.error === 'plan_in_use_on_another_device');
+}
+
+// Backend message plus a button that takes the customer to the plans, so this
+// device can get its own plan. Message is backend text: textContent only.
+function renderPlanInUsePanel(container, err) {
+    if (!container) return;
+    container.textContent = '';
+
+    const row = document.createElement('div');
+    row.className = 'voucher-result-error plan-in-use-error';
+    const icon = document.createElement('span');
+    icon.className = 'voucher-error-icon';
+    icon.textContent = '!';
+    const text = document.createElement('span');
+    text.className = 'voucher-error-text';
+    text.textContent = err.message;
+    row.append(icon, text);
+    container.appendChild(row);
+
+    const buy = document.createElement('button');
+    buy.type = 'button';
+    buy.className = 'plan-in-use-buy';
+    buy.textContent = tr('planInUseBuy');
+    buy.addEventListener('click', () => {
+        const target = document.getElementById('plans-section-title') || document.getElementById('plansGrid');
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    container.appendChild(buy);
+
+    container.classList.remove('hidden');
+}
+
 async function postPublicJson(endpoint, body, timeoutMs, fallbackMessage) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -2709,6 +2749,8 @@ async function submitAccessCode(code) {
                 code,
                 retry: () => submitAccessCode(code)
             });
+        } else if (isPlanInUseError(err)) {
+            renderPlanInUsePanel(result, err);
         } else {
             console.error('❌ [ACCESS CODE] Redeem failed:', err.message);
             showVoucherError(friendlyAccessCodeError(err));
@@ -3227,6 +3269,10 @@ function setupReconnectUI() {
                     code,
                     retry: () => runReconnect(val)
                 });
+                return;
+            }
+            if (isPlanInUseError(err)) {
+                renderPlanInUsePanel(result, err);
                 return;
             }
             let message = friendlyAccessCodeError(err);

@@ -213,3 +213,29 @@ test('payment success polls with the MAC and shows the access code card', async 
     await page.reload();
     await expect(page.locator('#voucherCodeInput')).toHaveValue('ABC-DEF');
 });
+
+test('plan in use on another device shows the message and a buy option', async ({ page }) => {
+    await openPortal(page);
+    const detail = {
+        error: 'plan_in_use_on_another_device',
+        message: 'This plan is in use on another device (MAC ending F3:3F). Buy a plan for this device.',
+        device_mac_tail: 'F3:3F',
+        offer_purchase: true,
+    };
+    await page.route('**/api/public/reconnect', route => json(route, 409, { detail }));
+    await page.route('**/api/public/access-code/redeem', route => json(route, 409, { detail }));
+
+    await page.fill('#reconnectInput', '0712345678');
+    await page.click('#reconnectBtn');
+    const reconnectResult = page.locator('#reconnectResult');
+    await expect(reconnectResult).toContainText('MAC ending F3:3F');
+    const buy = reconnectResult.locator('.plan-in-use-buy');
+    await expect(buy).toHaveText('Buy a plan for this device');
+    await buy.click();
+    await expect(page.locator('#plansGrid .plan-card')).toBeInViewport();
+
+    await page.fill('#voucherCodeInput', 'SIG7X2AB12');
+    await page.click('#voucherVerifyBtn');
+    await expect(page.locator('#voucherResult')).toContainText('MAC ending F3:3F');
+    await expect(page.locator('#voucherResult .plan-in-use-buy')).toBeVisible();
+});
