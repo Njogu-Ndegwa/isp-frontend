@@ -5646,3 +5646,22 @@ select,
 textarea {
     font-size: 16px;
 }
+
+/* "Buy a plan for this device" under a plan_in_use_on_another_device refusal */
+.plan-in-use-buy {
+    display: block;
+    width: 100%;
+    margin-top: var(--space-sm);
+    padding: 12px 16px;
+    border: none;
+    border-radius: 10px;
+    background: var(--primary);
+    color: white;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.plan-in-use-buy:hover {
+    filter: brightness(0.95);
+}
