@@ -5646,3 +5646,319 @@ select,
 textarea {
     font-size: 16px;
 }
+
+/* ---- Hero ads: the photo hero rotates through ads (ads.js) ----
+   Every ad slide shares one frame: progress segments along the top, the
+   WiFi's name below them, and a bottom bar with the advertiser, the offer
+   and one Call button. Nothing else on a slide is tappable. */
+.portal-header--hero.has-hero-ads {
+    display: block;
+    touch-action: pan-y;
+}
+.hero-track {
+    display: flex;
+    transition: transform 0.5s ease;
+}
+.hero-slide {
+    position: relative;
+    flex: 0 0 100%;
+    min-height: 220px;
+    overflow: hidden;
+}
+.hero-slide--welcome {
+    display: flex;
+    align-items: flex-end;
+}
+.hero-ad-video,
+.hero-slide--image:not(.hero-slide--contain) .hero-ad-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.hero-slide--contain .hero-ad-img {
+    position: absolute;
+    top: 46px;
+    right: 6px;
+    bottom: 64px;
+    width: 44%;
+    height: auto;
+    object-fit: contain;
+}
+
+/* Segments: one per slide; the current one fills as the slide plays. */
+.hero-segs {
+    position: absolute;
+    top: 4px;
+    left: 10px;
+    right: 10px;
+    z-index: 5;
+    display: flex;
+    gap: 4px;
+}
+.hero-seg {
+    flex: 1;
+    height: 18px;
+    padding: 7px 0 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+}
+.hero-seg span {
+    display: block;
+    height: 3px;
+    border-radius: 2px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 0 0.5px rgba(15, 23, 42, 0.25);
+}
+.hero-seg i {
+    display: block;
+    width: 0;
+    height: 100%;
+    background: #fff;
+}
+
+.hero-ad-top {
+    position: absolute;
+    top: 24px;
+    left: 12px;
+    right: 8px;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+.hero-ad-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 70%;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.55);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.hero-ad-mute {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 20px;
+    background: rgba(15, 23, 42, 0.55);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.hero-ad-headline {
+    position: absolute;
+    top: 62px;
+    left: 16px;
+    right: 48%;
+    z-index: 3;
+    color: #fff;
+    font-family: 'Outfit', 'DM Sans', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.15;
+    text-wrap: balance;
+}
+.hero-ad-price {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 1px 8px;
+    border-radius: 8px;
+    background: #FACC15;
+    color: #1A2E05;
+    font-size: 18px;
+}
+
+/* The bottom bar: who, what, and the one thing to tap. */
+.hero-ad-foot {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 30px 12px 12px 14px;
+    background: linear-gradient(to top, rgba(15, 23, 42, 0.92) 0%, rgba(15, 23, 42, 0.75) 55%, rgba(15, 23, 42, 0) 100%);
+    color: #fff;
+}
+.hero-ad-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.hero-ad-who {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+}
+.hero-ad-tag {
+    flex-shrink: 0;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: #FACC15;
+    color: #1F1A05;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+.hero-ad-name {
+    font-size: 15px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.hero-ad-offer {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.85);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.hero-ad-btn {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 20px 0 16px;
+    border-radius: 999px;
+    background: #15803D;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 4px 14px rgba(21, 128, 61, 0.35);
+    transition: transform 0.1s ease;
+}
+.hero-ad-btn:active { transform: scale(0.97); }
+.hero-ad-btn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+.hero-ad-btn--dark {
+    background: #334155;
+    box-shadow: none;
+}
+
+/* The unsold slot: light, so it reads as an invitation, not an ad. */
+.hero-slide--open { background: #FEF3C7; }
+.hero-slide--open .hero-ad-headline {
+    right: 16px;
+    color: #422006;
+    font-size: 26px;
+}
+.hero-ad-sub {
+    display: block;
+    margin-top: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: #713F12;
+}
+.hero-ad-foot--light {
+    background: none;
+    color: #422006;
+}
+.hero-ad-foot--light .hero-ad-offer { color: #713F12; }
+.hero-ad-foot--light .hero-ad-tag { background: #422006; color: #FEF3C7; }
+
+/* ---- Sponsor on the wait screen and the success page ---- */
+.wait-ad { margin: 16px 0 0; }
+.success-sponsor { margin: 16px 0; }
+.wait-ad-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 700;
+}
+.wait-ad-card {
+    overflow: hidden;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.1);
+}
+.ad-video video,
+.ad-sponsor-img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 640 / 404;
+    object-fit: cover;
+}
+.ad-sponsor-img.is-contain { object-fit: contain; }
+.wait-ad-foot {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+}
+.wait-ad-who {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 13px;
+    color: #475569;
+}
+.wait-ad-name {
+    font-size: 15px;
+    color: #0F172A;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.ad-media { position: relative; }
+.ad-media .hero-ad-tag {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 2;
+}
+.wait-ad-offer {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.wait-ad-cta {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 18px 0 14px;
+    border-radius: 999px;
+    background: #15803D;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+}
+.wait-ad-cta:focus-visible { outline: 3px solid #0F172A; outline-offset: 2px; }
+
+@media (min-width: 768px) {
+    .hero-slide { min-height: 280px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .hero-track { transition: none; }
+}
