@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <!--
+      "Your internet has expired" - the captive page for walled PPPoE customers.
+
+      An expired PPPoE customer's router redirects every plain-HTTP request
+      (including the phone/laptop captive-portal probes) here, with
+      ?r=<router id>&u=<PPPoE username>. While walled, the customer can reach
+      only this origin and the API hosts, so this page must not load anything
+      from anywhere else: no web fonts, no CDNs, no images off-site.
+    -->
+    <meta name="robots" content="noindex">
+    <meta name="theme-color" content="#E85D04">
+    <title>Renew your internet</title>
+    <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+    <link rel="stylesheet" href="expired.css?v=1">
+</head>
+<body>
+    <main class="x-wrap">
+        <header class="x-head">
+            <div class="x-brand" id="brand">Internet</div>
+            <a class="x-help" id="helpLink" href="#" hidden>Help</a>
+        </header>
+
+        <section id="loading" class="x-card x-center">
+            <div class="x-spinner" aria-hidden="true"></div>
+            <p>Loading your account...</p>
+        </section>
+
+        <section id="unavailable" class="x-card x-center" hidden>
+            <h1>This page isn't available</h1>
+            <p id="unavailableText">Open any website from your home connection to get back here, or contact your internet provider.</p>
+        </section>
+
+        <section id="online" class="x-card x-center x-ok" hidden>
+            <div class="x-tick" aria-hidden="true">&#10003;</div>
+            <h1>You're back online</h1>
+            <p id="onlineText">Your internet is active.</p>
+            <p class="x-muted">If pages don't open yet, wait a few seconds while your router reconnects.</p>
+            <a class="x-btn" id="continueBtn" href="http://neverssl.com/">Start browsing</a>
+        </section>
+
+        <div id="expiredView" hidden>
+            <section class="x-card x-alert">
+                <h1 id="headline">Your internet has expired</h1>
+                <p id="subline">Renew below and you'll be reconnected automatically.</p>
+            </section>
+
+            <section class="x-card" id="accountCard" hidden>
+                <h2>Your account</h2>
+                <dl class="x-rows">
+                    <div><dt>Name</dt><dd id="accName">-</dd></div>
+                    <div><dt>Account</dt><dd id="accUser">-</dd></div>
+                    <div id="accNumberRow"><dt>Account number</dt><dd id="accNumber">-</dd></div>
+                    <div><dt>Plan</dt><dd id="accPlan">-</dd></div>
+                    <div><dt>Expired</dt><dd id="accExpiry">-</dd></div>
+                </dl>
+            </section>
+
+            <section class="x-card" id="lookupCard" hidden>
+                <h2>Find your account</h2>
+                <p class="x-muted" id="lookupHint">Enter the account number from your SMS, or your PPPoE username.</p>
+                <form id="lookupForm" autocomplete="off">
+                    <input class="x-input" id="lookupInput" name="account" placeholder="Account number or username" required>
+                    <button class="x-btn" type="submit">Continue</button>
+                </form>
+            </section>
+
+            <section class="x-card" id="payCard" hidden>
+                <h2>Choose a plan</h2>
+                <div class="x-plans" id="plans" role="radiogroup" aria-label="Plans"></div>
+
+                <form id="payForm" autocomplete="off">
+                    <label class="x-label" for="phone">M-Pesa phone number</label>
+                    <input class="x-input" id="phone" type="tel" inputmode="numeric" maxlength="14" placeholder="07XX XXX XXX">
+                    <p class="x-muted x-small" id="phoneHint" hidden></p>
+                    <button class="x-btn x-pay" id="payBtn" type="submit">Pay with M-Pesa</button>
+                    <p class="x-error" id="payError" role="alert" hidden></p>
+                </form>
+
+                <div class="x-waiting" id="waiting" hidden>
+                    <div class="x-spinner" aria-hidden="true"></div>
+                    <div>
+                        <strong>Check your phone</strong>
+                        <p id="waitingText">Enter your M-Pesa PIN to pay. Keep this page open.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="x-card" id="paybillCard" hidden>
+                <h2>Or pay with Paybill</h2>
+                <ol class="x-steps">
+                    <li>M-Pesa &rarr; Lipa na M-Pesa &rarr; Pay Bill</li>
+                    <li>Business number: <strong id="pbNumber"></strong></li>
+                    <li>Account number: <strong id="pbAccount"></strong></li>
+                    <li>Amount: <strong id="pbAmount"></strong></li>
+                </ol>
+                <p class="x-muted x-small">You're reconnected within a minute of paying. This page updates on its own.</p>
+            </section>
+        </div>
+
+        <footer class="x-foot" id="footer"></footer>
+    </main>
+    <script src="expired.js?v=1" defer></script>
+</body>
+</html>
