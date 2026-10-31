@@ -51,6 +51,11 @@
 
             var identity = null;
             try { identity = new URLSearchParams(location.search).get('router'); } catch (e) {}
+            // Installed app / bookmark: no ?router=, so use the router this
+            // device last came through (saved by script.js, same key).
+            if (!identity) {
+                try { identity = localStorage.getItem('bitwave_last_router'); } catch (e) {}
+            }
             if (!identity || !window.fetch || !window.Promise) return;
             try {
                 if (sessionStorage.getItem('__DEMO_PORTAL__') || sessionStorage.getItem('__DEV_MOCK_PORTAL__')) return;

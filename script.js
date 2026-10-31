@@ -101,7 +101,7 @@ function activateApiFallback() {
 const PORTAL_ENDPOINT = `${API_BASE_URL}/public/portal`;
 // Legacy endpoints (used as fallback if portal endpoint fails)
 function getPlansUrl(rId) {
-    return `${API_BASE_URL}/public/plans/${rId || FALLBACK_ROUTER_ID}`;
+    return `${API_BASE_URL}/public/plans/${rId}`;
 }
 const PAYMENT_ENDPOINT = `${API_BASE_URL}/hotspot/register-and-pay`;
 const PAYMENT_STATUS_ENDPOINT = `${API_BASE_URL}/hotspot/payment-status`;
@@ -122,9 +122,9 @@ const FREE_TRIAL_CLAIM_ENDPOINT = `${API_BASE_URL}/public/free-trial/claim`;
 const RADIUS_PAYMENT_ENDPOINT = `${API_BASE_URL}/radius/hotspot/register-and-pay`;
 const RADIUS_PAYMENT_STATUS_ENDPOINT = `${API_BASE_URL}/radius/hotspot/payment-status`;
 
-// Router ID - Will be looked up dynamically from router identity
-// Fallback used only if lookup fails
-const FALLBACK_ROUTER_ID = 2;
+// Router ID - looked up from the router identity (?router= or the saved one).
+// There is deliberately no fallback router: guessing one showed another
+// reseller's (or Bitwave's test) plans to customers.
 let routerId = null; // Will be set after lookup
 let routerAuthMethod = 'DIRECT_API'; // Will be set after lookup ('DIRECT_API' or 'RADIUS')
 let routerBusinessName = null; // Will be set after lookup from backend
@@ -242,12 +242,9 @@ async function getRouterId(identity) {
     
     if (!identity) {
         console.warn('⚠️ [ROUTER DEBUG] No router identity provided!');
-        console.warn('⚠️ [ROUTER DEBUG] Returning FALLBACK_ROUTER_ID:', FALLBACK_ROUTER_ID);
-        // Keep routerAuthMethod as default 'DIRECT_API' when no identity provided
         routerAuthMethod = 'DIRECT_API';
-        console.log('🔐 [ROUTER DEBUG] routerAuthMethod set to DIRECT_API (no identity)');
         console.log('═══════════════════════════════════════════════════════');
-        return FALLBACK_ROUTER_ID;
+        throw new Error('No router identity');
     }
     
     console.log('🔍 Looking up router by identity:', identity);
@@ -484,13 +481,44 @@ function getUrlParams() {
         ip: params.get('ip') || '',
         dst: params.get('dst') || '',
         gw: params.get('gw') || '',
-        router: params.get('router') || ''
+        router: resolveRouterIdentity(params.get('router') || '')
     };
     
     console.log('📍 Final router value after || fallback:', `"${result.router}"`);
     console.log('═══════════════════════════════════════════════════════');
     
     return result;
+}
+
+// The hotspot redirect always carries ?router=<identity>. The installed PWA
+// (manifest start_url) and bookmarks open the page without it, so remember the
+// last router this device was sent here by and reuse it. index.html reads the
+// same key for its early plans request.
+const LAST_ROUTER_STORAGE_KEY = 'bitwave_last_router';
+
+function resolveRouterIdentity(urlRouter) {
+    if (urlRouter) {
+        try { localStorage.setItem(LAST_ROUTER_STORAGE_KEY, urlRouter); } catch {}
+        return urlRouter;
+    }
+    try {
+        const saved = localStorage.getItem(LAST_ROUTER_STORAGE_KEY);
+        if (saved) {
+            console.log('📍 No ?router= in URL — using saved router:', `"${saved}"`);
+            return saved;
+        }
+    } catch {}
+    return '';
+}
+
+function showNoRouterMessage() {
+    plansGrid.innerHTML = `
+        <div id="noRouterMessage" style="grid-column:1/-1;text-align:center;padding:2rem 1rem;">
+            <div style="font-size:2rem;margin-bottom:.5rem;">📶</div>
+            <p style="font-weight:600;margin:0 0 .25rem;">Connect to your WiFi hotspot to see packages</p>
+            <p style="opacity:.65;font-size:.85rem;margin:0;">Join the WiFi network, then open this page again.</p>
+        </div>
+    `;
 }
 
 function normalizeGateway(gw) {
@@ -720,8 +748,27 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('🔒 [ROUTER DEBUG] Pay button DISABLED until router_id resolves');
     }
     
-    const routerIdentity = mikrotikParams.router || 'MikroTik';
+    const routerIdentity = mikrotikParams.router;
     console.log('📍 Router identity:', `"${routerIdentity}"`);
+
+    if (!routerIdentity) {
+        // Opened without ?router= (installed app, bookmark) on a device that
+        // has never come through a hotspot. Don't guess a router.
+        console.warn('⚠️ [ROUTER DEBUG] No router identity — not loading plans');
+        showNoRouterMessage();
+        window._portalAds = [];
+        window.portalDataPromise = Promise.resolve(null);
+        const brandLink = document.getElementById('brandLink');
+        if (brandLink) brandLink.classList.remove('brand-loading');
+        const logoEl = document.querySelector('.logo');
+        if (logoEl && !logoEl.textContent.trim()) logoEl.textContent = 'WiFi Portal';
+        setupEventListeners();
+        setupVoucherUI();
+        setupReconnectUI();
+        loadSavedPhoneNumber();
+        setupBrandLink();
+        return; // pay button stays disabled: there is no router to pay on
+    }
 
     // Single portal fetch — router + plans + ads in one request
     // Falls back to individual endpoints if the portal endpoint fails
@@ -791,12 +838,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateBranding();
             } catch (err) {
                 console.error('❌ Router lookup fallback failed:', err.message);
-                routerId = FALLBACK_ROUTER_ID;
+                routerId = null;
                 routerAuthMethod = 'DIRECT_API';
                 applyPaymentMethods(['mpesa', 'voucher']);
             }
 
             try {
+                if (!routerId) throw new Error('router not found');
                 const freshPlans = await fetchPlansFromAPI(routerId);
                 displayPlans(freshPlans);
             } catch (err) {
@@ -2452,7 +2500,7 @@ async function redeemAccessCode(code, macAddress, rId) {
 async function disconnectAccessCodeDevice(code, device) {
     const requestBody = {
         code: normalizeAccessCode(code),
-        router_id: routerId || FALLBACK_ROUTER_ID
+        router_id: routerId
     };
     if (device.is_main_device || device.pairing_id == null) {
         requestBody.main_device = true;
@@ -2707,7 +2755,7 @@ async function submitAccessCode(code) {
     if (result) result.classList.add('hidden');
 
     try {
-        const rId = routerId || FALLBACK_ROUTER_ID;
+        const rId = routerId;
         const data = await redeemAccessCode(code, macAddress, rId);
         handleRedeemSuccess(data, macAddress);
     } catch (err) {
@@ -3136,7 +3184,7 @@ async function reconnectUser(inputValue) {
         err.status = 0;
         throw err;
     }
-    const rId = routerId || FALLBACK_ROUTER_ID;
+    const rId = routerId;
     const trimmed = inputValue.trim();
 
     let requestBody;
@@ -3548,8 +3596,6 @@ async function processPayment(phoneNumber, plan) {
     console.log('🆔 routerId is null:', routerId === null);
     console.log('🆔 routerId is undefined:', routerId === undefined);
     console.log('🆔 routerId is falsy:', !routerId);
-    console.log('🆔 FALLBACK_ROUTER_ID constant:', FALLBACK_ROUTER_ID);
-    console.log('🆔 Would use fallback:', !routerId);
     console.log('═══════════════════════════════════════════════════════');
     
     // A free trial (or any KSH 0 plan) must never reach the STK push. They are
@@ -4311,14 +4357,12 @@ window.debugRouterState = function() {
     console.log('📍 URL:', window.location.href);
     console.log('📍 mikrotikParams.router:', `"${mikrotikParams.router}"`);
     console.log('📍 Global routerId:', routerId);
-    console.log('📍 FALLBACK_ROUTER_ID:', FALLBACK_ROUTER_ID);
     console.log('📍 Submit button disabled:', submitButton ? submitButton.disabled : 'N/A');
     console.log('═══════════════════════════════════════════════════════');
     return { 
         url: window.location.href,
         routerParam: mikrotikParams.router, 
-        routerId: routerId, 
-        fallback: FALLBACK_ROUTER_ID 
+        routerId: routerId
     };
 };
 
