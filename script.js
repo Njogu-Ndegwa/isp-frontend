@@ -1204,6 +1204,15 @@ function applyFeaturedOrder(plans, featuredIds) {
 // ========================================
 const I18N = {
     en: {
+        confirmationPending: 'Confirmation pending',
+        paymentReceived: 'Payment received',
+        confirmationSlow: 'Confirmation is taking longer than expected. If money was deducted, please do not pay again. Check the status or contact support.',
+        paymentConnecting: 'Your payment was received. We are still connecting your device. Please do not pay again.',
+        checkPaymentStatus: 'Check payment status',
+        checkingPaymentStatus: 'Checking status...',
+        statusCheckNoCharge: 'Checking the status will not start another payment or charge.',
+        waitingConfirmation: 'Waiting for confirmation',
+        providerPaymentFailed: 'The payment provider confirmed that this payment did not complete. If money was deducted, contact support before trying again.',
         choosePlan: 'Choose Your Plan',
         enterPhone: 'Enter Phone Number',
         pay: 'Pay & Connect',
@@ -1322,6 +1331,15 @@ const I18N = {
         connectingSlow: 'Inachukua muda zaidi kuliko kawaida. Subiri dakika moja, kisha bonyeza Start Browsing. Kurasa zikikataa kufunguka, zima WiFi kisha uiwashe tena.',
     },
     fr: {
+        confirmationPending: 'Confirmation en attente',
+        paymentReceived: 'Paiement reçu',
+        confirmationSlow: 'La confirmation prend plus de temps que prévu. Si vous avez été débité, ne payez pas à nouveau. Vérifiez le statut ou contactez le support.',
+        paymentConnecting: 'Votre paiement a été reçu. La connexion de votre appareil est en cours. Ne payez pas à nouveau.',
+        checkPaymentStatus: 'Vérifier le statut du paiement',
+        checkingPaymentStatus: 'Vérification en cours...',
+        statusCheckNoCharge: 'Vérifier le statut ne déclenche aucun nouveau paiement ni débit.',
+        waitingConfirmation: 'En attente de confirmation',
+        providerPaymentFailed: 'Le fournisseur confirme que ce paiement n’a pas abouti. Si vous avez été débité, contactez le support avant de réessayer.',
         choosePlan: 'Choisissez votre forfait',
         enterPhone: 'Entrez votre numéro',
         pay: 'Payer & Connecter',
@@ -3511,6 +3529,10 @@ async function handlePayment(e) {
         }
         
     } catch (error) {
+        if (error.code === 'PAYMENT_CONFIRMATION_PENDING') {
+            showUnconfirmedPayment(error);
+            return;
+        }
         // Show error
         showErrorMessage(error.message);
         hideSection(paymentSection);
@@ -3664,7 +3686,7 @@ async function processPayment(phoneNumber, plan) {
 // ========================================
 // POLL PAYMENT STATUS & WAIT FOR INTERNET ACCESS
 // ========================================
-async function pollPaymentStatusAndLogin(customerId, phoneNumber, plan) {
+async function pollPaymentStatusAndLogin(customerId, phoneNumber, plan, knownPaymentReceived = false) {
     console.log('🔄 Checking payment status and internet access...');
     console.log('📋 Customer ID:', customerId);
     
@@ -3675,9 +3697,19 @@ async function pollPaymentStatusAndLogin(customerId, phoneNumber, plan) {
     console.log('🔐 [ROUTER DEBUG] Status endpoint:', statusEndpoint);
     
     let attempts = 0;
+    let pollInFlight = false;
+    let paymentReceived = knownPaymentReceived;
+    const stillPending = () => {
+        const error = new Error(tr(paymentReceived ? 'paymentConnecting' : 'confirmationSlow'));
+        error.code = 'PAYMENT_CONFIRMATION_PENDING';
+        error.verification = { customerId, phoneNumber, plan, paymentReceived };
+        return error;
+    };
     
     return new Promise((resolve, reject) => {
         const pollInterval = setInterval(async () => {
+            if (pollInFlight) return;
+            pollInFlight = true;
             attempts++;
             console.log(`🔍 Polling attempt ${attempts}/${PAYMENT_POLL_MAX_ATTEMPTS}...`);
             
@@ -3702,9 +3734,26 @@ async function pollPaymentStatusAndLogin(customerId, phoneNumber, plan) {
                 
                 const data = await response.json();
                 console.log('📊 Status:', data);
+                const isFapshi = routerPaymentProvider === 'fapshi';
+                paymentReceived = paymentReceived || (isFapshi && data.payment_status === 'successful');
+                const deliveryPending = isFapshi && data.payment_status === 'successful'
+                    && ['pending', 'review_required'].includes(data.payment_fulfillment_status);
+
+                // Only a confirmed failure permits another payment attempt. A
+                // timeout or provider outage does not establish that no debit occurred.
+                if (isFapshi && data.status !== 'active' && ['failed', 'expired'].includes(data.payment_status)) {
+                    clearInterval(pollInterval);
+                    reject(new Error(tr('providerPaymentFailed')));
+                    return;
+                }
+                if (isFapshi && data.payment_review_required && data.status !== 'active') {
+                    clearInterval(pollInterval);
+                    reject(stillPending());
+                    return;
+                }
                 
                 // Check if payment is successful (status is "active")
-                if (data.status === 'active') {
+                if (data.status === 'active' && !deliveryPending) {
                     // Payment confirmed and user is active
                     clearInterval(pollInterval);
                     console.log('✅ Payment confirmed!');
@@ -3793,12 +3842,12 @@ async function pollPaymentStatusAndLogin(customerId, phoneNumber, plan) {
                     if (attempts >= PAYMENT_POLL_MAX_ATTEMPTS) {
                         clearInterval(pollInterval);
                         console.warn('⏱️ Polling timeout - max attempts reached');
-                        reject(new Error(`Payment verification timeout. Please check your ${getPaymentProviderLabel()} messages and try again, or contact support if payment was deducted.`));
+                        reject(routerPaymentProvider === 'fapshi' ? stillPending() : new Error(`Payment verification timeout. Please check your ${getPaymentProviderLabel()} messages and try again, or contact support if payment was deducted.`));
                     }
                 } else if (attempts >= PAYMENT_POLL_MAX_ATTEMPTS) {
                     clearInterval(pollInterval);
                     console.warn('⏱️ Polling timeout - max attempts reached');
-                    reject(new Error('Payment verification timeout. Please refresh the page or contact support.'));
+                    reject(routerPaymentProvider === 'fapshi' ? stillPending() : new Error('Payment verification timeout. Please refresh the page or contact support.'));
                 } else {
                     console.log(`⏳ Waiting for payment confirmation. Retrying in ${PAYMENT_POLL_INTERVAL/1000}s...`);
                 }
@@ -3808,12 +3857,57 @@ async function pollPaymentStatusAndLogin(customerId, phoneNumber, plan) {
                 
                 if (attempts >= PAYMENT_POLL_MAX_ATTEMPTS) {
                     clearInterval(pollInterval);
-                    reject(error);
+                    reject(routerPaymentProvider === 'fapshi' ? stillPending() : error);
                 }
                 // Continue polling on error (unless max attempts reached)
+            } finally {
+                pollInFlight = false;
             }
         }, PAYMENT_POLL_INTERVAL);
     });
+}
+
+function showUnconfirmedPayment(error) {
+    const context = error.verification;
+    hideSection(paymentSection);
+    hideSection(errorSection);
+    hideSection(successSection);
+    showSection(processingSection);
+    if (processingTitle) processingTitle.textContent = tr(context.paymentReceived ? 'paymentReceived' : 'confirmationPending');
+    if (processingSubtext) processingSubtext.textContent = error.message;
+    updateProcessingSteps(context.paymentReceived ? 3 : 2);
+    const waitingLabel = document.querySelector('#step2 .step-label');
+    if (waitingLabel) waitingLabel.textContent = tr(context.paymentReceived ? 'paymentReceived' : 'waitingConfirmation');
+    const hint = document.getElementById('paymentConfirmationHint');
+    if (hint) hint.textContent = tr('statusCheckNoCharge');
+    let button = document.getElementById('checkPaymentStatusButton');
+    if (!button) {
+        button = document.createElement('button');
+        button.id = 'checkPaymentStatusButton';
+        button.type = 'button';
+        button.className = 'submit-button';
+        processingSection.appendChild(button);
+    }
+    button.textContent = tr('checkPaymentStatus');
+    button.disabled = false;
+    button.onclick = async () => {
+        button.disabled = true;
+        button.textContent = tr('checkingPaymentStatus');
+        try {
+            await pollPaymentStatusAndLogin(context.customerId, context.phoneNumber, context.plan, context.paymentReceived);
+            button.remove();
+        } catch (nextError) {
+            if (nextError.code === 'PAYMENT_CONFIRMATION_PENDING') {
+                showUnconfirmedPayment(nextError);
+            } else {
+                button.remove();
+                hideSection(processingSection);
+                showErrorMessage(nextError.message);
+                showSection(errorSection);
+            }
+        }
+    };
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ========================================
