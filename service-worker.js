@@ -3,7 +3,7 @@
 // Handles caching for offline functionality
 // ========================================
 
-const CACHE_NAME = 'bitwave-soko-pwa-v5';
+const CACHE_NAME = 'bitwave-soko-pwa-v6';
 const OFFLINE_URL = '/index.html';
 
 // Assets to cache for offline use
@@ -19,13 +19,6 @@ const ASSETS_TO_CACHE = [
     '/spots.js',
     '/manifest.json',
     '/icons/icon.svg',
-    // Images
-    '/images/tomatoes.jpg',
-    '/images/phone-cases.jpg',
-    '/images/sukuma-wiki.jpg',
-    '/images/watches.jpg',
-    '/images/bananas.jpg',
-    '/images/tomatoes-thumb.jpg',
     // Fonts from Google Fonts (will be cached on first load)
 ];
 

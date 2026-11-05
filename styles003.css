@@ -5862,6 +5862,7 @@ textarea {
     overflow: hidden;
     text-overflow: ellipsis;
 }
+.wait-spot-who .hero-spot-tag { align-self: flex-start; margin-bottom: 2px; }
 .spot-media { position: relative; }
 .spot-media .hero-spot-tag {
     position: absolute;
