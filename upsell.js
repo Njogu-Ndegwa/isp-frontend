@@ -381,7 +381,7 @@ function injectOffers() {
     existingOffers.forEach(offer => offer.remove());
     
     // Remove existing offer banner
-    const existingBanner = plansGrid.querySelector('.offer-banner');
+    const existingBanner = plansGrid.querySelector('.offer-strip');
     if (existingBanner) existingBanner.remove();
     
     // Get current offers
@@ -394,7 +394,7 @@ function injectOffers() {
     
     // Create offer banner
     const banner = document.createElement('div');
-    banner.className = 'offer-banner';
+    banner.className = 'offer-strip';
     banner.innerHTML = `<span>🎁 Special Offers</span>`;
     
     // Insert banner at top of grid

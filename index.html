@@ -133,7 +133,7 @@
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
     
-    <!-- No image preloads: the two default ad images (ads.js) only show after
+    <!-- No image preloads: the two default ad images (spots.js) only show after
          the plans, and preloading them at high priority took ~40 KB of a slow
          phone's bandwidth away from the CSS and script.js the plans wait on. -->
     
@@ -143,7 +143,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Outfit:wght@600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <!-- Fallback for no-JS -->
     <noscript><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Outfit:wght@600;700&display=swap" rel="stylesheet"></noscript>
-    <link rel="stylesheet" href="styles003.css?v=17">
+    <link rel="stylesheet" href="styles003.css?v=18">
     
 </head>
 <body>
@@ -171,56 +171,27 @@
         <main class="main" id="mainContent">
 
             <!-- Announcement banner — shown when show_announcement is true -->
-            <div id="announcement-banner" class="announcement-banner" data-type="info" style="display:none">
+            <div id="notice-strip" class="notice-strip" data-type="info" style="display:none">
                 <span class="announcement-text"></span>
             </div>
 
             <!-- Welcome banner — shown when show_welcome_banner is true -->
-            <div id="welcome-banner" class="welcome-banner" style="display:none">
-                <h2 class="welcome-banner-title"></h2>
-                <p class="welcome-banner-sub"></p>
+            <div id="welcome-strip" class="welcome-strip" style="display:none">
+                <h2 class="welcome-strip-title"></h2>
+                <p class="welcome-strip-sub"></p>
             </div>
             
             <!-- Plans Section -->
             <section class="plans-section" id="plansSection">
                 
                 <!-- Featured Marketplace Ads - Horizontal Scroll -->
-                <div class="marketplace-showcase" id="ads-section">
+                <div class="spots-showcase" id="spots-section" style="display:none">
                     <div class="showcase-header">
                         <span class="showcase-title" role="heading" aria-level="2">🛒 Soko Deals Today</span>
                         <span class="showcase-badge">AD</span>
                     </div>
                     <div class="showcase-scroll" id="showcaseScroll">
-                        <!-- Ads loaded dynamically from backend via ads.js -->
-                        <!-- Skeleton loaders shown while loading -->
-                        <div class="product-card ad-skeleton">
-                            <div class="product-image skeleton-shimmer"></div>
-                            <div class="product-info">
-                                <div class="skeleton-text"></div>
-                                <div class="skeleton-text short"></div>
-                            </div>
-                        </div>
-                        <div class="product-card ad-skeleton">
-                            <div class="product-image skeleton-shimmer"></div>
-                            <div class="product-info">
-                                <div class="skeleton-text"></div>
-                                <div class="skeleton-text short"></div>
-                            </div>
-                        </div>
-                        <div class="product-card ad-skeleton">
-                            <div class="product-image skeleton-shimmer"></div>
-                            <div class="product-info">
-                                <div class="skeleton-text"></div>
-                                <div class="skeleton-text short"></div>
-                            </div>
-                        </div>
-
-                        <a href="#" class="product-card ad-cta-card" data-support-link style="display:none">
-                            <div class="ad-cta-content">
-                                <div class="ad-cta-icon">+</div>
-                                <span class="ad-cta-text">Your Ad Here</span>
-                            </div>
-                        </a>
+                        <!-- Filled by spots.js. The section stays hidden unless there is an ad. -->
                     </div>
                     <div class="scroll-hint">
                         <span data-i18n="swipeHint">← Swipe for more deals →</span>
@@ -658,8 +629,8 @@
                 </form>
 
                 <!-- Mini Ad during payment -->
-                <div class="payment-ad">
-                    <div class="payment-ad-header">While you wait...</div>
+                <div class="pay-spot" style="display:none">
+                    <div class="pay-spot-header">While you wait...</div>
                     <div class="mini-products" id="miniProducts">
                         <!-- Populated by JS -->
                     </div>
@@ -775,12 +746,12 @@
                 </div>
 
                 <!-- Success Page Ads -->
-                <div class="success-ads">
-                    <div class="success-ads-header">
-                        <span class="ads-title">🛒 While you browse...</span>
-                        <span class="ads-badge">AD</span>
+                <div class="done-spots" style="display:none">
+                    <div class="done-spots-header">
+                        <span class="spots-title">🛒 While you browse...</span>
+                        <span class="spots-chip">AD</span>
                     </div>
-                    <div class="success-ads-scroll" id="successAdsScroll">
+                    <div class="done-spots-scroll" id="doneSpotsScroll">
                         <!-- Populated dynamically from DB -->
                     </div>
                 </div>
@@ -852,49 +823,49 @@
         </main>
 
         <!-- Ad Details Modal -->
-        <div class="ad-modal-overlay hidden" id="adModalOverlay">
-            <div class="ad-modal" id="adModal">
-                <button class="ad-modal-close" id="adModalClose" aria-label="Close">
+        <div class="spot-sheet-overlay hidden" id="spotSheetOverlay">
+            <div class="spot-sheet" id="spotSheet">
+                <button class="spot-sheet-close" id="spotSheetClose" aria-label="Close">
                     <span>×</span>
                 </button>
                 
-                <div class="ad-modal-content">
+                <div class="spot-sheet-content">
                     <!-- Image Section -->
-                    <div class="ad-modal-image" id="adModalImage">
-                        <img src="" alt="" id="adModalImg">
-                        <span class="ad-modal-badge" id="adModalBadge"></span>
+                    <div class="spot-sheet-image" id="spotSheetImage">
+                        <img src="" alt="" id="spotSheetImg">
+                        <span class="spot-sheet-badge" id="spotSheetBadge"></span>
                     </div>
                     
                     <!-- Info Section -->
-                    <div class="ad-modal-info">
-                        <span class="ad-modal-tag">SPONSORED</span>
-                        <h2 class="ad-modal-title" id="adModalTitle"></h2>
-                        <p class="ad-modal-description" id="adModalDescription"></p>
+                    <div class="spot-sheet-info">
+                        <span class="spot-sheet-tag">SPONSORED</span>
+                        <h2 class="spot-sheet-title" id="spotSheetTitle"></h2>
+                        <p class="spot-sheet-description" id="spotSheetDescription"></p>
                         
-                        <div class="ad-modal-seller">
+                        <div class="spot-sheet-seller">
                             <span class="seller-icon">📍</span>
                             <div class="seller-details">
-                                <span class="seller-name" id="adModalSeller"></span>
-                                <span class="seller-location" id="adModalLocation"></span>
+                                <span class="seller-name" id="spotSheetSeller"></span>
+                                <span class="seller-location" id="spotSheetLocation"></span>
                             </div>
                         </div>
                         
-                        <div class="ad-modal-price-section">
-                            <span class="ad-modal-label">Price</span>
-                            <span class="ad-modal-price" id="adModalPrice"></span>
+                        <div class="spot-sheet-price-section">
+                            <span class="spot-sheet-label">Price</span>
+                            <span class="spot-sheet-price" id="spotSheetPrice"></span>
                         </div>
                         
                         <!-- Contact Section -->
-                        <div class="ad-modal-contact">
-                            <a href="" class="ad-call-button" id="adModalCallBtn">
+                        <div class="spot-sheet-contact">
+                            <a href="" class="spot-call-button" id="spotSheetCallBtn">
                                 <span class="call-btn-icon">📞</span>
                                 <span class="call-btn-text">Call Seller</span>
                             </a>
                         </div>
                         
-                        <div class="ad-modal-footer">
-                            <span class="ad-views" id="adModalViews">👁️ <span>0</span> views</span>
-                            <span class="ad-id" id="adModalId">Ad #</span>
+                        <div class="spot-sheet-footer">
+                            <span class="spot-views" id="spotSheetViews">👁️ <span>0</span> views</span>
+                            <span class="spot-ref" id="spotSheetId">Ad #</span>
                         </div>
                     </div>
                 </div>
@@ -964,7 +935,7 @@
     </div>
 
     <!-- PWA Install Prompt Banner -->
-    <div class="pwa-install-banner hidden" id="pwaInstallBanner">
+    <div class="pwa-install-strip hidden" id="pwaInstallStrip">
         <div class="pwa-install-content">
             <span class="pwa-install-icon">📲</span>
             <div class="pwa-install-text">
@@ -977,9 +948,9 @@
     </div>
 
     <!-- Defer scripts to prevent render blocking -->
-    <script src="script.js?v=17" defer></script>
+    <script src="script.js?v=18" defer></script>
     <script src="script003.js" defer></script>
-    <script src="ads.js" defer></script>
+    <script src="spots.js?v=1" defer></script>
     <script src="device-pairing.js?v=2" defer></script>
     <script src="access-login.js" defer></script>
     
@@ -1013,7 +984,7 @@
         
         // PWA Install Prompt
         let deferredPrompt = null;
-        const installBanner = document.getElementById('pwaInstallBanner');
+        const installBanner = document.getElementById('pwaInstallStrip');
         const installBtn = document.getElementById('pwaInstallBtn');
         const installClose = document.getElementById('pwaInstallClose');
         

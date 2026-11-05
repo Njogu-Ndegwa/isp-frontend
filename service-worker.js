@@ -3,7 +3,7 @@
 // Handles caching for offline functionality
 // ========================================
 
-const CACHE_NAME = 'bitwave-soko-pwa-v4';
+const CACHE_NAME = 'bitwave-soko-pwa-v5';
 const OFFLINE_URL = '/index.html';
 
 // Assets to cache for offline use
@@ -16,7 +16,7 @@ const ASSETS_TO_CACHE = [
     '/styles003.css',
     '/script.js',
     '/script003.js',
-    '/ads.js',
+    '/spots.js',
     '/manifest.json',
     '/icons/icon.svg',
     // Images

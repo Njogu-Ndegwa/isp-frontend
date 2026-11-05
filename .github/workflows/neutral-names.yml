@@ -1,0 +1,16 @@
+name: Neutral names
+
+# Ad blockers hide or block anything named like an ad. This fails a PR that
+# brings such a name back into the portal (see scripts/check-neutral-names.js).
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+      - run: node scripts/check-neutral-names.js

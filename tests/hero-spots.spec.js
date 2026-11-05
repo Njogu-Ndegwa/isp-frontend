@@ -20,7 +20,7 @@ const HERO_AD = {
     phone_number: '0712 000 111', whatsapp_number: null,
     price: 'KSH 120 / kg', price_value: 120, category: 'produce',
     badge_type: null, badge_text: null,
-    placement: 'hero', media_type: 'image', image_url: '/images/demo-ads/onions-land.webp',
+    placement: 'hero', media_type: 'image', image_url: '/images/demo-spots/onions-land.webp',
     video_url: null, poster_url: null, image_fit: 'cover', bg_color: '#14532D', slot: 'platform',
 };
 
@@ -48,13 +48,13 @@ function json(route, status, body) {
 }
 
 async function openPortal(page, body, beacons) {
-    // Anything else ads.js might ask the API for: answer empty, never hang.
+    // Anything else spots.js might ask the API for: answer empty, never hang.
     // Registered first: Playwright tries the most recently added route first.
     await page.route(url => url.hostname === 'isp.bitwavetechnologies.com', route =>
         json(route, 200, { ads: [], pagination: {} }));
     await page.route(isPortal, route => json(route, 200, body));
-    await page.route(url => /\/ads\/(impression|click)$/.test(url.pathname), route => {
-        const kind = route.request().url().endsWith('/click') ? 'click' : 'impression';
+    await page.route(url => /\/public\/spots\/(seen|tap)$/.test(url.pathname), route => {
+        const kind = route.request().url().endsWith('/tap') ? 'click' : 'impression';
         beacons.push({ kind, body: route.request().postDataJSON() });
         return json(route, 200, { success: true });
     });
@@ -67,15 +67,16 @@ test('a hero ad becomes a slide with one Call button, and the showcase stays hid
     const beacons = [];
     await openPortal(page, portal(), beacons);
 
-    const slide = page.locator('#portal-header .hero-slide--ad[data-ad-id="9"]');
+    const slide = page.locator('#portal-header .hero-slide--spot[data-spot-id="9"]');
     await expect(slide).toHaveCount(1);
-    await expect(page.locator('#portal-header')).toHaveClass(/has-hero-ads/);
+    await expect(page.locator('#portal-header')).toHaveClass(/has-hero-spots/);
     const call = slide.locator('[data-hero-cta="call"]');
     await expect(call).toHaveCount(1);
     expect(await call.getAttribute('href')).toMatch(/^tel:/);
-    // welcome + ad + "advertise here"
-    await expect(page.locator('#portal-header .hero-seg')).toHaveCount(3);
-    await expect(page.locator('#ads-section')).toBeHidden();
+    // welcome + ad, and no slide asking customers to advertise
+    await expect(page.locator('#portal-header .hero-seg')).toHaveCount(2);
+    await expect(page.locator('#portal-header')).not.toContainText(/your business here|book this space|advertise/i);
+    await expect(page.locator('#spots-section')).toBeHidden();
 });
 
 test('a view is counted once the ad has been on screen, with placement, hotspot and phone', async ({ page }) => {
