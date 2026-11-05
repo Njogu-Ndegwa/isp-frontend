@@ -93,7 +93,7 @@ function applySupportContacts() {
 // STATE MANAGEMENT
 // ========================================
 let isTestRunning = false;
-let currentSection = 'deals';
+let currentSection = 'speedtest';
 let adsData = [];
 let speedTestHistory = [];
 
@@ -435,90 +435,119 @@ async function sendSpeedTestToBackend(result) {
 }
 
 // ========================================
-// ADS / DEALS - Same as captive portal
+// DEALS - real offers from the same feed as the captive portal
+// No offers, offers switched off, or a failed call all end the same way: the
+// section and its tab stay away quietly and the rest of the app works as usual.
 // ========================================
-async function loadAds() {
-    try {
-        const response = await fetch(resolvePwaUrl(ADS_ENDPOINT));
-        if (!response.ok) throw new Error('Failed to load ads');
-        
-        const ads = await response.json();
-        adsData = ads;
-        renderAds(ads);
-        console.log(`✅ Loaded ${ads.length} ads from API`);
-    } catch (error) {
-        console.log('📢 Using fallback ads');
-        // Use fallback ads
-        adsData = getFallbackAds();
-        renderAds(adsData);
-    }
+const DEALS_TIMEOUT_MS = 10000;
+const DEAL_IMAGE_PLACEHOLDER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23f5f5f5' width='100' height='100'/%3E%3Ctext x='50' y='55' text-anchor='middle' font-size='30'%3E🛒%3C/text%3E%3C/svg%3E";
+
+function escapeHtml(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
 }
 
-function getFallbackAds() {
-    return [
-        {
-            id: 1,
-            title: "Fresh Tomatoes",
-            seller: "Mama Njeri",
-            location: "Stall 42",
-            price: "KSH 80/kg",
-            image: "images/tomatoes.jpg",
-            badge: { type: "hot", text: "HOT" },
-            phone: "0712345678",
-            description: "Fresh, ripe tomatoes perfect for cooking"
-        },
-        {
-            id: 2,
-            title: "Phone Cases",
-            seller: "Tech Hub",
-            location: "Shop 15",
-            price: "KSH 250",
-            image: "images/phone-cases.jpg",
-            badge: { type: "new", text: "NEW" },
-            phone: "0723456789",
-            description: "Stylish phone cases for all models"
-        },
-        {
-            id: 3,
-            title: "Sukuma Wiki",
-            seller: "Green Grocers",
-            location: "Stall 8",
-            price: "KSH 30/bunch",
-            image: "images/sukuma-wiki.jpg",
-            badge: null,
-            phone: "0734567890",
-            description: "Fresh organic sukuma wiki"
-        }
-    ];
+function highlightNav(section) {
+    currentSection = section;
+    elements.bottomNav.forEach(item => {
+        item.classList.toggle('active', item.dataset.section === section);
+    });
+}
+
+function setDealsVisible(visible) {
+    const display = visible ? '' : 'none';
+    if (elements.sections.deals) elements.sections.deals.style.display = display;
+    elements.bottomNav.forEach(item => {
+        if (item.dataset.section === 'deals') item.style.display = display;
+    });
+
+    if (!visible) {
+        highlightNav(currentSection === 'deals' ? 'speedtest' : currentSection);
+        return;
+    }
+    // The section sits at the top, so it is what the customer is looking at,
+    // unless a link (#speedtest, #support) asked for something further down.
+    const hash = window.location.hash.replace('#', '');
+    if (!hash || hash === 'deals') highlightNav('deals');
+    if (hash) handleUrlHash();
+}
+
+// GET /api/public/spots answers { ads: [...], pagination }. Older deployments
+// answered a plain list, and spots.js accepts both too.
+function dealsFromResponse(body) {
+    if (Array.isArray(body)) return body;
+    return body && Array.isArray(body.ads) ? body.ads : [];
+}
+
+// The feed's field names, in the shape the card and the detail sheet read.
+function toDeal(ad) {
+    return {
+        id: ad.id,
+        title: ad.title || '',
+        description: ad.description || '',
+        seller: ad.seller_name || '',
+        location: ad.seller_location || '',
+        price: ad.price || '',
+        image: ad.image_url || ad.poster_url || '',
+        badge: ad.badge_text ? { type: ad.badge_type || '', text: ad.badge_text } : null,
+        phone: ad.phone_number || ''
+    };
+}
+
+async function loadAds() {
+    // Also covers a page saved before this section started out hidden.
+    setDealsVisible(false);
+    adsData = [];
+
+    // Same switch as the login page: a reseller who turned offers off sees none here.
+    if (getCachedPortalSettings().show_ads === false) return;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), DEALS_TIMEOUT_MS);
+    try {
+        const response = await fetch(resolvePwaUrl(ADS_ENDPOINT), { signal: controller.signal });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        const deals = dealsFromResponse(await response.json()).map(toDeal);
+        if (deals.length === 0) return;
+
+        renderAds(deals);
+        adsData = deals;
+        setDealsVisible(true);
+    } catch (error) {
+        console.log('Deals not shown:', error.message);
+    } finally {
+        clearTimeout(timeoutId);
+    }
 }
 
 function renderAds(ads) {
     if (!elements.showcaseScroll) return;
-    
-    // Remove skeletons
-    const skeletons = elements.showcaseScroll.querySelectorAll('.spot-skeleton');
-    skeletons.forEach(s => s.remove());
-    
-    
-    // Create and insert ad cards
-    ads.forEach((ad, index) => {
+
+    elements.showcaseScroll.querySelectorAll('.spot-card').forEach(card => card.remove());
+
+    ads.forEach(ad => {
         const card = document.createElement('div');
         card.className = 'spot-card';
         card.setAttribute('data-spot-id', ad.id);
         card.onclick = () => openAdModal(ad);
-        
+
+        // These strings come from whoever wrote the offer, so they are escaped.
         card.innerHTML = `
             <div class="product-image">
-                <img src="${ad.image}" alt="${ad.title}" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23f5f5f5%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 font-size=%2230%22>🛒</text></svg>'">
-                ${ad.badge ? `<span class="product-badge ${ad.badge.type}">${ad.badge.text}</span>` : ''}
+                <img src="${escapeHtml(ad.image || DEAL_IMAGE_PLACEHOLDER)}" alt="${escapeHtml(ad.title)}" loading="lazy">
+                ${ad.badge ? `<span class="product-badge ${escapeHtml(ad.badge.type)}">${escapeHtml(ad.badge.text)}</span>` : ''}
             </div>
             <div class="product-info">
-                <div class="product-name">${ad.title}</div>
-                <div class="product-seller">${ad.seller}</div>
-                <div class="product-price">${ad.price}</div>
+                <div class="product-name">${escapeHtml(ad.title)}</div>
+                <div class="product-seller">${escapeHtml(ad.seller)}</div>
+                <div class="product-price">${escapeHtml(ad.price)}</div>
             </div>
         `;
-        
+        const image = card.querySelector('img');
+        image.addEventListener('error', () => { image.src = DEAL_IMAGE_PLACEHOLDER; }, { once: true });
+
         elements.showcaseScroll.appendChild(card);
     });
 }
@@ -540,7 +569,7 @@ function initAdModal() {
 function openAdModal(ad) {
     if (!elements.spotSheetOverlay) return;
     
-    document.getElementById('spotSheetImage').src = ad.image;
+    document.getElementById('spotSheetImage').src = ad.image || DEAL_IMAGE_PLACEHOLDER;
     document.getElementById('spotSheetImage').alt = ad.title;
     document.getElementById('spotSheetBadge').textContent = ad.badge?.text || '';
     document.getElementById('spotSheetBadge').className = `spot-sheet-badge ${ad.badge?.type || ''}`;
