@@ -24,7 +24,7 @@ function resolvePwaUrl(url) {
 
 const API_BASE_URL = PRIMARY_PWA_API_BASE;
 const SPEED_TEST_ENDPOINT = `${API_BASE_URL}/speed-tests`;
-const ADS_ENDPOINT = `${API_BASE_URL}/ads`;
+const ADS_ENDPOINT = `${API_BASE_URL}/public/spots`;
 
 // ========================================
 // SUPPORT CONTACTS — reseller-specific, never hardcoded
@@ -127,8 +127,8 @@ const elements = {
     supportForm: document.getElementById('supportForm'),
     
     // Ad Modal
-    adModalOverlay: document.getElementById('adModalOverlay'),
-    adModalClose: document.getElementById('adModalClose'),
+    spotSheetOverlay: document.getElementById('spotSheetOverlay'),
+    spotSheetClose: document.getElementById('spotSheetClose'),
     
     // Install Prompt
     installPrompt: document.getElementById('installPrompt'),
@@ -496,17 +496,15 @@ function renderAds(ads) {
     if (!elements.showcaseScroll) return;
     
     // Remove skeletons
-    const skeletons = elements.showcaseScroll.querySelectorAll('.ad-skeleton');
+    const skeletons = elements.showcaseScroll.querySelectorAll('.spot-skeleton');
     skeletons.forEach(s => s.remove());
     
-    // Get CTA card
-    const ctaCard = elements.showcaseScroll.querySelector('.ad-cta-card');
     
     // Create and insert ad cards
     ads.forEach((ad, index) => {
         const card = document.createElement('div');
-        card.className = 'product-card';
-        card.setAttribute('data-ad-id', ad.id);
+        card.className = 'spot-card';
+        card.setAttribute('data-spot-id', ad.id);
         card.onclick = () => openAdModal(ad);
         
         card.innerHTML = `
@@ -521,11 +519,7 @@ function renderAds(ads) {
             </div>
         `;
         
-        if (ctaCard) {
-            elements.showcaseScroll.insertBefore(card, ctaCard);
-        } else {
-            elements.showcaseScroll.appendChild(card);
-        }
+        elements.showcaseScroll.appendChild(card);
     });
 }
 
@@ -533,37 +527,42 @@ function renderAds(ads) {
 // AD MODAL
 // ========================================
 function initAdModal() {
-    if (elements.adModalClose) {
-        elements.adModalClose.addEventListener('click', closeAdModal);
+    if (elements.spotSheetClose) {
+        elements.spotSheetClose.addEventListener('click', closeAdModal);
     }
-    if (elements.adModalOverlay) {
-        elements.adModalOverlay.addEventListener('click', (e) => {
-            if (e.target === elements.adModalOverlay) closeAdModal();
+    if (elements.spotSheetOverlay) {
+        elements.spotSheetOverlay.addEventListener('click', (e) => {
+            if (e.target === elements.spotSheetOverlay) closeAdModal();
         });
     }
 }
 
 function openAdModal(ad) {
-    if (!elements.adModalOverlay) return;
+    if (!elements.spotSheetOverlay) return;
     
-    document.getElementById('adModalImage').src = ad.image;
-    document.getElementById('adModalImage').alt = ad.title;
-    document.getElementById('adModalBadge').textContent = ad.badge?.text || '';
-    document.getElementById('adModalBadge').className = `ad-modal-badge ${ad.badge?.type || ''}`;
-    document.getElementById('adModalTag').textContent = 'MARKETPLACE';
-    document.getElementById('adModalTitle').textContent = ad.title;
-    document.getElementById('adModalDescription').textContent = ad.description || '';
-    document.getElementById('adModalSeller').textContent = ad.seller;
-    document.getElementById('adModalLocation').textContent = ad.location || '';
-    document.getElementById('adModalPrice').textContent = ad.price;
-    document.getElementById('adCallButton').href = `tel:${ad.phone}`;
+    document.getElementById('spotSheetImage').src = ad.image;
+    document.getElementById('spotSheetImage').alt = ad.title;
+    document.getElementById('spotSheetBadge').textContent = ad.badge?.text || '';
+    document.getElementById('spotSheetBadge').className = `spot-sheet-badge ${ad.badge?.type || ''}`;
+    document.getElementById('spotSheetTag').textContent = 'MARKETPLACE';
+    document.getElementById('spotSheetTitle').textContent = ad.title;
+    document.getElementById('spotSheetDescription').textContent = ad.description || '';
+    document.getElementById('spotSheetSeller').textContent = ad.seller;
+    document.getElementById('spotSheetLocation').textContent = ad.location || '';
+    document.getElementById('spotSheetPrice').textContent = ad.price;
+    document.getElementById('spotCallButton').href = `tel:${ad.phone}`;
     
-    elements.adModalOverlay.classList.remove('hidden');
+    elements.spotSheetOverlay.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
+
+    // An ad blocker's cosmetic filter hiding the sheet would leave a dimmed,
+    // scroll-locked screen with nothing in it. Back out instead.
+    const sheet = elements.spotSheetOverlay.querySelector('.spot-sheet');
+    if (sheet && !sheet.offsetWidth) closeAdModal();
 }
 
 function closeAdModal() {
-    elements.adModalOverlay.classList.add('hidden');
+    elements.spotSheetOverlay.classList.add('hidden');
     document.body.style.overflow = '';
 }
 

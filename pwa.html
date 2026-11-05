@@ -52,28 +52,28 @@
         <main class="pwa-main">
             
             <!-- Marketplace Showcase - EXACTLY like captive portal, AT THE TOP -->
-            <div class="marketplace-showcase" id="deals">
+            <div class="spots-showcase" id="deals">
                 <div class="showcase-header">
                     <h3 class="showcase-title">🛒 Soko Deals Today</h3>
                     <span class="showcase-badge">AD</span>
                 </div>
                 <div class="showcase-scroll" id="showcaseScroll">
                     <!-- Skeleton loaders shown while loading -->
-                    <div class="product-card ad-skeleton">
+                    <div class="spot-card spot-skeleton">
                         <div class="product-image skeleton-shimmer"></div>
                         <div class="product-info">
                             <div class="skeleton-text"></div>
                             <div class="skeleton-text short"></div>
                         </div>
                     </div>
-                    <div class="product-card ad-skeleton">
+                    <div class="spot-card spot-skeleton">
                         <div class="product-image skeleton-shimmer"></div>
                         <div class="product-info">
                             <div class="skeleton-text"></div>
                             <div class="skeleton-text short"></div>
                         </div>
                     </div>
-                    <div class="product-card ad-skeleton">
+                    <div class="spot-card spot-skeleton">
                         <div class="product-image skeleton-shimmer"></div>
                         <div class="product-info">
                             <div class="skeleton-text"></div>
@@ -81,12 +81,6 @@
                         </div>
                     </div>
 
-                    <a href="#" class="product-card ad-cta-card" data-support-link style="display:none">
-                        <div class="ad-cta-content">
-                            <div class="ad-cta-icon">+</div>
-                            <span class="ad-cta-text">Your Ad Here</span>
-                        </div>
-                    </a>
                 </div>
                 <div class="scroll-hint">
                     <span>← Swipe for more deals →</span>
@@ -300,31 +294,31 @@
         </nav>
 
         <!-- Ad Modal (Same as captive portal) -->
-        <div class="ad-modal-overlay hidden" id="adModalOverlay">
-            <div class="ad-modal">
-                <button class="ad-modal-close" id="adModalClose">×</button>
-                <div class="ad-modal-content" id="adModalContent">
-                    <div class="ad-modal-image">
-                        <img src="" alt="" id="adModalImage">
-                        <span class="ad-modal-badge" id="adModalBadge"></span>
+        <div class="spot-sheet-overlay hidden" id="spotSheetOverlay">
+            <div class="spot-sheet">
+                <button class="spot-sheet-close" id="spotSheetClose">×</button>
+                <div class="spot-sheet-content" id="spotSheetContent">
+                    <div class="spot-sheet-image">
+                        <img src="" alt="" id="spotSheetImage">
+                        <span class="spot-sheet-badge" id="spotSheetBadge"></span>
                     </div>
-                    <div class="ad-modal-info">
-                        <span class="ad-modal-tag" id="adModalTag"></span>
-                        <h2 class="ad-modal-title" id="adModalTitle"></h2>
-                        <p class="ad-modal-description" id="adModalDescription"></p>
-                        <div class="ad-modal-seller">
+                    <div class="spot-sheet-info">
+                        <span class="spot-sheet-tag" id="spotSheetTag"></span>
+                        <h2 class="spot-sheet-title" id="spotSheetTitle"></h2>
+                        <p class="spot-sheet-description" id="spotSheetDescription"></p>
+                        <div class="spot-sheet-seller">
                             <span class="seller-icon">🏪</span>
                             <div class="seller-details">
-                                <span class="seller-name" id="adModalSeller"></span>
-                                <span class="seller-location" id="adModalLocation"></span>
+                                <span class="seller-name" id="spotSheetSeller"></span>
+                                <span class="seller-location" id="spotSheetLocation"></span>
                             </div>
                         </div>
-                        <div class="ad-modal-price-section">
-                            <span class="ad-modal-label">Price</span>
-                            <span class="ad-modal-price" id="adModalPrice"></span>
+                        <div class="spot-sheet-price-section">
+                            <span class="spot-sheet-label">Price</span>
+                            <span class="spot-sheet-price" id="spotSheetPrice"></span>
                         </div>
-                        <div class="ad-modal-contact">
-                            <a href="#" class="ad-call-button" id="adCallButton">
+                        <div class="spot-sheet-contact">
+                            <a href="#" class="spot-call-button" id="spotCallButton">
                                 <span class="call-btn-icon">📞</span>
                                 <span>Call Seller</span>
                             </a>

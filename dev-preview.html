@@ -320,7 +320,7 @@
         }
 
         /* Ads */
-        #portal-inner .pp-ads {
+        #portal-inner .pp-spots {
             margin: 16px -16px 20px;
             padding: 14px 0;
             border-top: 1px solid transparent;
@@ -328,59 +328,47 @@
             min-height: 195px;
             /* background + border-color injected via inline style in renderPortal() */
         }
-        #portal-inner .pp-ads-head {
+        #portal-inner .pp-spots-head {
             display: flex; align-items: center;
             justify-content: space-between; padding: 0 16px 8px;
         }
-        #portal-inner .pp-ads-title { font-size: .9rem; font-weight: 700; color: var(--p-text); }
-        #portal-inner .pp-ads-badge {
+        #portal-inner .pp-spots-title { font-size: .9rem; font-weight: 700; color: var(--p-text); }
+        #portal-inner .pp-spots-badge {
             font-size: .58rem; font-weight: 700; color: var(--p-text-sec);
             background: rgba(0,0,0,.06); padding: 2px 8px; border-radius: 9999px;
             letter-spacing: .5px;
         }
-        #portal-inner .pp-ads-scroll {
+        #portal-inner .pp-spots-scroll {
             display: flex; gap: 12px; overflow-x: auto;
             scroll-snap-type: x mandatory; padding: 4px 16px 6px;
             -webkit-overflow-scrolling: touch; scrollbar-width: none;
         }
-        #portal-inner .pp-ads-scroll::-webkit-scrollbar { display: none; }
-        #portal-inner .pp-ad-card {
+        #portal-inner .pp-spots-scroll::-webkit-scrollbar { display: none; }
+        #portal-inner .pp-spot-card {
             flex-shrink: 0; width: 120px; background: var(--p-surface);
             border-radius: 12px; overflow: hidden; scroll-snap-align: start;
             box-shadow: 0 1px 4px rgba(0,0,0,.08);
         }
-        #portal-inner .pp-ad-img {
+        #portal-inner .pp-spot-img {
             position: relative; width: 100%; aspect-ratio: 1;
             background: #f5f5f5; display: flex; align-items: center; justify-content: center;
         }
-        #portal-inner .pp-ad-emoji { font-size: 1.9rem; }
-        #portal-inner .pp-ad-badge-chip {
+        #portal-inner .pp-spot-emoji { font-size: 1.9rem; }
+        #portal-inner .pp-spot-badge-chip {
             position: absolute; top: 5px; left: 5px;
             font-size: .52rem; font-weight: 700; padding: 2px 5px; border-radius: 5px;
         }
-        #portal-inner .pp-ad-info { padding: 7px; }
-        #portal-inner .pp-ad-name {
+        #portal-inner .pp-spot-info { padding: 7px; }
+        #portal-inner .pp-spot-name {
             font-size: .72rem; font-weight: 600; color: var(--p-text);
             margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-        #portal-inner .pp-ad-seller {
+        #portal-inner .pp-spot-seller {
             font-size: .6rem; color: var(--p-text-sec); margin-bottom: 3px;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-        #portal-inner .pp-ad-price { font-size: .82rem; font-weight: 700; color: var(--p-primary); }
-        #portal-inner .pp-ad-cta {
-            flex-shrink: 0; width: 120px; background: #f8f8f8; border: 2px dashed #ddd;
-            border-radius: 12px; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; min-height: 120px;
-            scroll-snap-align: start; text-decoration: none; text-align: center; gap: 5px; color: #999;
-        }
-        #portal-inner .pp-ad-cta-icon {
-            width: 34px; height: 34px; background: #eee; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.2rem; font-weight: 300; color: #aaa;
-        }
-        #portal-inner .pp-ad-cta span { font-size: .64rem; font-weight: 600; }
-        #portal-inner .pp-ads-hint {
+        #portal-inner .pp-spot-price { font-size: .82rem; font-weight: 700; color: var(--p-primary); }
+        #portal-inner .pp-spots-hint {
             text-align: center; padding: 5px 16px 0;
             font-size: .58rem; color: var(--p-text-sec); opacity: .7;
         }
@@ -925,27 +913,26 @@ function renderPortal(mockData, overrideTheme) {
         const adsBg     = `linear-gradient(135deg, ${hexToRgba(p.primary, 0.07)} 0%, ${hexToRgba(p.accent, 0.05)} 100%)`;
         const adsBorder = hexToRgba(p.primary, 0.12);
         const adCards   = adsSource.map(ad => `
-            <div class="pp-ad-card">
-                <div class="pp-ad-img">
-                    <span class="pp-ad-emoji">${ad.emoji}</span>
-                    <span class="pp-ad-badge-chip" style="background:${ad.badgeBg};color:${ad.badgeCol}">${ad.badge}</span>
+            <div class="pp-spot-card">
+                <div class="pp-spot-img">
+                    <span class="pp-spot-emoji">${ad.emoji}</span>
+                    <span class="pp-spot-badge-chip" style="background:${ad.badgeBg};color:${ad.badgeCol}">${ad.badge}</span>
                 </div>
-                <div class="pp-ad-info">
-                    <div class="pp-ad-name">${ad.name}</div>
-                    <div class="pp-ad-seller">${ad.seller}</div>
-                    <div class="pp-ad-price">${ad.price}</div>
+                <div class="pp-spot-info">
+                    <div class="pp-spot-name">${ad.name}</div>
+                    <div class="pp-spot-seller">${ad.seller}</div>
+                    <div class="pp-spot-price">${ad.price}</div>
                 </div>
             </div>`).join('');
-        return `<div class="pp-ads" style="background:${adsBg};border-top-color:${adsBorder};border-bottom-color:${adsBorder}">
-            <div class="pp-ads-head">
-                <span class="pp-ads-title">🛒 Soko Deals Today</span>
-                <span class="pp-ads-badge">AD</span>
+        return `<div class="pp-spots" style="background:${adsBg};border-top-color:${adsBorder};border-bottom-color:${adsBorder}">
+            <div class="pp-spots-head">
+                <span class="pp-spots-title">🛒 Soko Deals Today</span>
+                <span class="pp-spots-badge">AD</span>
             </div>
-            <div class="pp-ads-scroll">
+            <div class="pp-spots-scroll">
                 ${adCards}
-                <a href="#" class="pp-ad-cta"><div class="pp-ad-cta-icon">+</div><span>Your Ad Here</span></a>
             </div>
-            <div class="pp-ads-hint">← Swipe for more deals →</div>
+            <div class="pp-spots-hint">← Swipe for more deals →</div>
         </div>`;
     })() : '';
 

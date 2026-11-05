@@ -24,7 +24,7 @@ const ALLOWED_PREFIXES = [
 
 // Plans/portal reads may be served briefly stale from the edge; everything
 // else (payments, vouchers, status polls) must never be cached.
-const CACHEABLE_GET_PREFIXES = ['public/portal/', 'public/plans/', 'ads'];
+const CACHEABLE_GET_PREFIXES = ['public/portal/', 'public/plans/', 'public/spots', 'ads'];
 
 module.exports = async (req, res) => {
   // Path arrives via the vercel.json rewrite /api/bw/:path* -> /api/bw?path=…

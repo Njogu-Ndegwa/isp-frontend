@@ -7,9 +7,12 @@
 // BACKEND API CONFIGURATION
 // ========================================
 const ADS_API_BASE_URL = 'https://isp.bitwavetechnologies.com/api';
-const ADS_ENDPOINT = `${ADS_API_BASE_URL}/ads`;
-const AD_CLICK_ENDPOINT = `${ADS_API_BASE_URL}/ads/click`;
-const AD_IMPRESSION_ENDPOINT = `${ADS_API_BASE_URL}/ads/impression`;
+// Neutral paths: ad blockers block URLs like /ads and /ads/click, and hide
+// elements named like them. tests/neutral-names.spec.js keeps those words out.
+// The backend's old /api/ads paths stay only for pages cached on phones.
+const ADS_ENDPOINT = `${ADS_API_BASE_URL}/public/spots`;
+const AD_CLICK_ENDPOINT = `${ADS_API_BASE_URL}/public/spots/tap`;
+const AD_IMPRESSION_ENDPOINT = `${ADS_API_BASE_URL}/public/spots/seen`;
 
 // Resolves a URL through the global fallback state set by script.js
 function resolveAdsUrl(url) {
@@ -20,7 +23,7 @@ function resolveAdsUrl(url) {
     return url;
 }
 
-// Note: Backend API format from https://isp.bitwavetechnologies.com/api/ads
+// Note: Backend API format from https://isp.bitwavetechnologies.com/api/public/spots
 
 // ========================================
 // DATA TRANSFER OBJECTS (DTOs)
@@ -31,7 +34,7 @@ function resolveAdsUrl(url) {
 /**
  * Ad DTO - Structure of an ad from the backend
  * 
- * GET /api/ads Response:
+ * GET /api/public/spots Response:
  * {
  *   "ads": [
  *     {
@@ -69,7 +72,7 @@ function resolveAdsUrl(url) {
 /**
  * Ad Click Event DTO - What we POST when user clicks an ad
  * 
- * POST /api/ads/click
+ * POST /api/public/spots/tap
  * {
  *   "ad_id": 1,
  *   "click_type": "whatsapp",           // "view_details", "call", "whatsapp"
@@ -84,7 +87,7 @@ function resolveAdsUrl(url) {
 /**
  * Ad Impression Event DTO - What we POST when ad is displayed
  * 
- * POST /api/ads/impression
+ * POST /api/public/spots/seen
  * {
  *   "ad_ids": [1],                      // Array of ad IDs shown
  *   "device_id": "dev_abc123",
@@ -198,14 +201,12 @@ let deviceId = getOrCreateDeviceId();
 // Using WebP for better performance (80% smaller than PNG)
 // ========================================
 const AD_LOCAL_IMAGES = {
-    8: 'images/Advertise-Here.webp',      // Buy Ad Space — Get Seen
     9: 'images/Internet-Technician.webp', // Fast Home Wi-Fi Installation
     10: 'images/Onions.webp'              // Fresh Onions
 };
 
 // Fallback to PNG if WebP not created yet
 const AD_LOCAL_IMAGES_FALLBACK = {
-    8: 'images/Advertise-Here.png',
     9: 'images/Internet-Technician.png'
 };
 
@@ -243,7 +244,7 @@ const LOCAL_FALLBACK_IMAGES = {
     electronics: ['images/phone-cases.jpg', 'images/watches.jpg'],
     fashion: ['images/watches.jpg', 'images/phone-cases.jpg'],
     food: ['images/tomatoes.jpg', 'images/bananas.jpg', 'images/sukuma-wiki.jpg'],
-    services: ['images/Internet-Technician.png', 'images/Advertise-Here.png'],
+    services: ['images/Internet-Technician.png'],
     // Default fallback (cycles through all available images)
     default: [
         'images/tomatoes.jpg',
@@ -410,51 +411,16 @@ async function fetchAds() {
 }
 
 // ========================================
-// HIDE AD SECTIONS (when no ads available)
-// When show_ads is off, hides everything including CTA card.
-// When show_ads is on but no actual ads exist, shows CTA card for advertisers.
+// HIDE AD SECTIONS (no ads, ads switched off, or the request failed)
+// Nothing asks customers to advertise: with no ad the login page goes straight
+// from the header to the steps. index.html starts these hidden too, so they
+// never flash while the answer is on its way.
 // ========================================
 function hideAdSections() {
-    const showcaseSection = document.querySelector('.marketplace-showcase');
-    const showcaseScroll = document.getElementById('showcaseScroll');
-
-    // When the portal explicitly disables ads, hide the entire showcase — no CTA card shown.
-    if (window._portalShowAds === false) {
-        if (showcaseSection) showcaseSection.style.display = 'none';
-        const paymentAd = document.querySelector('.payment-ad');
-        if (paymentAd) paymentAd.style.display = 'none';
-        const successAds = document.querySelector('.success-ads');
-        if (successAds) successAds.style.display = 'none';
-        console.log('🙈 Ads disabled by portal settings — all ad sections hidden');
-        return;
-    }
-
-    // Ads are allowed but none are available — keep showcase with CTA card for advertisers
-    if (showcaseSection && showcaseScroll) {
-        showcaseSection.style.display = '';
-        
-        const existingCards = showcaseScroll.querySelectorAll('.product-card:not(.ad-cta-card), .ad-skeleton');
-        existingCards.forEach(card => card.remove());
-        
-        const scrollHint = showcaseSection.querySelector('.scroll-hint');
-        if (scrollHint) scrollHint.style.display = 'none';
-        
-        const showcaseTitle = showcaseSection.querySelector('.showcase-title');
-        if (showcaseTitle) showcaseTitle.textContent = '📢 Advertise Here';
-        
-        console.log('📢 Showing CTA card for advertisers');
-        // The "Your Ad Here" card is a tel: link to the reseller — re-apply the
-        // number (and hide the card if the reseller has none on file).
-        if (window.refreshSupportLinks) window.refreshSupportLinks();
-    }
-
-    const paymentAd = document.querySelector('.payment-ad');
-    if (paymentAd) paymentAd.style.display = 'none';
-
-    const successAds = document.querySelector('.success-ads');
-    if (successAds) successAds.style.display = 'none';
-    
-    console.log('🙈 Ad content sections hidden (CTA visible)');
+    ['.spots-showcase', '.pay-spot', '.done-spots'].forEach(selector => {
+        const section = document.querySelector(selector);
+        if (section) section.style.display = 'none';
+    });
 }
 
 // ========================================
@@ -467,26 +433,16 @@ function showAdSections() {
         return;
     }
 
-    const showcaseSection = document.querySelector('.marketplace-showcase');
-    if (showcaseSection) {
-        showcaseSection.style.display = '';
-        
-        const showcaseTitle = showcaseSection.querySelector('.showcase-title');
-        if (showcaseTitle) showcaseTitle.textContent = '🛒 Soko Deals Today';
-        
-        const scrollHint = showcaseSection.querySelector('.scroll-hint');
-        if (scrollHint) scrollHint.style.display = '';
-    }
+    const showcaseSection = document.querySelector('.spots-showcase');
+    if (showcaseSection) showcaseSection.style.display = '';
+
     
-    const paymentAd = document.querySelector('.payment-ad');
+    const paymentAd = document.querySelector('.pay-spot');
     if (paymentAd) paymentAd.style.display = '';
 
-    const successAds = document.querySelector('.success-ads');
+    const successAds = document.querySelector('.done-spots');
     if (successAds) successAds.style.display = '';
 
-    // Ad sections just became visible — re-apply the reseller's support number
-    // so the home-install promo / "Your Ad Here" card never show without one.
-    if (window.refreshSupportLinks) window.refreshSupportLinks();
 
     console.log('👁️ All ad sections visible');
 }
@@ -496,47 +452,21 @@ function showAdSections() {
 // ========================================
 function renderAds(ads) {
     const showcaseScroll = document.getElementById('showcaseScroll');
-    const showcaseSection = document.querySelector('.marketplace-showcase');
+    const showcaseSection = document.querySelector('.spots-showcase');
     
     if (!showcaseScroll) {
         console.warn('⚠️ Showcase scroll element not found');
         return;
     }
     
-    // Remove skeleton loaders and existing product cards (except the CTA card)
-    const existingCards = showcaseScroll.querySelectorAll('.product-card:not(.ad-cta-card), .ad-skeleton');
-    existingCards.forEach(card => card.remove());
-    
-    // No ads - keep CTA card visible (handled by hideAdSections)
-    if (!ads || ads.length === 0) {
-        console.log('📭 No ads to render - CTA card remains visible');
-        return;
-    }
-    
-    // Show showcase section with full features
-    if (showcaseSection) {
-        showcaseSection.style.display = '';
-        
-        // Show scroll hint when we have ads
-        const scrollHint = showcaseSection.querySelector('.scroll-hint');
-        if (scrollHint) {
-            scrollHint.style.display = '';
-        }
-    }
-    
-    // Get the CTA card to insert ads before it
-    const ctaCard = showcaseScroll.querySelector('.ad-cta-card');
-    
-    // Create and insert ad cards
-    ads.forEach((ad, index) => {
-        const card = createAdCard(ad, index);
-        if (ctaCard) {
-            showcaseScroll.insertBefore(card, ctaCard);
-        } else {
-            showcaseScroll.appendChild(card);
-        }
-    });
-    
+    showcaseScroll.querySelectorAll('.spot-card').forEach(card => card.remove());
+
+    if (!ads || ads.length === 0) return;
+
+    if (showcaseSection) showcaseSection.style.display = '';
+
+    ads.forEach((ad, index) => showcaseScroll.appendChild(createAdCard(ad, index)));
+
     console.log('🎨 Rendered', ads.length, 'ads in showcase');
 }
 
@@ -545,8 +475,8 @@ function renderAds(ads) {
 // ========================================
 function createAdCard(ad, index) {
     const card = document.createElement('div');
-    card.className = 'product-card';
-    card.setAttribute('data-ad-id', ad.id);
+    card.className = 'spot-card';
+    card.setAttribute('data-spot-id', ad.id);
     card.setAttribute('role', 'button');
     card.setAttribute('tabindex', '0');
     card.setAttribute('aria-label', `View details for ${ad.title}`);
@@ -602,8 +532,8 @@ function createAdCard(ad, index) {
 // OPEN AD DETAILS MODAL
 // ========================================
 function openAdDetails(ad) {
-    const overlay = document.getElementById('adModalOverlay');
-    const modal = document.getElementById('adModal');
+    const overlay = document.getElementById('spotSheetOverlay');
+    const modal = document.getElementById('spotSheet');
     
     if (!overlay || !modal) {
         console.error('❌ Ad modal elements not found');
@@ -611,43 +541,51 @@ function openAdDetails(ad) {
     }
     
     // Populate modal content
-    const modalImg = document.getElementById('adModalImg');
+    const modalImg = document.getElementById('spotSheetImg');
     modalImg.src = ad.image_url;
     modalImg.alt = ad.title;
     // Reset fallback flag and setup fallback for modal image
     modalImg.dataset.fallbackAttempted = '';
     setupImageFallback(modalImg, ad.category, ad.id);
     
-    document.getElementById('adModalTitle').textContent = ad.title;
-    document.getElementById('adModalDescription').textContent = ad.description;
-    document.getElementById('adModalSeller').textContent = ad.seller_name;
-    document.getElementById('adModalLocation').textContent = ad.seller_location;
-    document.getElementById('adModalPrice').textContent = ad.price;
-    document.getElementById('adModalViews').innerHTML = `👁️ <span>${ad.views_count || 0}</span> views`;
-    document.getElementById('adModalId').textContent = `Ad #${ad.id}`;
+    document.getElementById('spotSheetTitle').textContent = ad.title;
+    document.getElementById('spotSheetDescription').textContent = ad.description;
+    document.getElementById('spotSheetSeller').textContent = ad.seller_name;
+    document.getElementById('spotSheetLocation').textContent = ad.seller_location;
+    document.getElementById('spotSheetPrice').textContent = ad.price;
+    document.getElementById('spotSheetViews').innerHTML = `👁️ <span>${ad.views_count || 0}</span> views`;
+    document.getElementById('spotSheetId').textContent = `Ad #${ad.id}`;
     
     // Badge
-    const badgeEl = document.getElementById('adModalBadge');
+    const badgeEl = document.getElementById('spotSheetBadge');
     if (ad.badge_type && ad.badge_text) {
         badgeEl.textContent = ad.badge_text;
-        badgeEl.className = `ad-modal-badge ${ad.badge_type}`;
+        badgeEl.className = `spot-sheet-badge ${ad.badge_type}`;
         badgeEl.style.display = 'block';
     } else {
         badgeEl.style.display = 'none';
     }
     
     // Phone call link
-    const callBtn = document.getElementById('adModalCallBtn');
+    const callBtn = document.getElementById('spotSheetCallBtn');
     callBtn.href = `tel:${formatPhoneForCall(ad.phone_number)}`;
     callBtn.onclick = () => recordClick(ad.id, 'call');
     
     // Show modal
     overlay.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
-    
+
+    // If something (an ad blocker's cosmetic filter) still hides the sheet, the
+    // overlay would leave a dimmed screen with nothing in it and scrolling
+    // locked. Back out instead, so the portal stays usable.
+    if (!modal.offsetWidth) {
+        closeAdDetails();
+        return;
+    }
+
     // Focus management
     setTimeout(() => {
-        document.getElementById('adModalClose').focus();
+        document.getElementById('spotSheetClose').focus();
     }, 100);
     
     console.log('📖 Opened ad details:', ad.title);
@@ -680,7 +618,7 @@ window.openAdDetails = openAdDetails;
 // CLOSE AD DETAILS MODAL
 // ========================================
 function closeAdDetails() {
-    const overlay = document.getElementById('adModalOverlay');
+    const overlay = document.getElementById('spotSheetOverlay');
     
     if (overlay) {
         overlay.classList.add('hidden');
@@ -690,7 +628,7 @@ function closeAdDetails() {
 
 // ========================================
 // RECORD AD CLICK - Analytics
-// POST https://isp.bitwavetechnologies.com/api/ads/click
+// POST https://isp.bitwavetechnologies.com/api/public/spots/tap
 // ========================================
 async function recordClick(adId, clickType, placement = 'local') {
     console.log(`📊 Recording click: Ad #${adId}, Type: ${clickType}`);
@@ -712,11 +650,11 @@ async function recordClick(adId, clickType, placement = 'local') {
         user_agent: navigator.userAgent,
         session_id: sessionId,
         referrer: 'wifi_portal',
-        mac_address: mikrotikParams?.mac || null,
+        mac_address: (typeof mikrotikParams !== 'undefined' && mikrotikParams?.mac) || null,
         // Where the tap happened and on which hotspot: what the advertiser
         // is billed by, and what the reseller's share is worked out from.
         placement,
-        router_identity: mikrotikParams?.router || null
+        router_identity: (typeof mikrotikParams !== 'undefined' && mikrotikParams?.router) || null
     };
     
     try {
@@ -744,7 +682,7 @@ async function recordClick(adId, clickType, placement = 'local') {
 
 // ========================================
 // RECORD AD IMPRESSION - Analytics
-// POST https://isp.bitwavetechnologies.com/api/ads/impression
+// POST https://isp.bitwavetechnologies.com/api/public/spots/seen
 // ========================================
 async function recordImpression(adIds, placement = 'showcase_carousel') {
     console.log(`📊 Recording impression for ${adIds.length} ads`);
@@ -846,8 +784,8 @@ async function retryPendingClicks() {
 // MODAL EVENT LISTENERS
 // ========================================
 function setupModalListeners() {
-    const overlay = document.getElementById('adModalOverlay');
-    const closeBtn = document.getElementById('adModalClose');
+    const overlay = document.getElementById('spotSheetOverlay');
+    const closeBtn = document.getElementById('spotSheetClose');
     
     if (closeBtn) {
         closeBtn.addEventListener('click', closeAdDetails);
@@ -874,15 +812,15 @@ function setupModalListeners() {
 // POPULATE SUCCESS PAGE ADS
 // ========================================
 function populateSuccessAds() {
-    const container = document.getElementById('successAdsScroll');
-    const successAdsSection = document.querySelector('.success-ads');
+    const container = document.getElementById('doneSpotsScroll');
+    const successAdsSection = document.querySelector('.done-spots');
 
     if (!container) return;
 
     if (window._heroAdsActive) renderSuccessSponsor();
 
     // No ads available - hide the section
-    if (adsData.length === 0) {
+    if (adsData.length === 0 || window._portalShowAds === false) {
         if (successAdsSection) {
             successAdsSection.style.display = 'none';
         }
@@ -899,21 +837,21 @@ function populateSuccessAds() {
     const shuffled = [...adsData].sort(() => Math.random() - 0.5).slice(0, 6);
     
     container.innerHTML = shuffled.map(ad => `
-        <div class="success-ad-card" onclick="openAdDetailsById(${ad.id})" role="button" tabindex="0" 
-             aria-label="View details for ${ad.title}" data-category="${ad.category || ''}" data-ad-id="${ad.id}">
-            <img src="${ad.image_url}" alt="${ad.title}" class="success-ad-img" loading="lazy">
-            <div class="success-ad-info">
-                <div class="success-ad-title">${ad.title}</div>
-                <div class="success-ad-price">${ad.price}</div>
+        <div class="done-spot-card" onclick="openAdDetailsById(${ad.id})" role="button" tabindex="0" 
+             aria-label="View details for ${ad.title}" data-category="${ad.category || ''}" data-spot-id="${ad.id}">
+            <img src="${ad.image_url}" alt="${ad.title}" class="done-spot-img" loading="lazy">
+            <div class="done-spot-info">
+                <div class="done-spot-title">${ad.title}</div>
+                <div class="done-spot-price">${ad.price}</div>
             </div>
         </div>
     `).join('');
     
     // Setup image fallbacks for walled garden restrictions
-    container.querySelectorAll('.success-ad-card').forEach(card => {
+    container.querySelectorAll('.done-spot-card').forEach(card => {
         const img = card.querySelector('img');
         const category = card.dataset.category;
-        const adId = parseInt(card.dataset.adId, 10);
+        const adId = parseInt(card.dataset.spotId, 10);
         setupImageFallback(img, category, adId);
         
         // Add keyboard accessibility
@@ -936,7 +874,7 @@ window.populateSuccessAds = populateSuccessAds;
 // ========================================
 function populateMiniProducts() {
     const container = document.getElementById('miniProducts');
-    const paymentAdSection = document.querySelector('.payment-ad');
+    const paymentAdSection = document.querySelector('.pay-spot');
 
     if (!container) return;
 
@@ -948,7 +886,7 @@ function populateMiniProducts() {
     }
 
     // No ads available - hide the section
-    if (adsData.length === 0) {
+    if (adsData.length === 0 || window._portalShowAds === false) {
         if (paymentAdSection) {
             paymentAdSection.style.display = 'none';
         }
@@ -966,7 +904,7 @@ function populateMiniProducts() {
     
     container.innerHTML = shuffled.map(ad => `
         <div class="mini-product" onclick="openAdDetailsById(${ad.id})" role="button" tabindex="0"
-             aria-label="View details for ${ad.title}" style="cursor: pointer;" data-category="${ad.category || ''}" data-ad-id="${ad.id}">
+             aria-label="View details for ${ad.title}" style="cursor: pointer;" data-category="${ad.category || ''}" data-spot-id="${ad.id}">
             <img src="${ad.image_url}" alt="${ad.title}" loading="lazy">
             <span>${ad.price}</span>
         </div>
@@ -976,7 +914,7 @@ function populateMiniProducts() {
     container.querySelectorAll('.mini-product').forEach(product => {
         const img = product.querySelector('img');
         const category = product.dataset.category;
-        const adId = parseInt(product.dataset.adId, 10);
+        const adId = parseInt(product.dataset.spotId, 10);
         setupImageFallback(img, category, adId);
         
         product.addEventListener('keydown', (e) => {
@@ -996,7 +934,7 @@ window.populateMiniProducts = populateMiniProducts;
 // ========================================
 // HERO ADS
 // The reseller's photo hero rotates: their welcome slide first, then the
-// hero ads (image or muted video), then an open "advertise here" slot.
+// hero ads (image or muted video).
 // The same sponsor plays on the M-Pesa wait screen and on the success page.
 //
 // Extra ad fields (all optional, older ads keep working as showcase ads):
@@ -1039,8 +977,8 @@ function heroCallHref(ad) {
 }
 
 const AD_ICONS = {
-    phone: '<svg class="ad-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>',
-    chat: '<svg class="ad-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.8-.9L3 21l1.9-5.2A8.4 8.4 0 1 1 21 11.5z"/></svg>',
+    phone: '<svg class="spot-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>',
+    chat: '<svg class="spot-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.6 8.6 0 0 1-3.8-.9L3 21l1.9-5.2A8.4 8.4 0 1 1 21 11.5z"/></svg>',
     muted: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>',
     sound: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>',
     wifi: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.55a11 11 0 0 1 14 0"/><path d="M8.5 16.1a6 6 0 0 1 7 0"/><path d="M2 8.82a15 15 0 0 1 20 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>'
@@ -1052,18 +990,18 @@ const AD_ICONS = {
 // of the frame, clear of the top 20% and the bottom 30%.
 function heroTopHtml(isVideo) {
     return `
-        <div class="hero-ad-top">
-            <span class="hero-ad-brand">${AD_ICONS.wifi}${adEsc(heroBrandName())}</span>
-            ${isVideo ? `<button type="button" class="hero-ad-mute" aria-label="Turn sound on">${AD_ICONS.muted}</button>` : ''}
+        <div class="hero-spot-top">
+            <span class="hero-spot-brand">${AD_ICONS.wifi}${adEsc(heroBrandName())}</span>
+            ${isVideo ? `<button type="button" class="hero-spot-mute" aria-label="Turn sound on">${AD_ICONS.muted}</button>` : ''}
         </div>`;
 }
 
-function heroFootHtml({ tag, name, offer, button, light }) {
+function heroFootHtml({ tag, name, offer, button }) {
     return `
-        <div class="hero-ad-foot${light ? ' hero-ad-foot--light' : ''}">
-            <div class="hero-ad-info">
-                <div class="hero-ad-who"><span class="hero-ad-tag">${tag}</span><span class="hero-ad-name">${adEsc(name)}</span></div>
-                ${offer ? `<div class="hero-ad-offer">${adEsc(offer)}</div>` : ''}
+        <div class="hero-spot-foot">
+            <div class="hero-spot-info">
+                <div class="hero-spot-who"><span class="hero-spot-tag">${tag}</span><span class="hero-spot-name">${adEsc(name)}</span></div>
+                ${offer ? `<div class="hero-spot-offer">${adEsc(offer)}</div>` : ''}
             </div>
             ${button || ''}
         </div>`;
@@ -1072,7 +1010,7 @@ function heroFootHtml({ tag, name, offer, button, light }) {
 function heroCallButton(ad) {
     const href = heroCallHref(ad);
     if (!href) return '';
-    return `<a class="hero-ad-btn" href="${href}" data-hero-cta="call" data-ad-id="${ad.id}"
+    return `<a class="hero-spot-btn" href="${href}" data-hero-cta="call" data-spot-id="${ad.id}"
                aria-label="Call ${adEsc(ad.seller_name || ad.title)}">${AD_ICONS.phone}<span>Call</span></a>`;
 }
 
@@ -1083,10 +1021,10 @@ function heroSlideHtml(ad, i, total) {
 
     if (ad.media_type === 'video' && ad.video_url) {
         return `
-        <div class="hero-slide hero-slide--ad hero-slide--video" data-ad-id="${ad.id}" role="group"
+        <div class="hero-slide hero-slide--spot hero-slide--video" data-spot-id="${ad.id}" role="group"
              aria-roledescription="slide" aria-label="${n}: video ad from ${adEsc(name)}"
              style="background:${adEsc(ad.bg_color || '#0f172a')}">
-            <video class="hero-ad-video" muted playsinline preload="none"
+            <video class="hero-spot-video" muted playsinline preload="none"
                    poster="${adEsc(ad.poster_url || '')}" data-src="${adEsc(ad.video_url)}"></video>
             ${heroTopHtml(true)}
             ${heroFootHtml({ tag: heroAdLabel(ad), name, offer, button: heroCallButton(ad) })}
@@ -1097,31 +1035,17 @@ function heroSlideHtml(ad, i, total) {
     // a full photo carries its own message, so only the bar goes on top.
     const contain = ad.image_fit === 'contain';
     return `
-        <div class="hero-slide hero-slide--ad hero-slide--image${contain ? ' hero-slide--contain' : ''}" data-ad-id="${ad.id}" role="group"
+        <div class="hero-slide hero-slide--spot hero-slide--image${contain ? ' hero-slide--contain' : ''}" data-spot-id="${ad.id}" role="group"
              aria-roledescription="slide" aria-label="${n}: ad from ${adEsc(name)}"
              style="background:${adEsc(ad.bg_color || '#0f172a')}">
-            ${ad.image_url ? `<img class="hero-ad-img" src="${adEsc(ad.image_url)}" alt="" loading="lazy" decoding="async">` : ''}
+            ${ad.image_url ? `<img class="hero-spot-img" src="${adEsc(ad.image_url)}" alt="" loading="lazy" decoding="async">` : ''}
             ${heroTopHtml(false)}
-            ${contain ? `<div class="hero-ad-headline">${adEsc(ad.title)}${ad.price ? ` <span class="hero-ad-price">${adEsc(ad.price)}</span>` : ''}</div>` : ''}
+            ${contain ? `<div class="hero-spot-headline">${adEsc(ad.title)}${ad.price ? ` <span class="hero-spot-price">${adEsc(ad.price)}</span>` : ''}</div>` : ''}
             ${heroFootHtml({
                 tag: heroAdLabel(ad), name,
                 offer: contain ? (ad.description || ad.seller_location || '') : offer,
                 button: heroCallButton(ad)
             })}
-        </div>`;
-}
-
-function heroOpenSlotHtml(i, total) {
-    // The button is a tel: link to the reseller; refreshSupportLinks() fills
-    // the number in and keeps it hidden when the reseller has none on file.
-    const brand = heroBrandName();
-    const button = `<a href="#" class="hero-ad-btn hero-ad-btn--dark" data-support-link style="display:none"
-                       aria-label="Call ${adEsc(brand)} to advertise">${AD_ICONS.phone}<span>Call</span></a>`;
-    return `
-        <div class="hero-slide hero-slide--ad hero-slide--open" role="group" aria-roledescription="slide" aria-label="${i + 1} of ${total}: advertise here">
-            ${heroTopHtml(false)}
-            <div class="hero-ad-headline">Your business here<span class="hero-ad-sub">Seen by everyone who connects to this WiFi</span></div>
-            ${heroFootHtml({ tag: 'Ad space', name: 'Book this space', offer: `Call ${brand}`, button, light: true })}
         </div>`;
 }
 
@@ -1134,7 +1058,7 @@ function mountHeroAds() {
     if (!header || !header.classList.contains('portal-header--hero')) return;
     if (header.querySelector('.hero-track')) return;
 
-    const total = heroAds.length + 2;
+    const total = heroAds.length + 1;
     const track = document.createElement('div');
     track.className = 'hero-track';
     const welcome = document.createElement('div');
@@ -1145,7 +1069,7 @@ function mountHeroAds() {
     while (header.firstChild) welcome.appendChild(header.firstChild);
     track.appendChild(welcome);
     track.insertAdjacentHTML('beforeend',
-        heroAds.map((ad, i) => heroSlideHtml(ad, i + 1, total)).join('') + heroOpenSlotHtml(total - 1, total));
+        heroAds.map((ad, i) => heroSlideHtml(ad, i + 1, total)).join(''));
 
     // Story-style segments: which slide this is, and how long it has left.
     const segs = document.createElement('div');
@@ -1155,7 +1079,7 @@ function mountHeroAds() {
             `<button type="button" class="hero-seg" data-go="${i}" aria-label="Show slide ${i + 1} of ${total}"><span><i></i></span></button>`);
     }
 
-    header.classList.add('has-hero-ads');
+    header.classList.add('has-hero-spots');
     header.setAttribute('aria-roledescription', 'carousel');
     header.appendChild(track);
     header.appendChild(segs);
@@ -1179,7 +1103,7 @@ function mountHeroAds() {
         if (b) { heroGo(Number(b.dataset.go)); heroSchedule(); }
     });
     track.addEventListener('click', e => {
-        const mute = e.target.closest('.hero-ad-mute');
+        const mute = e.target.closest('.hero-spot-mute');
         if (mute) {
             const v = mute.closest('.hero-slide').querySelector('video');
             v.muted = !v.muted;
@@ -1188,7 +1112,7 @@ function mountHeroAds() {
             return;
         }
         const cta = e.target.closest('[data-hero-cta]');
-        if (cta) recordClick(Number(cta.dataset.adId), 'call', 'hero');
+        if (cta) recordClick(Number(cta.dataset.spotId), 'call', 'hero');
     });
     let x0 = null;
     track.addEventListener('pointerdown', e => { x0 = e.clientX; });
@@ -1199,7 +1123,6 @@ function mountHeroAds() {
         if (Math.abs(dx) > 40) { heroGo(heroRot.idx + (dx < 0 ? 1 : -1)); heroSchedule(); }
     });
 
-    if (window.refreshSupportLinks) window.refreshSupportLinks();
     heroGo(0);
     heroSchedule();
 }
@@ -1246,7 +1169,7 @@ function heroGo(n) {
     if (next && !next.src) { next.src = next.dataset.src; next.preload = 'metadata'; }
 
     clearTimeout(heroRot.seenTimer);
-    const adId = Number(active.dataset.adId);
+    const adId = Number(active.dataset.spotId);
     if (adId && !heroRot.seen.has(adId)) {
         heroRot.seenTimer = setTimeout(() => {
             heroRot.seen.add(adId);
@@ -1307,7 +1230,7 @@ document.addEventListener('visibilitychange', () => {
     // Customers flip to the M-Pesa prompt and back; Chrome also pauses
     // muted video in a background tab. Resume the sponsor on return.
     const processing = document.getElementById('processingSection');
-    const waitVideo = document.querySelector('.wait-ad video');
+    const waitVideo = document.querySelector('.wait-spot video');
     if (waitVideo && processing && !processing.classList.contains('hidden')) {
         const p = waitVideo.play();
         if (p && p.catch) p.catch(() => {});
@@ -1319,7 +1242,7 @@ function playAdVideo(v, loop) {
     v.muted = true;
     v.loop = !!loop;
     try { v.currentTime = 0; } catch (_) {}
-    const bar = v.parentNode.querySelector('.ad-video-bar i');
+    const bar = v.parentNode.querySelector('.spot-video-bar i');
     if (bar && !v.dataset.barWired) {
         v.dataset.barWired = '1';
         v.addEventListener('timeupdate', () => {
@@ -1338,19 +1261,19 @@ function sponsorAd() {
 }
 
 function sponsorMediaHtml(ad) {
-    const tag = `<span class="hero-ad-tag">${heroAdLabel(ad)}</span>`;
+    const tag = `<span class="hero-spot-tag">${heroAdLabel(ad)}</span>`;
     if (ad.media_type === 'video' && ad.video_url) {
         return `
-            <div class="ad-media ad-video" style="background:${adEsc(ad.bg_color || '#0f172a')}">
+            <div class="spot-media spot-video" style="background:${adEsc(ad.bg_color || '#0f172a')}">
                 <video muted playsinline preload="none" poster="${adEsc(ad.poster_url || '')}" data-src="${adEsc(ad.video_url)}"></video>
                 ${tag}
-                <span class="ad-video-bar"><i></i></span>
+                <span class="spot-video-bar"><i></i></span>
             </div>`;
     }
     if (!ad.image_url) return '';
     return `
-        <div class="ad-media">
-            <img class="ad-sponsor-img${ad.image_fit === 'contain' ? ' is-contain' : ''}" src="${adEsc(ad.image_url)}" alt="" style="background:${adEsc(ad.bg_color || '#0f172a')}">
+        <div class="spot-media">
+            <img class="spot-feature-img${ad.image_fit === 'contain' ? ' is-contain' : ''}" src="${adEsc(ad.image_url)}" alt="" style="background:${adEsc(ad.bg_color || '#0f172a')}">
             ${tag}
         </div>`;
 }
@@ -1360,9 +1283,9 @@ function sponsorMediaHtml(ad) {
 function sponsorWhoHtml(ad) {
     const offer = [ad.title, ad.price].filter(Boolean).join(' · ');
     return `
-        <div class="wait-ad-who">
-            <strong class="wait-ad-name">${adEsc(ad.seller_name || ad.title)}</strong>
-            ${offer ? `<span class="wait-ad-offer">${adEsc(offer)}</span>` : ''}
+        <div class="wait-spot-who">
+            <strong class="wait-spot-name">${adEsc(ad.seller_name || ad.title)}</strong>
+            ${offer ? `<span class="wait-spot-offer">${adEsc(offer)}</span>` : ''}
         </div>`;
 }
 
@@ -1372,16 +1295,16 @@ function mountWaitAd() {
     const section = document.getElementById('processingSection');
     const ad = sponsorAd();
     if (!section || !ad || window._portalShowAds === false) return;
-    if (!section.querySelector('.wait-ad')) {
+    if (!section.querySelector('.wait-spot')) {
         const box = document.createElement('div');
-        box.className = 'wait-ad';
+        box.className = 'wait-spot';
         box.innerHTML = `
-            <div class="wait-ad-head">While you wait</div>
-            <div class="wait-ad-card">
+            <div class="wait-spot-head">While you wait</div>
+            <div class="wait-spot-card">
                 ${sponsorMediaHtml(ad)}
-                <div class="wait-ad-foot">
+                <div class="wait-spot-foot">
                     ${sponsorWhoHtml(ad)}
-                    ${heroCallHref(ad) ? `<a class="wait-ad-cta" href="${heroCallHref(ad)}" data-ad-id="${ad.id}">${AD_ICONS.phone}<span>Call</span></a>` : ''}
+                    ${heroCallHref(ad) ? `<a class="wait-spot-cta" href="${heroCallHref(ad)}" data-spot-id="${ad.id}">${AD_ICONS.phone}<span>Call</span></a>` : ''}
                 </div>
             </div>`;
         // Straight under "Check your phone" so most of it is on the first
@@ -1390,10 +1313,10 @@ function mountWaitAd() {
         const anchor = section.querySelector('.processing-hero');
         if (anchor && anchor.nextSibling) section.insertBefore(box, anchor.nextSibling);
         else section.appendChild(box);
-        const cta = box.querySelector('.wait-ad-cta');
+        const cta = box.querySelector('.wait-spot-cta');
         if (cta) cta.addEventListener('click', () => recordClick(ad.id, 'call', 'wait_screen'));
     }
-    const v = section.querySelector('.wait-ad video');
+    const v = section.querySelector('.wait-spot video');
     if (v) playAdVideo(v, true);
     recordImpression([ad.id], 'wait_screen');
 }
@@ -1404,34 +1327,34 @@ function watchProcessingSection() {
     new MutationObserver(() => {
         const visible = !section.classList.contains('hidden');
         if (visible) mountWaitAd();
-        else section.querySelectorAll('.wait-ad video').forEach(v => v.pause());
+        else section.querySelectorAll('.wait-spot video').forEach(v => v.pause());
     }).observe(section, { attributes: true, attributeFilter: ['class'] });
 }
 
 // Success page: the sponsor card above the local-shops row. The customer is
 // online now, so WhatsApp works here.
 function renderSuccessSponsor() {
-    const section = document.querySelector('.success-ads');
+    const section = document.querySelector('.done-spots');
     const ad = sponsorAd();
     if (!section || !ad || window._portalShowAds === false) return;
-    let card = document.getElementById('successSponsor');
+    let card = document.getElementById('doneFeature');
     if (!card) {
         card = document.createElement('div');
-        card.id = 'successSponsor';
-        card.className = 'success-sponsor';
+        card.id = 'doneFeature';
+        card.className = 'done-feature';
         section.parentNode.insertBefore(card, section);
     }
     const wa = ad.whatsapp_number || ad.phone_number;
     card.innerHTML = `
-        <div class="wait-ad-head">Sponsored</div>
-        <div class="wait-ad-card">
+        <div class="wait-spot-head">Sponsored</div>
+        <div class="wait-spot-card">
             ${sponsorMediaHtml(ad)}
-            <div class="wait-ad-foot">
+            <div class="wait-spot-foot">
                 ${sponsorWhoHtml(ad)}
-                ${wa ? `<a class="wait-ad-cta" href="https://wa.me/${formatPhoneForWhatsApp(wa)}" target="_blank" rel="noopener" data-ad-id="${ad.id}">${AD_ICONS.chat}<span>WhatsApp</span></a>` : ''}
+                ${wa ? `<a class="wait-spot-cta" href="https://wa.me/${formatPhoneForWhatsApp(wa)}" target="_blank" rel="noopener" data-spot-id="${ad.id}">${AD_ICONS.chat}<span>WhatsApp</span></a>` : ''}
             </div>
         </div>`;
-    const cta = card.querySelector('.wait-ad-cta');
+    const cta = card.querySelector('.wait-spot-cta');
     if (cta) cta.addEventListener('click', () => recordClick(ad.id, 'whatsapp', 'success_page'));
     const v = card.querySelector('video');
     if (v) playAdVideo(v, true);
@@ -1453,7 +1376,7 @@ function initAdsFromPortalData(portalAds) {
             mountHeroAds();
             watchPlansSection();
             watchProcessingSection();
-            const showcase = document.querySelector('.marketplace-showcase');
+            const showcase = document.querySelector('.spots-showcase');
             if (showcase) showcase.style.display = 'none';
             console.log('✅ [ADS] Hero ads:', heroAds.length, '| local ads:', adsData.length);
             return;

@@ -78,7 +78,7 @@ const marketplaceAds = [
 // ========================================
 document.addEventListener('DOMContentLoaded', () => {
     initializeMarketplace();
-    // Mini products now populated by ads.js with proper ad data
+    // Mini products now populated by spots.js with proper ad data
     // initializeMiniProducts();
     enhanceScrollHint();
 });
@@ -195,7 +195,7 @@ function enhanceScrollHint() {
 // In a real app, this would open product details
 // ========================================
 document.addEventListener('click', (e) => {
-    const productCard = e.target.closest('.product-card:not(.cta-card)');
+    const productCard = e.target.closest('.spot-card');
     if (productCard) {
         // Visual feedback
         productCard.style.transform = 'scale(0.95)';
@@ -230,7 +230,7 @@ function renderMarketplaceAds(ads) {
     if (!showcase || !ads.length) return;
     
     const adsHTML = ads.map(ad => `
-        <div class="product-card" data-id="${ad.id}">
+        <div class="spot-card" data-id="${ad.id}">
             <div class="product-image">
                 <img src="${ad.image}" alt="${ad.name}" loading="lazy">
                 ${ad.badge ? `<span class="product-badge ${ad.badge.type}">${ad.badge.text}</span>` : ''}
@@ -243,21 +243,7 @@ function renderMarketplaceAds(ads) {
         </div>
     `).join('');
     
-    // Keep the CTA card at the end. The number is the reseller's, resolved by
-    // script.js from portal settings — never hardcoded here.
-    const supportPhone = window.refreshSupportLinks ? window.refreshSupportLinks() : '';
-    const ctaCard = `
-        <div class="product-card cta-card">
-            <div class="cta-content">
-                <span class="cta-icon">📢</span>
-                <h4>Advertise Here!</h4>
-                <p>Show your products to thousands of customers</p>
-                ${supportPhone ? `<a class="cta-link" href="tel:${supportPhone}">Call ${supportPhone}</a>` : ''}
-            </div>
-        </div>
-    `;
-
-    showcase.innerHTML = adsHTML + ctaCard;
+    showcase.innerHTML = adsHTML;
 }
 
 // ========================================

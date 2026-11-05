@@ -84,7 +84,7 @@ const PRIMARY_API_BASE = 'https://isp.bitwavetechnologies.com/api';
 const FALLBACK_API_BASE = '/api/bw';
 const API_BASE_URL = PRIMARY_API_BASE;
 
-// Shared fallback state — ads.js and pwa.js read this to rewrite their URLs too.
+// Shared fallback state — spots.js and pwa.js read this to rewrite their URLs too.
 // index.html's early portal request creates it first and may already have
 // switched to the fallback; keep that.
 window.__apiFallback = window.__apiFallback
@@ -775,7 +775,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 showPlansError();
             }
 
-            // ---- Ads (store for ads.js to consume) ----
+            // ---- Ads (store for spots.js to consume) ----
             window._portalAds = data.ads || [];
             console.log('✅ [PORTAL] Ads received:', window._portalAds.length);
 
@@ -783,7 +783,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .catch(async (error) => {
             console.warn('⚠️ [PORTAL] Portal fetch failed, falling back to individual endpoints:', error.message);
-            window._portalAds = null; // signal ads.js to fetch independently
+            window._portalAds = null; // signal spots.js to fetch independently
 
             // Fallback: individual router lookup + plans fetch
             try {
@@ -1077,7 +1077,7 @@ function renderHeroHeader(settings) {
         </div>`;
 
     refreshSupportLinks();
-    // Hero ads (ads.js) turn this header into a carousel; re-mount after
+    // Hero ads (spots.js) turn this header into a carousel; re-mount after
     // every render because the innerHTML above wipes it.
     if (window.mountHeroAds) window.mountHeroAds();
 
@@ -1105,17 +1105,18 @@ function renderHeader(settings) {
 // FEATURE FLAGS — show/hide portal sections
 // ========================================
 function applyFeatureFlags(settings) {
-    // Expose show_ads flag globally so ads.js can respect it during its own init
+    // Expose show_ads flag globally so spots.js can respect it during its own init
     window._portalShowAds = !!settings.show_ads;
 
-    const adsSection = document.getElementById('ads-section');
+    const adsSection = document.getElementById('spots-section');
     if (adsSection) {
-        // With hero ads the login page's ads live in the hero (ads.js), so
+        // With hero ads the login page's ads live in the hero (spots.js), so
         // the showcase above the plans stays hidden.
         const portalAds = window._portalAds || [];
         const heroMode = portalAds.some(ad => ad.placement === 'hero');
         const showAds = settings.show_ads && !heroMode && portalAds.length > 0;
-        adsSection.style.display = showAds ? '' : 'none';
+        // Only ever hides: spots.js shows it once it has cards to put in it.
+        if (!showAds) adsSection.style.display = 'none';
     }
 
     const reconnectBlock = document.getElementById('reconnectSection');
@@ -1123,15 +1124,15 @@ function applyFeatureFlags(settings) {
         reconnectBlock.style.display = settings.show_reconnect_button !== false ? '' : 'none';
     }
 
-    const welcomeBanner = document.getElementById('welcome-banner');
+    const welcomeBanner = document.getElementById('welcome-strip');
     if (welcomeBanner) {
         // The title is already prominent in both modes (hero heading / sticky header brand),
         // so only show the welcome banner when there is a subtitle with extra context.
         const showBanner = settings.show_welcome_banner && !!settings.welcome_subtitle;
         welcomeBanner.style.display = showBanner ? '' : 'none';
         if (showBanner) {
-            const titleEl = welcomeBanner.querySelector('.welcome-banner-title');
-            const subEl = welcomeBanner.querySelector('.welcome-banner-sub');
+            const titleEl = welcomeBanner.querySelector('.welcome-strip-title');
+            const subEl = welcomeBanner.querySelector('.welcome-strip-sub');
             if (titleEl) {
                 titleEl.style.display = 'none'; // title always visible elsewhere
             }
@@ -1139,7 +1140,7 @@ function applyFeatureFlags(settings) {
         }
     }
 
-    const announcement = document.getElementById('announcement-banner');
+    const announcement = document.getElementById('notice-strip');
     if (announcement) {
         const showAnnouncement = settings.show_announcement && settings.announcement_text;
         announcement.style.display = showAnnouncement ? '' : 'none';
@@ -1609,7 +1610,7 @@ function getSupportPhone() {
 // Marks up every support CTA in the page from the resolved number.
 // Elements opt in with [data-support-link] (the anchor itself) or
 // [data-support-section] (a whole banner that only exists to trigger a call).
-// Safe to call repeatedly — ads.js re-runs it after it toggles ad sections.
+// Safe to call repeatedly.
 function refreshSupportLinks() {
     const phone = getSupportPhone();
 
@@ -1630,16 +1631,13 @@ function refreshSupportLinks() {
         // only take responsibility for the no-phone case.
         if (!phone) {
             section.style.display = 'none';
-        } else if (section.dataset.hiddenByAds !== 'true' && section.style.display === 'none') {
+        } else if (section.dataset.hiddenBySpots !== 'true' && section.style.display === 'none') {
             section.style.display = '';
         }
     });
 
     return phone;
 }
-// ads.js runs in its own file — expose the refresher so it can re-apply the
-// number after re-showing ad banners.
-window.refreshSupportLinks = refreshSupportLinks;
 
 function updateSupportPhone(phone) {
     if (phone) routerSupportPhone = String(phone).trim();
