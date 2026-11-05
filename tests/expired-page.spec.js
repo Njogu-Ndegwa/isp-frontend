@@ -88,7 +88,8 @@ test('expired customer sees account, plans and paybill, pays, and is told they a
 
     await page.locator('.x-plan', { hasText: 'Home 20M' }).click();
     await expect(page.locator('#payBtn')).toHaveText('Pay KES 2,500 with M-Pesa');
-    await expect(page.locator('#pbAmount')).toHaveText('KES 2,500');
+    // Paybill renews the customer's own plan, whatever is selected for the prompt.
+    await expect(page.locator('#pbAmount')).toHaveText('KES 1,500');
     await page.fill('#phone', '0799 000 111');
     await page.click('#payBtn');
 
@@ -150,6 +151,17 @@ test('a router without the feature shows that the page is not available', async 
     await mockApi(page, { data: 404 });
     await page.goto(PAGE + 'r=42&u=jane');
     await expect(page.locator('#unavailable')).toBeVisible();
+});
+
+test('too many wrong account numbers shows the reason, not a broken page', async ({ page }) => {
+    await page.route('**/public/pppoe/expired/**', (route) => route.fulfill({
+        status: 429,
+        contentType: 'application/json',
+        body: JSON.stringify({ detail: 'Too many incorrect account numbers. Please wait a few minutes and try again.' }),
+    }));
+    await page.goto(PAGE + 'r=42&u=jane');
+    await expect(page.locator('#unavailable')).toBeVisible();
+    await expect(page.locator('#unavailableText')).toContainText('Too many incorrect account numbers');
 });
 
 test('paused accounts are not offered a payment', async ({ page }) => {

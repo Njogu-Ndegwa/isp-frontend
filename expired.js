@@ -192,7 +192,10 @@
     function refreshAmounts() {
         var plan = selectedPlan();
         $('payBtn').textContent = plan ? 'Pay ' + money(plan.price) + ' with M-Pesa' : 'Pay with M-Pesa';
-        text('pbAmount', plan ? money(plan.price) : '');
+        // Paybill always renews the customer's own plan, whichever plan is
+        // selected above: the plan picked here only travels with an M-Pesa prompt.
+        var own = state.data && state.data.customer && state.data.customer.plan_price;
+        text('pbAmount', own ? money(own) : (plan ? money(plan.price) : ''));
     }
 
     function render(data) {
@@ -273,6 +276,12 @@
         var path = '/public/pppoe/expired/' + routerId + (username ? '?u=' + encodeURIComponent(username) : '');
         request('GET', path).then(function (res) {
             if (res.status === 404) { unavailable(); return; }
+            if (res.status === 429) {
+                unavailable(typeof (res.body && res.body.detail) === 'string'
+                    ? res.body.detail
+                    : 'Too many attempts. Please wait a few minutes and try again.');
+                return;
+            }
             if (!res.ok) throw new Error('load failed');
             render(res.body);
         }).catch(function () {
