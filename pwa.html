@@ -51,37 +51,13 @@
         <!-- Main Content -->
         <main class="pwa-main">
             
-            <!-- Marketplace Showcase - EXACTLY like captive portal, AT THE TOP -->
-            <div class="spots-showcase" id="deals">
+            <!-- Deals: stays hidden until pwa.js has real offers to put in it -->
+            <div class="spots-showcase" id="deals" style="display:none">
                 <div class="showcase-header">
                     <h3 class="showcase-title">🛒 Soko Deals Today</h3>
                     <span class="showcase-badge">AD</span>
                 </div>
-                <div class="showcase-scroll" id="showcaseScroll">
-                    <!-- Skeleton loaders shown while loading -->
-                    <div class="spot-card spot-skeleton">
-                        <div class="product-image skeleton-shimmer"></div>
-                        <div class="product-info">
-                            <div class="skeleton-text"></div>
-                            <div class="skeleton-text short"></div>
-                        </div>
-                    </div>
-                    <div class="spot-card spot-skeleton">
-                        <div class="product-image skeleton-shimmer"></div>
-                        <div class="product-info">
-                            <div class="skeleton-text"></div>
-                            <div class="skeleton-text short"></div>
-                        </div>
-                    </div>
-                    <div class="spot-card spot-skeleton">
-                        <div class="product-image skeleton-shimmer"></div>
-                        <div class="product-info">
-                            <div class="skeleton-text"></div>
-                            <div class="skeleton-text short"></div>
-                        </div>
-                    </div>
-
-                </div>
+                <div class="showcase-scroll" id="showcaseScroll"></div>
                 <div class="scroll-hint">
                     <span>← Swipe for more deals →</span>
                 </div>
@@ -279,11 +255,11 @@
 
         <!-- Bottom Navigation -->
         <nav class="bottom-nav">
-            <button class="nav-item active" data-section="deals">
+            <button class="nav-item" data-section="deals" style="display:none">
                 <span class="nav-icon">🛒</span>
                 <span class="nav-label">Deals</span>
             </button>
-            <button class="nav-item" data-section="speedtest">
+            <button class="nav-item active" data-section="speedtest">
                 <span class="nav-icon">⚡</span>
                 <span class="nav-label">Speed Test</span>
             </button>
@@ -346,7 +322,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="pwa.js"></script>
+    <script src="pwa.js?v=2"></script>
     
     <!-- Service Worker Registration -->
     <script>
