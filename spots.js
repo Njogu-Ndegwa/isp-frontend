@@ -138,89 +138,32 @@ function applyLocalImages(ads) {
 }
 
 // ========================================
-// LOCAL FALLBACK IMAGES
-// Used when CDN images fail to load (walled garden restrictions)
+// WHEN A PHOTO IS MISSING OR WON'T LOAD
+// The same neutral tile as the installed app (pwa.js). It is inline, so it also
+// works behind the walled garden, where a CDN photo often can't load.
 // ========================================
+const AD_BLANK_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23f5f5f5' width='100' height='100'/%3E%3Ctext x='50' y='55' text-anchor='middle' font-size='30'%3E%F0%9F%9B%92%3C/text%3E%3C/svg%3E";
 
-// Specific fallback images for known ads (by ID) - same as primary for consistency
-const AD_SPECIFIC_FALLBACKS = AD_LOCAL_IMAGES;
-
-// Category-based fallbacks for other ads
-const LOCAL_FALLBACK_IMAGES = {
-    // Category-based fallbacks
-    produce: ['images/tomatoes.jpg', 'images/sukuma-wiki.jpg', 'images/bananas.jpg'],
-    electronics: ['images/phone-cases.jpg', 'images/watches.jpg'],
-    fashion: ['images/watches.jpg', 'images/phone-cases.jpg'],
-    food: ['images/tomatoes.jpg', 'images/bananas.jpg', 'images/sukuma-wiki.jpg'],
-    services: ['images/Internet-Technician.png'],
-    // Default fallback (cycles through all available images)
-    default: [
-        'images/tomatoes.jpg',
-        'images/phone-cases.jpg', 
-        'images/sukuma-wiki.jpg',
-        'images/watches.jpg',
-        'images/bananas.jpg'
-    ]
-};
-
-// Track which fallback index to use (to vary images)
-let fallbackImageIndex = 0;
-
-/**
- * Get a local fallback image based on ad ID or category
- * @param {number} adId - The ad ID (for specific fallbacks)
- * @param {string} category - The ad category (produce, electronics, fashion, etc.)
- * @returns {string} - Local image path
- */
-function getLocalFallbackImage(adId, category) {
-    // First check if there's a specific fallback for this ad ID
-    if (adId && AD_SPECIFIC_FALLBACKS[adId]) {
-        console.log(`🖼️ Using specific fallback for ad #${adId}`);
-        return AD_SPECIFIC_FALLBACKS[adId];
-    }
-    
-    // Fall back to category-based images
-    const categoryLower = (category || '').toLowerCase();
-    const images = LOCAL_FALLBACK_IMAGES[categoryLower] || LOCAL_FALLBACK_IMAGES.default;
-    
-    // Cycle through available images to add variety
-    const image = images[fallbackImageIndex % images.length];
-    fallbackImageIndex++;
-    
-    return image;
+function adImageSrc(ad) {
+    return ad.image_url || ad.poster_url || AD_BLANK_IMAGE;
 }
 
 /**
- * Setup image error handling with local fallback
+ * A photo that fails ends on the neutral tile, never on a broken-picture icon.
  * @param {HTMLImageElement} imgElement - The image element
- * @param {string} category - Ad category for fallback selection
- * @param {number} adId - Ad ID for specific fallback images
+ * @param {number} adId - Ad ID, for the local PNG twin of a local WebP
  */
-function setupImageFallback(imgElement, category, adId) {
+function setupImageFallback(imgElement, adId) {
     if (!imgElement) return;
-    
-    // Store original src for logging
-    const originalSrc = imgElement.src;
-    
+
     imgElement.onerror = function() {
-        // First try: WebP failed, try PNG fallback for this specific ad
         if (!this.dataset.pngAttempted && AD_LOCAL_IMAGES_FALLBACK[adId]) {
             this.dataset.pngAttempted = 'true';
-            console.log(`🖼️ WebP failed, trying PNG for ad #${adId}`);
             this.src = AD_LOCAL_IMAGES_FALLBACK[adId];
             return;
         }
-        
-        // Second try: Use category-based fallback
-        if (!this.dataset.fallbackAttempted) {
-            this.dataset.fallbackAttempted = 'true';
-            const fallbackSrc = getLocalFallbackImage(adId, category);
-            console.log(`🖼️ Image failed to load, using local fallback: ${fallbackSrc}`);
-            this.src = fallbackSrc;
-            return;
-        }
-        
-        console.warn('⚠️ All image fallbacks failed:', originalSrc);
+        this.onerror = null;
+        this.src = AD_BLANK_IMAGE;
     };
 }
 
@@ -258,6 +201,59 @@ function formatPhoneForWhatsApp(phone) {
 }
 
 // ========================================
+// OPTIONAL FIELDS
+// Only title, seller and phone are required on the ad form. Everything else can
+// be null, so every list passes through cleanAds() on its way in: from there on
+// each field is a plain string, '' when missing, and no surface has to check.
+// One ad that makes no sense is dropped here and the rest carry on.
+// ========================================
+const AD_TEXT_FIELDS = ['title', 'description', 'seller_name', 'seller_location', 'price', 'image_url',
+    'video_url', 'poster_url', 'badge_type', 'badge_text', 'category', 'placement', 'media_type',
+    'image_fit', 'bg_color', 'slot'];
+
+function adText(value) {
+    if (typeof value !== 'string' && typeof value !== 'number') return '';
+    const text = String(value).trim();
+    return /^(null|undefined)$/i.test(text) ? '' : text;
+}
+
+function adPhone(value) {
+    const phone = adText(value).replace(/[^\d+]/g, '');
+    return /\d/.test(phone) ? phone : '';
+}
+
+function cleanAds(list) {
+    const ads = [];
+    (Array.isArray(list) ? list : []).forEach(raw => {
+        const id = raw && typeof raw === 'object' ? parseInt(raw.id, 10) : NaN;
+        if (!(id > 0)) return;
+        const ad = { ...raw, id };
+        AD_TEXT_FIELDS.forEach(field => { ad[field] = adText(raw[field]); });
+        ad.phone_number = adPhone(raw.phone_number);
+        ad.whatsapp_number = adPhone(raw.whatsapp_number);
+        if (ad.title || ad.seller_name || ad.image_url || ad.video_url) ads.push(ad);
+    });
+    return ads;
+}
+
+// Builds one thing per ad. An ad that still throws is left out, not the row.
+function eachAd(ads, build) {
+    const built = [];
+    ads.forEach((ad, index) => {
+        try {
+            built.push(build(ad, index));
+        } catch (error) {
+            console.warn('⚠️ Skipped ad #' + (ad && ad.id) + ':', error.message);
+        }
+    });
+    return built;
+}
+
+function adLabel(ad) {
+    return adEsc(ad.title || ad.seller_name || 'this offer');
+}
+
+// ========================================
 // FETCH ADS FROM BACKEND
 // ========================================
 async function fetchAds() {
@@ -286,11 +282,11 @@ async function fetchAds() {
         const apiResponse = await response.json();
         
         // API returns { ads: [...], pagination: {...} }
-        const apiAds = apiResponse.ads || apiResponse;
+        const apiAds = cleanAds(apiResponse.ads || apiResponse);
         console.log('✅ Ads fetched from API:', apiAds.length, 'ads');
         console.log('📊 Pagination:', apiResponse.pagination);
         
-        if (Array.isArray(apiAds) && apiAds.length > 0) {
+        if (apiAds.length > 0) {
             adsData = applyLocalImages(apiAds);
             if (window._portalShowAds === false) {
                 hideAdSections();
@@ -373,7 +369,7 @@ function renderAds(ads) {
 
     if (showcaseSection) showcaseSection.style.display = '';
 
-    ads.forEach((ad, index) => showcaseScroll.appendChild(createAdCard(ad, index)));
+    eachAd(ads, createAdCard).forEach(card => showcaseScroll.appendChild(card));
 
     console.log('🎨 Rendered', ads.length, 'ads in showcase');
 }
@@ -387,33 +383,36 @@ function createAdCard(ad, index) {
     card.setAttribute('data-spot-id', ad.id);
     card.setAttribute('role', 'button');
     card.setAttribute('tabindex', '0');
-    card.setAttribute('aria-label', `View details for ${ad.title}`);
+    card.setAttribute('aria-label', `View details for ${ad.title || ad.seller_name || 'this offer'}`);
     
     // Badge HTML
     let badgeHtml = '';
     if (ad.badge_type && ad.badge_text) {
-        badgeHtml = `<span class="product-badge ${ad.badge_type}">${ad.badge_text}</span>`;
+        badgeHtml = `<span class="product-badge ${adEsc(ad.badge_type)}">${adEsc(ad.badge_text)}</span>`;
     }
     
     // First 2 images are above the fold - don't lazy load, prioritize first one
     const loadingAttr = index < 2 ? '' : 'loading="lazy"';
     const priorityAttr = index === 0 ? 'fetchpriority="high"' : '';
     
+    // Location is optional, and only its first part fits on the card.
+    const seller = [ad.seller_name, ad.seller_location.split(',')[0].trim()].filter(Boolean).join(' - ');
+
     card.innerHTML = `
         <div class="product-image">
-            <img src="${ad.image_url}" alt="${ad.title}" ${loadingAttr} ${priorityAttr}>
+            <img src="${adEsc(adImageSrc(ad))}" alt="${adEsc(ad.title)}" ${loadingAttr} ${priorityAttr}>
             ${badgeHtml}
         </div>
         <div class="product-info">
-            <h4 class="product-name">${ad.title}</h4>
-            <p class="product-seller">${ad.seller_name} - ${ad.seller_location.split(',')[0]}</p>
-            <p class="product-price">${ad.price}</p>
+            ${ad.title ? `<h4 class="product-name">${adEsc(ad.title)}</h4>` : ''}
+            ${seller ? `<p class="product-seller">${adEsc(seller)}</p>` : ''}
+            ${ad.price ? `<p class="product-price">${adEsc(ad.price)}</p>` : ''}
         </div>
     `;
-    
+
     // Setup image fallback for walled garden restrictions
     const imgElement = card.querySelector('img');
-    setupImageFallback(imgElement, ad.category, ad.id);
+    setupImageFallback(imgElement, ad.id);
     
     // Click handler
     card.addEventListener('click', () => {
@@ -450,17 +449,24 @@ function openAdDetails(ad) {
     
     // Populate modal content
     const modalImg = document.getElementById('spotSheetImg');
-    modalImg.src = ad.image_url;
+    // The sheet is reused from ad to ad, so its fallback starts over each time.
+    modalImg.dataset.pngAttempted = '';
+    setupImageFallback(modalImg, ad.id);
+    modalImg.src = adImageSrc(ad);
     modalImg.alt = ad.title;
-    // Reset fallback flag and setup fallback for modal image
-    modalImg.dataset.fallbackAttempted = '';
-    setupImageFallback(modalImg, ad.category, ad.id);
-    
-    document.getElementById('spotSheetTitle').textContent = ad.title;
-    document.getElementById('spotSheetDescription').textContent = ad.description;
-    document.getElementById('spotSheetSeller').textContent = ad.seller_name;
-    document.getElementById('spotSheetLocation').textContent = ad.seller_location;
-    document.getElementById('spotSheetPrice').textContent = ad.price;
+
+    // A row with nothing to say is left out, and comes back for the next ad.
+    const fillRow = (id, text, row) => {
+        const el = document.getElementById(id);
+        el.textContent = text;
+        (row ? el.closest(row) : el).style.display = text ? '' : 'none';
+    };
+    fillRow('spotSheetTitle', ad.title);
+    fillRow('spotSheetDescription', ad.description);
+    fillRow('spotSheetSeller', ad.seller_name);
+    fillRow('spotSheetLocation', ad.seller_location);
+    document.querySelector('.spot-sheet-seller').style.display = (ad.seller_name || ad.seller_location) ? '' : 'none';
+    fillRow('spotSheetPrice', ad.price, '.spot-sheet-price-section');
     document.getElementById('spotSheetViews').innerHTML = `👁️ <span>${ad.views_count || 0}</span> views`;
     document.getElementById('spotSheetId').textContent = `Ad #${ad.id}`;
     
@@ -476,7 +482,8 @@ function openAdDetails(ad) {
     
     // Phone call link
     const callBtn = document.getElementById('spotSheetCallBtn');
-    callBtn.href = `tel:${formatPhoneForCall(ad.phone_number)}`;
+    callBtn.closest('.spot-sheet-contact').style.display = ad.phone_number ? '' : 'none';
+    callBtn.href = ad.phone_number ? `tel:${formatPhoneForCall(ad.phone_number)}` : '#';
     callBtn.onclick = () => recordClick(ad.id, 'call');
     
     // Show modal
@@ -725,7 +732,13 @@ function populateSuccessAds() {
 
     if (!container) return;
 
-    if (window._heroAdsActive) renderSuccessSponsor();
+    if (window._heroAdsActive) {
+        try {
+            renderSuccessSponsor();
+        } catch (error) {
+            console.warn('⚠️ Sponsor card not shown:', error.message);
+        }
+    }
 
     // No ads available - hide the section
     if (adsData.length === 0 || window._portalShowAds === false) {
@@ -744,13 +757,13 @@ function populateSuccessAds() {
     // Shuffle and take up to 6 ads
     const shuffled = [...adsData].sort(() => Math.random() - 0.5).slice(0, 6);
     
-    container.innerHTML = shuffled.map(ad => `
-        <div class="done-spot-card" onclick="openAdDetailsById(${ad.id})" role="button" tabindex="0" 
-             aria-label="View details for ${ad.title}" data-category="${ad.category || ''}" data-spot-id="${ad.id}">
-            <img src="${ad.image_url}" alt="${ad.title}" class="done-spot-img" loading="lazy">
+    container.innerHTML = eachAd(shuffled, ad => `
+        <div class="done-spot-card" onclick="openAdDetailsById(${ad.id})" role="button" tabindex="0"
+             aria-label="View details for ${adLabel(ad)}" data-spot-id="${ad.id}">
+            <img src="${adEsc(adImageSrc(ad))}" alt="${adEsc(ad.title)}" class="done-spot-img" loading="lazy">
             <div class="done-spot-info">
-                <div class="done-spot-title">${ad.title}</div>
-                <div class="done-spot-price">${ad.price}</div>
+                <div class="done-spot-title">${adEsc(ad.title || ad.seller_name)}</div>
+                ${ad.price ? `<div class="done-spot-price">${adEsc(ad.price)}</div>` : ''}
             </div>
         </div>
     `).join('');
@@ -758,9 +771,8 @@ function populateSuccessAds() {
     // Setup image fallbacks for walled garden restrictions
     container.querySelectorAll('.done-spot-card').forEach(card => {
         const img = card.querySelector('img');
-        const category = card.dataset.category;
         const adId = parseInt(card.dataset.spotId, 10);
-        setupImageFallback(img, category, adId);
+        setupImageFallback(img, adId);
         
         // Add keyboard accessibility
         card.addEventListener('keydown', (e) => {
@@ -810,20 +822,19 @@ function populateMiniProducts() {
     // Shuffle and take up to 4 ads
     const shuffled = [...adsData].sort(() => Math.random() - 0.5).slice(0, 4);
     
-    container.innerHTML = shuffled.map(ad => `
+    container.innerHTML = eachAd(shuffled, ad => `
         <div class="mini-product" onclick="openAdDetailsById(${ad.id})" role="button" tabindex="0"
-             aria-label="View details for ${ad.title}" style="cursor: pointer;" data-category="${ad.category || ''}" data-spot-id="${ad.id}">
-            <img src="${ad.image_url}" alt="${ad.title}" loading="lazy">
-            <span>${ad.price}</span>
+             aria-label="View details for ${adLabel(ad)}" style="cursor: pointer;" data-spot-id="${ad.id}">
+            <img src="${adEsc(adImageSrc(ad))}" alt="${adEsc(ad.title)}" loading="lazy">
+            ${ad.price ? `<span>${adEsc(ad.price)}</span>` : ''}
         </div>
     `).join('');
     
     // Setup image fallbacks and keyboard accessibility
     container.querySelectorAll('.mini-product').forEach(product => {
         const img = product.querySelector('img');
-        const category = product.dataset.category;
         const adId = parseInt(product.dataset.spotId, 10);
-        setupImageFallback(img, category, adId);
+        setupImageFallback(img, adId);
         
         product.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
@@ -948,7 +959,7 @@ function heroSlideHtml(ad, i, total) {
              style="background:${adEsc(ad.bg_color || '#0f172a')}">
             ${ad.image_url ? `<img class="hero-spot-img" src="${adEsc(ad.image_url)}" alt="" loading="lazy" decoding="async">` : ''}
             ${heroTopHtml(false)}
-            ${contain ? `<div class="hero-spot-headline">${adEsc(ad.title)}${ad.price ? ` <span class="hero-spot-price">${adEsc(ad.price)}</span>` : ''}</div>` : ''}
+            ${contain && (ad.title || ad.price) ? `<div class="hero-spot-headline">${adEsc(ad.title)}${ad.price ? ` <span class="hero-spot-price">${adEsc(ad.price)}</span>` : ''}</div>` : ''}
             ${heroFootHtml({
                 tag: heroAdLabel(ad), name,
                 offer: contain ? (ad.description || ad.seller_location || '') : offer,
@@ -967,6 +978,9 @@ function mountHeroAds() {
     if (header.querySelector('.hero-track')) return;
 
     const total = heroAds.length + 1;
+    // Built first: the welcome moves out of the header next, and nothing may
+    // stop halfway through that and leave the header empty.
+    const slidesHtml = heroAds.map((ad, i) => heroSlideHtml(ad, i + 1, total)).join('');
     const track = document.createElement('div');
     track.className = 'hero-track';
     const welcome = document.createElement('div');
@@ -976,8 +990,12 @@ function mountHeroAds() {
     welcome.setAttribute('aria-label', `1 of ${total}: welcome`);
     while (header.firstChild) welcome.appendChild(header.firstChild);
     track.appendChild(welcome);
-    track.insertAdjacentHTML('beforeend',
-        heroAds.map((ad, i) => heroSlideHtml(ad, i + 1, total)).join(''));
+    track.insertAdjacentHTML('beforeend', slidesHtml);
+    // A photo that fails leaves the slide's colour and its bar. Errors don't
+    // bubble, so this listens on the way down.
+    track.addEventListener('error', e => {
+        if (e.target.classList && e.target.classList.contains('hero-spot-img')) e.target.remove();
+    }, true);
 
     // Story-style segments: which slide this is, and how long it has left.
     const segs = document.createElement('div');
@@ -1168,8 +1186,16 @@ function sponsorAd() {
     return paid.find(ad => ad.media_type === 'video' && ad.video_url) || paid[0] || null;
 }
 
+function sponsorTagHtml(ad) {
+    return `<span class="hero-spot-tag">${heroAdLabel(ad)}</span>`;
+}
+
+function sponsorHasMedia(ad) {
+    return !!((ad.media_type === 'video' && ad.video_url) || ad.image_url);
+}
+
 function sponsorMediaHtml(ad) {
-    const tag = `<span class="hero-spot-tag">${heroAdLabel(ad)}</span>`;
+    const tag = sponsorTagHtml(ad);
     if (ad.media_type === 'video' && ad.video_url) {
         return `
             <div class="spot-media spot-video" style="background:${adEsc(ad.bg_color || '#0f172a')}">
@@ -1187,14 +1213,31 @@ function sponsorMediaHtml(ad) {
 }
 
 // Who is advertising and what, under the sponsor's video. The Ad tag sits
-// on the media's corner so a long name and a wide WhatsApp button both fit.
+// on the media's corner so a long name and a wide WhatsApp button both fit;
+// with no media it moves here, because an ad always says it is one.
 function sponsorWhoHtml(ad) {
     const offer = [ad.title, ad.price].filter(Boolean).join(' · ');
+    const name = ad.seller_name || ad.title;
     return `
         <div class="wait-spot-who">
-            <strong class="wait-spot-name">${adEsc(ad.seller_name || ad.title)}</strong>
+            ${sponsorHasMedia(ad) ? '' : sponsorTagHtml(ad)}
+            ${name ? `<strong class="wait-spot-name">${adEsc(name)}</strong>` : ''}
             ${offer ? `<span class="wait-spot-offer">${adEsc(offer)}</span>` : ''}
         </div>`;
+}
+
+// A sponsor photo that fails takes its frame with it, and the Ad tag moves down
+// to the text, the same as an ad that never had a photo.
+function setupSponsorImage(root) {
+    const img = root.querySelector('.spot-feature-img');
+    if (!img) return;
+    img.addEventListener('error', () => {
+        const media = img.closest('.spot-media');
+        const tag = media.querySelector('.hero-spot-tag');
+        const who = root.querySelector('.wait-spot-who');
+        if (tag && who) who.prepend(tag);
+        media.remove();
+    }, { once: true });
 }
 
 // "While you wait": the sponsor's video on the M-Pesa processing screen.
@@ -1221,6 +1264,7 @@ function mountWaitAd() {
         const anchor = section.querySelector('.processing-hero');
         if (anchor && anchor.nextSibling) section.insertBefore(box, anchor.nextSibling);
         else section.appendChild(box);
+        setupSponsorImage(box);
         const cta = box.querySelector('.wait-spot-cta');
         if (cta) cta.addEventListener('click', () => recordClick(ad.id, 'call', 'wait_screen'));
     }
@@ -1262,6 +1306,7 @@ function renderSuccessSponsor() {
                 ${wa ? `<a class="wait-spot-cta" href="https://wa.me/${formatPhoneForWhatsApp(wa)}" target="_blank" rel="noopener" data-spot-id="${ad.id}">${AD_ICONS.chat}<span>WhatsApp</span></a>` : ''}
             </div>
         </div>`;
+    setupSponsorImage(card);
     const cta = card.querySelector('.wait-spot-cta');
     if (cta) cta.addEventListener('click', () => recordClick(ad.id, 'whatsapp', 'success_page'));
     const v = card.querySelector('video');
@@ -1272,8 +1317,9 @@ function renderSuccessSponsor() {
 // ========================================
 // INITIALIZE ADS FROM PORTAL DATA (called when portal endpoint provides ads)
 // ========================================
-function initAdsFromPortalData(portalAds) {
-    if (Array.isArray(portalAds) && portalAds.length > 0) {
+function initAdsFromPortalData(rawAds) {
+    const portalAds = cleanAds(rawAds);
+    if (portalAds.length > 0) {
         heroAds = portalAds.filter(ad => adPlacement(ad) === 'hero');
         adsData = applyLocalImages(portalAds.filter(ad => adPlacement(ad) !== 'hero'));
         if (heroAds.length > 0) {

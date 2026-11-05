@@ -776,7 +776,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // ---- Ads (store for spots.js to consume) ----
-            window._portalAds = data.ads || [];
+            window._portalAds = Array.isArray(data.ads) ? data.ads : [];
             console.log('✅ [PORTAL] Ads received:', window._portalAds.length);
 
             return data;
@@ -1113,7 +1113,7 @@ function applyFeatureFlags(settings) {
         // With hero ads the login page's ads live in the hero (spots.js), so
         // the showcase above the plans stays hidden.
         const portalAds = window._portalAds || [];
-        const heroMode = portalAds.some(ad => ad.placement === 'hero');
+        const heroMode = portalAds.some(ad => ad && ad.placement === 'hero');
         const showAds = settings.show_ads && !heroMode && portalAds.length > 0;
         // Only ever hides: spots.js shows it once it has cards to put in it.
         if (!showAds) adsSection.style.display = 'none';

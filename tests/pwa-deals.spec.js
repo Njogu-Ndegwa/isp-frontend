@@ -90,7 +90,7 @@ test('real offers show with the API fields, and open with the seller real number
     // Empty optional fields leave a clean card, not the words undefined or null.
     const second = cards.nth(1);
     await expect(second.locator('.product-name')).toHaveText('Phone repair');
-    await expect(second.locator('.product-price')).toHaveText('');
+    await expect(second.locator('.product-price')).toHaveCount(0);
     await expect(second.locator('.product-badge')).toHaveCount(0);
     await expect(second.locator('img')).toHaveAttribute('src', /^data:image\/svg/);
     await expect(page.locator('#deals')).not.toContainText(/undefined|null/);
@@ -106,6 +106,69 @@ test('real offers show with the API fields, and open with the seller real number
     await expect(page.locator('#spotCallButton')).toHaveAttribute('href', 'tel:0722000111');
     await page.locator('#spotSheetClose').click();
     await expect(page.locator('#spotSheetOverlay')).toBeHidden();
+    expect(errors).toEqual([]);
+});
+
+test('detail sheet leaves out what an offer does not have, and the next full offer brings it back', async ({ page }) => {
+    const bare = { id: 23, title: 'Phone repair', seller_name: 'Otis', phone_number: null,
+        price: null, seller_location: null, description: null, image_url: null, badge_type: null, badge_text: null };
+    const { errors } = await open(page, r => r.fulfill({ json: spotsAnswer([bare, SPOT]) }));
+
+    await page.locator('.spot-card[data-spot-id="23"]').click();
+    const sheet = page.locator('#spotSheetOverlay');
+    await expect(sheet).toBeVisible();
+    await expect(page.locator('#spotSheetTitle')).toHaveText('Phone repair');
+    await expect(page.locator('#spotSheetSeller')).toHaveText('Otis');
+    await expect(page.locator('#spotSheetDescription')).toBeHidden();
+    await expect(page.locator('#spotSheetLocation')).toBeHidden();
+    await expect(page.locator('#spotSheetBadge')).toBeHidden();
+    await expect(sheet.locator('.spot-sheet-price-section')).toBeHidden();
+    await expect(page.locator('#spotCallButton')).toBeHidden();
+    await expect(page.locator('#spotSheetImage')).toHaveAttribute('src', /^data:image\/svg/);
+    await expect(sheet).not.toContainText(/undefined|null/);
+    if (process.env.CAPTURE_SCREENSHOTS) {
+        await page.waitForTimeout(600); // the sheet slides up first
+        await page.screenshot({ path: 'test-results/pwa-sheet-bare-mobile.png' });
+    }
+    await page.locator('#spotSheetClose').click();
+
+    await page.locator('.spot-card[data-spot-id="21"]').click();
+    await expect(page.locator('#spotSheetDescription')).toHaveText('Sold by the kilo');
+    await expect(page.locator('#spotSheetLocation')).toHaveText('By the stage');
+    await expect(page.locator('#spotSheetBadge')).toHaveText('HOT');
+    await expect(sheet.locator('.spot-sheet-price-section')).toBeVisible();
+    await expect(page.locator('#spotCallButton')).toHaveAttribute('href', 'tel:0722000111');
+    expect(errors).toEqual([]);
+});
+
+test('a broken photo falls back to the neutral tile on the card and in the sheet', async ({ page }) => {
+    const { errors } = await open(page, r => r.fulfill({ json: spotsAnswer([{ ...SPOT, image_url: '/images/gone-photo.jpg' }]) }));
+    const shown = img => expect.poll(() => img.evaluate(el => el.complete && el.naturalWidth > 0)).toBe(true);
+
+    const image = page.locator('.spot-card img');
+    await expect(image).toHaveAttribute('src', /^data:image\/svg/);
+    await shown(image);
+    await page.locator('.spot-card').click();
+    await expect(page.locator('#spotSheetImage')).toHaveAttribute('src', /^data:image\/svg/);
+    await shown(page.locator('#spotSheetImage'));
+    expect(errors).toEqual([]);
+});
+
+test('one bad offer never stops the others', async ({ page }) => {
+    const bad = [null, 'not an offer', 7, [], {}, { id: 41 }, { id: 42, title: { oops: 1 }, seller_name: 'Kamau', price: 80 }];
+    const { errors } = await open(page, r => r.fulfill({ json: spotsAnswer([...bad, SPOT]) }));
+    await expect(page.locator('.spot-card')).toHaveCount(2);
+    await expect(page.locator('#deals')).toBeVisible();
+    await expect(page.locator('#deals')).not.toContainText(/undefined|null|\[object/);
+    await expect(page.locator('.spot-card[data-spot-id="42"] .product-name')).toHaveCount(0);
+    await expect(page.locator('.spot-card[data-spot-id="42"] .product-price')).toHaveText('80');
+    expect(errors).toEqual([]);
+});
+
+test('a list with only bad offers shows nothing', async ({ page }) => {
+    const { calls, errors } = await open(page, r => r.fulfill({ json: spotsAnswer([null, { id: 41 }]) }));
+    await expect.poll(() => calls).toContain('/api/public/spots');
+    await expectNoDeals(page);
     expect(errors).toEqual([]);
 });
 

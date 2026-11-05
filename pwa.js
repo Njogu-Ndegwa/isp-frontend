@@ -480,19 +480,35 @@ function dealsFromResponse(body) {
     return body && Array.isArray(body.ads) ? body.ads : [];
 }
 
+// A missing value is '' from here on, so the card and the sheet just leave it out.
+function dealText(value) {
+    if (typeof value !== 'string' && typeof value !== 'number') return '';
+    const text = String(value).trim();
+    return /^(null|undefined)$/i.test(text) ? '' : text;
+}
+
 // The feed's field names, in the shape the card and the detail sheet read.
 function toDeal(ad) {
+    const badge = dealText(ad.badge_text);
     return {
         id: ad.id,
-        title: ad.title || '',
-        description: ad.description || '',
-        seller: ad.seller_name || '',
-        location: ad.seller_location || '',
-        price: ad.price || '',
-        image: ad.image_url || ad.poster_url || '',
-        badge: ad.badge_text ? { type: ad.badge_type || '', text: ad.badge_text } : null,
-        phone: ad.phone_number || ''
+        title: dealText(ad.title),
+        description: dealText(ad.description),
+        seller: dealText(ad.seller_name),
+        location: dealText(ad.seller_location),
+        price: dealText(ad.price),
+        image: dealText(ad.image_url) || dealText(ad.poster_url),
+        badge: badge ? { type: dealText(ad.badge_type), text: badge } : null,
+        phone: dealText(ad.phone_number)
     };
+}
+
+// One offer that makes no sense is dropped here and the rest carry on.
+function toDeals(list) {
+    return list
+        .filter(ad => ad && typeof ad === 'object')
+        .map(toDeal)
+        .filter(deal => deal.title || deal.seller || deal.image);
 }
 
 async function loadAds() {
@@ -509,7 +525,7 @@ async function loadAds() {
         const response = await fetch(resolvePwaUrl(ADS_ENDPOINT), { signal: controller.signal });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-        const deals = dealsFromResponse(await response.json()).map(toDeal);
+        const deals = toDeals(dealsFromResponse(await response.json()));
         if (deals.length === 0) return;
 
         renderAds(deals);
@@ -528,28 +544,36 @@ function renderAds(ads) {
     elements.showcaseScroll.querySelectorAll('.spot-card').forEach(card => card.remove());
 
     ads.forEach(ad => {
-        const card = document.createElement('div');
-        card.className = 'spot-card';
-        card.setAttribute('data-spot-id', ad.id);
-        card.onclick = () => openAdModal(ad);
-
-        // These strings come from whoever wrote the offer, so they are escaped.
-        card.innerHTML = `
-            <div class="product-image">
-                <img src="${escapeHtml(ad.image || DEAL_IMAGE_PLACEHOLDER)}" alt="${escapeHtml(ad.title)}" loading="lazy">
-                ${ad.badge ? `<span class="product-badge ${escapeHtml(ad.badge.type)}">${escapeHtml(ad.badge.text)}</span>` : ''}
-            </div>
-            <div class="product-info">
-                <div class="product-name">${escapeHtml(ad.title)}</div>
-                <div class="product-seller">${escapeHtml(ad.seller)}</div>
-                <div class="product-price">${escapeHtml(ad.price)}</div>
-            </div>
-        `;
-        const image = card.querySelector('img');
-        image.addEventListener('error', () => { image.src = DEAL_IMAGE_PLACEHOLDER; }, { once: true });
-
-        elements.showcaseScroll.appendChild(card);
+        try {
+            elements.showcaseScroll.appendChild(createDealCard(ad));
+        } catch (error) {
+            console.log('Offer skipped:', error.message);
+        }
     });
+}
+
+function createDealCard(ad) {
+    const card = document.createElement('div');
+    card.className = 'spot-card';
+    card.setAttribute('data-spot-id', ad.id);
+    card.onclick = () => openAdModal(ad);
+
+    // These strings come from whoever wrote the offer, so they are escaped.
+    card.innerHTML = `
+        <div class="product-image">
+            <img src="${escapeHtml(ad.image || DEAL_IMAGE_PLACEHOLDER)}" alt="${escapeHtml(ad.title)}" loading="lazy">
+            ${ad.badge ? `<span class="product-badge ${escapeHtml(ad.badge.type)}">${escapeHtml(ad.badge.text)}</span>` : ''}
+        </div>
+        <div class="product-info">
+            ${ad.title ? `<div class="product-name">${escapeHtml(ad.title)}</div>` : ''}
+            ${ad.seller ? `<div class="product-seller">${escapeHtml(ad.seller)}</div>` : ''}
+            ${ad.price ? `<div class="product-price">${escapeHtml(ad.price)}</div>` : ''}
+        </div>
+    `;
+    const image = card.querySelector('img');
+    image.addEventListener('error', () => { image.src = DEAL_IMAGE_PLACEHOLDER; }, { once: true });
+
+    return card;
 }
 
 // ========================================
@@ -569,17 +593,33 @@ function initAdModal() {
 function openAdModal(ad) {
     if (!elements.spotSheetOverlay) return;
     
-    document.getElementById('spotSheetImage').src = ad.image || DEAL_IMAGE_PLACEHOLDER;
-    document.getElementById('spotSheetImage').alt = ad.title;
-    document.getElementById('spotSheetBadge').textContent = ad.badge?.text || '';
+    const image = document.getElementById('spotSheetImage');
+    image.onerror = () => {
+        image.onerror = null;
+        image.src = DEAL_IMAGE_PLACEHOLDER;
+    };
+    image.src = ad.image || DEAL_IMAGE_PLACEHOLDER;
+    image.alt = ad.title;
+
+    // A row with nothing to say is left out, and comes back for the next offer.
+    const fillRow = (id, text, row) => {
+        const el = document.getElementById(id);
+        el.textContent = text;
+        (row ? el.closest(row) : el).style.display = text ? '' : 'none';
+    };
+    fillRow('spotSheetBadge', ad.badge?.text || '');
     document.getElementById('spotSheetBadge').className = `spot-sheet-badge ${ad.badge?.type || ''}`;
     document.getElementById('spotSheetTag').textContent = 'MARKETPLACE';
-    document.getElementById('spotSheetTitle').textContent = ad.title;
-    document.getElementById('spotSheetDescription').textContent = ad.description || '';
-    document.getElementById('spotSheetSeller').textContent = ad.seller;
-    document.getElementById('spotSheetLocation').textContent = ad.location || '';
-    document.getElementById('spotSheetPrice').textContent = ad.price;
-    document.getElementById('spotCallButton').href = `tel:${ad.phone}`;
+    fillRow('spotSheetTitle', ad.title);
+    fillRow('spotSheetDescription', ad.description);
+    fillRow('spotSheetSeller', ad.seller);
+    fillRow('spotSheetLocation', ad.location);
+    document.querySelector('.spot-sheet-seller').style.display = (ad.seller || ad.location) ? '' : 'none';
+    fillRow('spotSheetPrice', ad.price, '.spot-sheet-price-section');
+
+    const callButton = document.getElementById('spotCallButton');
+    callButton.closest('.spot-sheet-contact').style.display = ad.phone ? '' : 'none';
+    callButton.href = ad.phone ? `tel:${ad.phone}` : '#';
     
     elements.spotSheetOverlay.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
