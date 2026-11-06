@@ -433,6 +433,7 @@ test.describe('with a mouse (390px)', () => {
     });
 
     test('the swap in one constant: left becomes next, right becomes previous', async ({ page }) => {
+        test.skip(process.env.PORTAL_TIER === 'legacy', 'patches the source text of spots.js, which the compiled copy does not have');
         await openPortal(page, portal(), {
             beforeGoto: p => p.route(/\/spots\.js/, async route => {
                 const res = await route.fetch();

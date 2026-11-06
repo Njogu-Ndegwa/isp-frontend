@@ -1,6 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>
+        // Old browsers (smart TVs) can't parse the modern scripts at all, and a file
+        // that doesn't parse does nothing: the page stayed on its loading state for
+        // ever. They get the compiled copies in legacy/ instead (npm run build:legacy).
+        // Keep this script and the other inline ones plain ES5: they run everywhere.
+        (function () {
+            var modern = false;
+            try { new Function('var a = {}; return a?.b ?? (async function () {});'); modern = true; } catch (e) {}
+            window.__legacyPortal = !modern || !!window.__forceLegacyPortal;
+        })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Bitwave Soko - Speed Test & Deals</title>
@@ -322,21 +333,33 @@
     </div>
 
     <!-- Scripts -->
+    <!-- Old browsers: see the note on this loader in index.html. -->
+    <script>
+        if (window.__legacyPortal) {
+            document.write(
+                '<script src="legacy/polyfills.js?v=1"><\/script>' +
+                '<script src="legacy/pwa.js?v=3"><\/script>' +
+                '<!-' + '-'
+            );
+        }
+    </script>
     <script src="pwa.js?v=3"></script>
+    <!-- end of modern scripts -->
     
     <!-- Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', async () => {
-                try {
-                    const regs = await navigator.serviceWorker.getRegistrations();
-                    await Promise.all(regs.map((reg) => reg.unregister()));
-
-                    if ('caches' in window) {
-                        const cacheNames = await caches.keys();
-                        await Promise.all(cacheNames.map((name) => caches.delete(name)));
-                    }
-
+            window.addEventListener('load', function () {
+                if (!navigator.serviceWorker.getRegistrations) return;
+                navigator.serviceWorker.getRegistrations().then(function (regs) {
+                    return Promise.all(regs.map(function (reg) { return reg.unregister(); }));
+                }).then(function () {
+                    if (!('caches' in window)) return;
+                    return caches.keys().then(function (cacheNames) {
+                        return Promise.all(cacheNames.map(function (name) { return caches['delete'](name); }));
+                    });
+                }).then(function () {
+                    // If this tab was still controlled by an old SW, reload once.
                     if (navigator.serviceWorker.controller && !sessionStorage.getItem('sw_cleanup_reloaded')) {
                         sessionStorage.setItem('sw_cleanup_reloaded', '1');
                         window.location.reload();
@@ -344,9 +367,9 @@
                     }
 
                     console.log('✅ ServiceWorker disabled and caches cleared');
-                } catch (err) {
-                    console.log('❌ ServiceWorker cleanup failed:', err);
-                }
+                })['catch'](function (err) {
+                    console.log('⚠️ ServiceWorker cleanup failed:', err);
+                });
             });
         }
     </script>

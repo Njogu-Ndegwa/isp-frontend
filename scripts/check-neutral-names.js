@@ -86,6 +86,8 @@ function findProblems() {
         const word = blockedWord(file);
         if (word) problems.push(`${file}: file name contains "${word}"`);
         if (!/\.(html|css|js)$/.test(file) || file.startsWith('tests/')) continue;
+        // Generated from the root files, which are checked here.
+        if (file.startsWith('legacy/')) continue;
         if (file === 'scripts/check-neutral-names.js') continue;
         const text = fs.readFileSync(path.join(ROOT, file), 'utf8');
         for (const name of namesIn(file, text)) {

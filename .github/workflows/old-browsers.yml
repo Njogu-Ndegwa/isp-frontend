@@ -1,0 +1,42 @@
+name: Old browsers
+
+# Smart TVs run old browser engines. If the portal JS served to them stops parsing,
+# they sit on the grey loading cards and nothing reports it. This fails a PR that
+# gets there (see scripts/check-legacy.js), and runs the portal tests on both the
+# modern scripts and the compiled copies old browsers get.
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+jobs:
+  parse-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: node scripts/check-legacy.js
+
+  portal-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        tier: [modern, legacy]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test
+        env:
+          PORTAL_TIER: ${{ matrix.tier }}
