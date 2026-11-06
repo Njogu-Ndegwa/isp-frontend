@@ -1739,6 +1739,7 @@ function showPlansError() {
                        cursor:pointer;font-size:.9rem;">
                 🔄 Retry
             </button>
+            <p style="opacity:.65;font-size:.85rem;margin:1rem 0 0;">Or pay on a phone, then tap Connect a TV / Device</p>
         </div>
     `;
     document.getElementById('retryPlansBtn')

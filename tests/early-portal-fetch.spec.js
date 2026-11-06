@@ -44,7 +44,7 @@ test('the plans request leaves before script.js has even arrived', async ({ page
     await page.route(PRIMARY, route => { events.push('portal-request'); return json(route, 200, PORTAL); });
     await page.route(PROXY, route => json(route, 200, PORTAL));
     // A slow script.js: the old code could not ask for plans until it ran.
-    await page.route(url => url.pathname === '/script.js', async route => {
+    await page.route(url => url.pathname.endsWith('/script.js'), async route => {
         await sleep(1500);
         events.push('script.js-served');
         return route.continue();

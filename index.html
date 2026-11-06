@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <script>
+        // Old browsers (smart TVs) can't parse the modern scripts at all, and a file
+        // that doesn't parse does nothing: the page stayed on its loading state for
+        // ever. They get the compiled copies in legacy/ instead (npm run build:legacy).
+        // Keep this script and the other inline ones plain ES5: they run everywhere.
+        (function () {
+            var modern = false;
+            try { new Function('var a = {}; return a?.b ?? (async function () {});'); modern = true; } catch (e) {}
+            window.__legacyPortal = !modern || !!window.__forceLegacyPortal;
+        })();
+    </script>
+    <script>
         // iOS's captive-portal sheet ("Captive Wi-Fi") focuses the first text
         // field as soon as the page loads: the keyboard opens over the hero and
         // the page zooms in. Runs before <body> so it is in place before that.
@@ -273,6 +284,32 @@
                         <div class="skeleton-card"></div>
                         <div class="skeleton-card"></div>
                     </div>
+                    <script>
+                        // Grey cards must never be the end state. Whatever went wrong (scripts
+                        // that didn't parse or arrive, a request that hangs), after 25 s of
+                        // nothing but skeletons say so plainly. Lives here, inline and plain
+                        // ES5, so it works even when every other script failed. script.js gives
+                        // up on its own by about 20 s, and late plans still replace this.
+                        (function () {
+                            var LIMIT_S = 25, waited = 0;
+                            var grid = document.getElementById('plansGrid');
+                            var timer = setInterval(function () {
+                                if (grid.querySelector('.plan-card')) { clearInterval(timer); return; }
+                                waited = grid.querySelector('.skeleton-card') ? waited + 1 : 0;
+                                if (waited < LIMIT_S) return;
+                                waited = 0;
+                                grid.innerHTML =
+                                    '<div id="plansTimeoutMessage" style="grid-column:1/-1;text-align:center;padding:2rem 1rem;">' +
+                                    '<p style="font-weight:600;margin:0 0 .25rem;">Plans are taking too long to load</p>' +
+                                    '<p style="opacity:.65;font-size:.85rem;margin:0 0 1rem;">Check your connection and try again</p>' +
+                                    '<button type="button" id="plansTimeoutRetry" style="padding:.6rem 1.5rem;border:none;border-radius:8px;' +
+                                    'background:#2563eb;background:var(--primary,#2563eb);color:#fff;font-weight:600;cursor:pointer;font-size:.9rem;">Retry</button>' +
+                                    '<p style="opacity:.65;font-size:.85rem;margin:1rem 0 0;">Or pay on a phone, then tap Connect a TV / Device</p>' +
+                                    '</div>';
+                                document.getElementById('plansTimeoutRetry').onclick = function () { window.location.reload(); };
+                            }, 1000);
+                        })();
+                    </script>
                 </div>
 
                 <!-- OR Divider (visible only when both methods active) -->
@@ -948,26 +985,43 @@
     </div>
 
     <!-- Defer scripts to prevent render blocking -->
-    <script src="script.js?v=19" defer></script>
+    <!-- Old browsers: write the compiled scripts, then open a comment that swallows
+         the modern tags below up to the closing one. Modern browsers skip the write
+         and see plain tags, so their load order and timing don't change. -->
+    <script>
+        if (window.__legacyPortal) {
+            document.write(
+                '<script src="legacy/polyfills.js?v=1" defer><\/script>' +
+                '<script src="legacy/script.js?v=20" defer><\/script>' +
+                '<script src="legacy/script003.js" defer><\/script>' +
+                '<script src="legacy/spots.js?v=3" defer><\/script>' +
+                '<script src="legacy/device-pairing.js?v=2" defer><\/script>' +
+                '<script src="legacy/access-login.js" defer><\/script>' +
+                '<!-' + '-'
+            );
+        }
+    </script>
+    <script src="script.js?v=20" defer></script>
     <script src="script003.js" defer></script>
     <script src="spots.js?v=3" defer></script>
     <script src="device-pairing.js?v=2" defer></script>
     <script src="access-login.js" defer></script>
+    <!-- end of modern scripts -->
     
     <!-- PWA Service Worker & Install Prompt -->
     <script>
         // Disable Service Worker to avoid stale cached JS/HTML delaying updates.
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', async () => {
-                try {
-                    const regs = await navigator.serviceWorker.getRegistrations();
-                    await Promise.all(regs.map((reg) => reg.unregister()));
-
-                    if ('caches' in window) {
-                        const cacheNames = await caches.keys();
-                        await Promise.all(cacheNames.map((name) => caches.delete(name)));
-                    }
-
+            window.addEventListener('load', function () {
+                if (!navigator.serviceWorker.getRegistrations) return;
+                navigator.serviceWorker.getRegistrations().then(function (regs) {
+                    return Promise.all(regs.map(function (reg) { return reg.unregister(); }));
+                }).then(function () {
+                    if (!('caches' in window)) return;
+                    return caches.keys().then(function (cacheNames) {
+                        return Promise.all(cacheNames.map(function (name) { return caches['delete'](name); }));
+                    });
+                }).then(function () {
                     // If this tab was still controlled by an old SW, reload once.
                     if (navigator.serviceWorker.controller && !sessionStorage.getItem('sw_cleanup_reloaded')) {
                         sessionStorage.setItem('sw_cleanup_reloaded', '1');
@@ -976,26 +1030,26 @@
                     }
 
                     console.log('✅ ServiceWorker disabled and caches cleared');
-                } catch (err) {
+                })['catch'](function (err) {
                     console.log('⚠️ ServiceWorker cleanup failed:', err);
-                }
+                });
             });
         }
         
         // PWA Install Prompt
-        let deferredPrompt = null;
-        const installBanner = document.getElementById('pwaInstallStrip');
-        const installBtn = document.getElementById('pwaInstallBtn');
-        const installClose = document.getElementById('pwaInstallClose');
+        var deferredPrompt = null;
+        var installBanner = document.getElementById('pwaInstallStrip');
+        var installBtn = document.getElementById('pwaInstallBtn');
+        var installClose = document.getElementById('pwaInstallClose');
         
         // Listen for the beforeinstallprompt event
-        window.addEventListener('beforeinstallprompt', (e) => {
+        window.addEventListener('beforeinstallprompt', function (e) {
             e.preventDefault();
             deferredPrompt = e;
             console.log('📱 PWA install prompt ready');
             
             // Show install banner after 3 seconds (if not already installed)
-            setTimeout(() => {
+            setTimeout(function () {
                 if (!isAppInstalled() && installBanner) {
                     installBanner.classList.remove('hidden');
                 }
@@ -1004,23 +1058,24 @@
         
         // Install button click
         if (installBtn) {
-            installBtn.addEventListener('click', async () => {
-                if (deferredPrompt) {
-                    deferredPrompt.prompt();
-                    const result = await deferredPrompt.userChoice;
+            installBtn.addEventListener('click', function () {
+                function done() { installBanner.classList.add('hidden'); }
+                if (!deferredPrompt) { done(); return; }
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(function (result) {
                     console.log('📱 Install choice:', result.outcome);
                     if (result.outcome === 'accepted') {
                         console.log('✅ App installed!');
                     }
                     deferredPrompt = null;
-                }
-                installBanner.classList.add('hidden');
+                    done();
+                });
             });
         }
         
         // Close button click
         if (installClose) {
-            installClose.addEventListener('click', () => {
+            installClose.addEventListener('click', function () {
                 installBanner.classList.add('hidden');
                 // Don't show again for this session
                 sessionStorage.setItem('pwa_dismissed', 'true');
@@ -1035,7 +1090,7 @@
         }
         
         // Handle app installed event
-        window.addEventListener('appinstalled', () => {
+        window.addEventListener('appinstalled', function () {
             console.log('✅ PWA was installed');
             installBanner.classList.add('hidden');
             deferredPrompt = null;
