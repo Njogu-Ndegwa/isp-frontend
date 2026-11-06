@@ -870,8 +870,17 @@ window.populateMiniProducts = populateMiniProducts;
 const HERO_IMAGE_MS = 6000;
 const HERO_VIDEO_MAX_MS = 15000;
 const HERO_IMPRESSION_MS = 1000;   // a slide counts as seen after 1 s on screen
+// Which way a tap on each half of the hero goes: -1 is previous, 1 is next.
+// Same as WhatsApp Status. To swap the sides, swap these two numbers.
+const HERO_TAP_SIDES = { left: -1, right: 1 };
+const HERO_TAP_MOVE_PX = 10;       // a press that travels further isn't a tap
+const HERO_SWIPE_PX = 40;
+const HERO_CONTROL_MARGIN_PX = 16; // just missing Call must not flip the slide away
+// Never start a tap or swipe from these. The WiFi chip has no action of its own,
+// but it reads as a label, so tapping it shouldn't move the hero either.
+const HERO_NO_NAV = 'a, button, input, select, textarea, label, video[controls], .hero-spot-brand';
 let heroAds = [];
-const heroRot = { idx: 0, timer: null, seen: new Set(), seenTimer: null, track: null, segs: null };
+const heroRot = { idx: 0, timer: null, stopWatching: null, seen: new Set(), seenTimer: null, track: null, segs: null };
 
 function adEsc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1007,8 +1016,21 @@ function mountHeroAds() {
 
     header.classList.add('has-hero-spots');
     header.setAttribute('aria-roledescription', 'carousel');
-    header.appendChild(track);
+    // The track slides away under the finger, so taps are listened for on this
+    // instead: it holds still, and a re-render of the header replaces it.
+    const stage = document.createElement('div');
+    stage.className = 'hero-stage';
+    stage.appendChild(track);
+    header.appendChild(stage);
     header.appendChild(segs);
+    // Tapping the sides needs a pointer; these are the same two moves for a
+    // keyboard or a screen reader. Unseen until focused (styles003.css).
+    const steps = document.createElement('div');
+    steps.className = 'hero-steps';
+    steps.innerHTML =
+        '<button type="button" class="hero-step hero-step--prev" data-step="-1" aria-label="Previous slide">&lsaquo;</button>' +
+        '<button type="button" class="hero-step hero-step--next" data-step="1" aria-label="Next slide">&rsaquo;</button>';
+    header.appendChild(steps);
     heroRot.track = track;
     heroRot.segs = segs;
     heroRot.idx = 0;
@@ -1028,26 +1050,46 @@ function mountHeroAds() {
         const b = e.target.closest('.hero-seg');
         if (b) { heroGo(Number(b.dataset.go)); heroSchedule(); }
     });
-    track.addEventListener('click', e => {
+    // click is what keeps touch and mouse from firing twice, and the browser
+    // sends none after a scroll. The pointer events only rule out presses that
+    // started on a control or moved too far (a mouse drag still ends in a click).
+    let press = null;
+    stage.addEventListener('click', e => {
+        const wasTap = !!press && !press.moved;
+        press = null;
         const mute = e.target.closest('.hero-spot-mute');
         if (mute) {
             const v = mute.closest('.hero-slide').querySelector('video');
             v.muted = !v.muted;
-            mute.innerHTML = v.muted ? AD_ICONS.muted : AD_ICONS.sound;
-            mute.setAttribute('aria-label', v.muted ? 'Turn sound on' : 'Turn sound off');
+            heroShowMute(mute, v.muted);
             return;
         }
         const cta = e.target.closest('[data-hero-cta]');
-        if (cta) recordClick(Number(cta.dataset.spotId), 'call', 'hero');
+        if (cta) { recordClick(Number(cta.dataset.spotId), 'call', 'hero'); return; }
+        // Only a slide change: it records nothing. Views are heroGo's job.
+        if (wasTap) {
+            const box = header.getBoundingClientRect();
+            heroStep(e.clientX < box.left + box.width / 2 ? HERO_TAP_SIDES.left : HERO_TAP_SIDES.right);
+        }
     });
-    let x0 = null;
-    track.addEventListener('pointerdown', e => { x0 = e.clientX; });
-    track.addEventListener('pointerup', e => {
-        if (x0 === null) return;
-        const dx = e.clientX - x0;
-        x0 = null;
-        if (Math.abs(dx) > 40) { heroGo(heroRot.idx + (dx < 0 ? 1 : -1)); heroSchedule(); }
+    steps.addEventListener('click', e => {
+        const b = e.target.closest('.hero-step');
+        if (b) heroStep(Number(b.dataset.step));
     });
+    stage.addEventListener('pointerdown', e => {
+        press = e.isPrimary && !heroPressOnControl(e) ? { x: e.clientX, y: e.clientY, moved: false } : null;
+    });
+    // The browser took the gesture over to scroll the page.
+    stage.addEventListener('pointercancel', () => { press = null; });
+    stage.addEventListener('pointerup', e => {
+        if (!press) return;
+        const dx = e.clientX - press.x;
+        const dy = e.clientY - press.y;
+        press.moved = Math.hypot(dx, dy) > HERO_TAP_MOVE_PX;
+        if (Math.abs(dx) > HERO_SWIPE_PX && Math.abs(dx) > Math.abs(dy)) heroStep(dx < 0 ? 1 : -1);
+    });
+    // Otherwise a mouse drag on a photo becomes the browser's own image drag.
+    stage.addEventListener('dragstart', e => e.preventDefault());
 
     heroGo(0);
     heroSchedule();
@@ -1056,6 +1098,29 @@ window.mountHeroAds = mountHeroAds;
 
 function heroReducedMotion() {
     return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+}
+
+function heroShowMute(btn, muted) {
+    btn.innerHTML = muted ? AD_ICONS.muted : AD_ICONS.sound;
+    btn.setAttribute('aria-label', muted ? 'Turn sound on' : 'Turn sound off');
+}
+
+function heroPressOnControl(e) {
+    if (e.target.closest(HERO_NO_NAV)) return true;
+    const m = HERO_CONTROL_MARGIN_PX;
+    return Array.from(heroRot.track.children[heroRot.idx].querySelectorAll('a, button')).some(c => {
+        const r = c.getBoundingClientRect();
+        return r.width > 0 && e.clientX > r.left - m && e.clientX < r.right + m
+            && e.clientY > r.top - m && e.clientY < r.bottom + m;
+    });
+}
+
+// A customer moving the hero by hand. Away from the plans it stays on the
+// welcome slide, the same as the auto-rotate.
+function heroStep(dir) {
+    if (!heroOnPlansPage()) return;
+    heroGo(heroRot.idx + dir);
+    heroSchedule();
 }
 
 function heroGo(n) {
@@ -1088,8 +1153,15 @@ function heroGo(n) {
     Array.from(slides).forEach((s, i) => {
         const sv = s.querySelector('video');
         if (sv && i !== heroRot.idx) sv.pause();
+        // Tab and screen readers stay on the slide that's showing; the ones
+        // off to the side would otherwise scroll the hero out of line.
+        s.inert = i !== heroRot.idx;
     });
-    if (v) playAdVideo(v, false);
+    if (v) {
+        playAdVideo(v, false); // starts over, muted
+        const mute = active.querySelector('.hero-spot-mute');
+        if (mute) heroShowMute(mute, true);
+    }
     // Fetch the next slide's video while this one shows, never earlier.
     const next = slides[(heroRot.idx + 1) % slides.length].querySelector('video');
     if (next && !next.src) { next.src = next.dataset.src; next.preload = 'metadata'; }
@@ -1128,6 +1200,9 @@ function watchPlansSection() {
 
 function heroSchedule() {
     clearTimeout(heroRot.timer);
+    // Leaving a video by hand must not leave its 'ended' behind, or coming back
+    // to that video would advance twice when it finishes and skip a slide.
+    if (heroRot.stopWatching) { heroRot.stopWatching(); heroRot.stopWatching = null; }
     const track = heroRot.track;
     if (!track || !track.isConnected || !heroOnPlansPage()) return;
     if (heroReducedMotion()) return;
@@ -1136,9 +1211,9 @@ function heroSchedule() {
     if (v) {
         // A video slide stays until the clip ends, capped so a long upload
         // can't hold the hero.
-        const onEnd = () => { v.removeEventListener('ended', onEnd); clearTimeout(heroRot.timer); advance(); };
-        v.addEventListener('ended', onEnd);
-        heroRot.timer = setTimeout(() => { v.removeEventListener('ended', onEnd); advance(); }, HERO_VIDEO_MAX_MS);
+        v.addEventListener('ended', advance);
+        heroRot.stopWatching = () => v.removeEventListener('ended', advance);
+        heroRot.timer = setTimeout(advance, HERO_VIDEO_MAX_MS);
     } else {
         heroRot.timer = setTimeout(advance, HERO_IMAGE_MS);
     }
