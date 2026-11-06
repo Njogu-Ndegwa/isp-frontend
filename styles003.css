@@ -5608,10 +5608,17 @@ textarea {
 /* ---- Hero ads: the photo hero rotates through ads (spots.js) ----
    Every ad slide shares one frame: progress segments along the top, the
    WiFi's name below them, and a bottom bar with the advertiser, the offer
-   and one Call button. Nothing else on a slide is tappable. */
+   and one Call button. Tapping anywhere else moves to the previous or next
+   slide (spots.js, HERO_TAP_SIDES), so none of it can select text. */
 .portal-header--hero.has-hero-spots {
     display: block;
     touch-action: pan-y;
+}
+.hero-stage {
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
 }
 .hero-track {
     display: flex;
@@ -5691,6 +5698,7 @@ textarea {
     gap: 8px;
 }
 .hero-spot-brand {
+    cursor: default;
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -5740,6 +5748,35 @@ textarea {
     background: #FACC15;
     color: #1A2E05;
     font-size: 18px;
+}
+
+/* Previous and next for the keyboard: only there once focused, never in the
+   way of a tap. */
+.hero-step {
+    position: absolute;
+    top: 50%;
+    z-index: 6;
+    width: 40px;
+    height: 40px;
+    margin-top: -20px;
+    padding: 0 0 4px;
+    border: 0;
+    border-radius: 20px;
+    background: rgba(15, 23, 42, 0.8);
+    color: #fff;
+    font-size: 26px;
+    line-height: 1;
+    opacity: 0;
+    pointer-events: none;
+    cursor: pointer;
+}
+.hero-step--prev { left: 8px; }
+.hero-step--next { right: 8px; }
+.hero-step:focus-visible {
+    opacity: 1;
+    pointer-events: auto;
+    outline: 3px solid #fff;
+    outline-offset: 2px;
 }
 
 /* The bottom bar: who, what, and the one thing to tap. */
