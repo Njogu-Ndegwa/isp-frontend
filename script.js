@@ -130,6 +130,7 @@ let routerAuthMethod = 'DIRECT_API'; // Will be set after lookup ('DIRECT_API' o
 let routerBusinessName = null; // Will be set after lookup from backend
 let routerPaymentMethods = ['mpesa', 'voucher']; // Default — updated from portal/router API
 let routerPaymentProvider = 'mpesa'; // Collection gateway assigned to this router
+let routerCurrency = null; // Owner's market currency from the router API (KES, XAF, ZMW...)
 // Support phone is reseller-specific and comes from the backend ONLY.
 // Never hardcode a number here — a stale default sends customers to the
 // wrong person. Empty means "unknown", and every support link stays hidden.
@@ -302,6 +303,7 @@ async function getRouterId(identity) {
             console.log('💳 [ROUTER DEBUG] Payment methods:', routerPaymentMethods);
         }
         setPaymentProvider(data.payment_provider);
+        setRouterCurrency(data.currency);
 
         updateSupportPhone(data.support_phone);
         
@@ -704,6 +706,9 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
         setPaymentProvider(localStorage.getItem('_cached_payment_provider'));
     } catch { /* ignore — M-Pesa is the safe default */ }
+    try {
+        setRouterCurrency(localStorage.getItem('_cached_currency'));
+    } catch { /* ignore — falls back to the gateway's currency */ }
 
     // Check for saved RADIUS credentials from a previous payment session
     checkSavedRadiusLogin();
@@ -735,11 +740,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 window._routerBusinessName = routerBusinessName;
                 routerPaymentMethods = data.router.payment_methods || ['mpesa', 'voucher'];
                 setPaymentProvider(data.router.payment_provider);
+                setRouterCurrency(data.router.currency);
                 console.log('✅ [PORTAL] Router resolved — id:', routerId, 'auth:', routerAuthMethod, 'methods:', routerPaymentMethods);
                 updateBranding();
                 applyPaymentMethods(routerPaymentMethods);
                 try { localStorage.setItem('_cached_payment_methods', JSON.stringify(routerPaymentMethods)); } catch {}
                 try { localStorage.setItem('_cached_payment_provider', routerPaymentProvider); } catch {}
+                try { localStorage.setItem('_cached_currency', routerCurrency || ''); } catch {}
                 updateSupportPhone(data.router.support_phone);
             }
 
@@ -1547,8 +1554,17 @@ function getPaymentProviderLabel() {
     return 'M-Pesa';
 }
 
+// The code printed before plan prices. The backend sends the router owner's
+// market currency; Kenya keeps its familiar "KSH 50/-". Without it (an older
+// API response) fall back to the gateway's currency.
 function getPaymentCurrencyCode() {
+    if (routerCurrency) return routerCurrency === 'KES' ? 'KSH' : routerCurrency;
     return routerPaymentProvider === 'fapshi' ? 'XAF' : 'KSH';
+}
+
+function setRouterCurrency(currency) {
+    const code = String(currency || '').trim().toUpperCase();
+    routerCurrency = /^[A-Z]{3}$/.test(code) ? code : null;
 }
 
 function setPaymentProvider(provider) {
@@ -2247,8 +2263,8 @@ function createPlanCard(plan) {
 // FORMAT PRICE - Make currency code smaller
 // ========================================
 function formatPrice(price) {
-    // Split the provider-specific currency code from the amount.
-    const match = price.match(/^(KSH|XAF)\s*(.+)$/);
+    // Split the currency code (KSH, XAF, ZMW...) from the amount.
+    const match = price.match(/^([A-Z]{3})\s*(.+)$/);
     if (match) {
         return `<span class="currency-code">${match[1]}</span> ${match[2]}`;
     }
