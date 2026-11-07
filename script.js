@@ -131,6 +131,7 @@ let routerBusinessName = null; // Will be set after lookup from backend
 let routerPaymentMethods = ['mpesa', 'voucher']; // Default — updated from portal/router API
 let routerPaymentProvider = 'mpesa'; // Collection gateway assigned to this router
 let routerCurrency = null; // Owner's market currency from the router API (KES, XAF, ZMW...)
+let reconnectByPhone = true; // false on voucher-only routers (no mobile-money payments to look up)
 // Support phone is reseller-specific and comes from the backend ONLY.
 // Never hardcode a number here — a stale default sends customers to the
 // wrong person. Empty means "unknown", and every support link stays hidden.
@@ -1229,6 +1230,10 @@ const I18N = {
         reconnectHint: 'Enter your {provider} phone number or code',
         reconnectPlaceholder: 'Phone or code e.g. 0712… or ABC-DEF',
         reconnectInvalid: 'Please enter a valid {provider} phone number or code (e.g. ABC-DEF or your {provider} receipt)',
+        reconnectSubCode: 'Enter your voucher or access code to reconnect',
+        reconnectHintCode: 'Enter your voucher or access code',
+        reconnectPlaceholderCode: 'Code e.g. 12345678 or ABC-DEF',
+        reconnectInvalidCode: 'Please enter a valid voucher or access code (e.g. 12345678 or ABC-DEF)',
         reconnectPhoneDetected: '📱 Phone number detected',
         reconnectCodeDetected: '🎟️ Code detected',
         codeTitle: 'Have a Voucher or access code?',
@@ -1288,6 +1293,10 @@ const I18N = {
         reconnectHint: 'Ingiza nambari ya simu ya {provider} au msimbo',
         reconnectPlaceholder: 'Simu au msimbo k.m. 0712… au ABC-DEF',
         reconnectInvalid: 'Ingiza nambari sahihi ya simu ya {provider} au msimbo (k.m. ABC-DEF au risiti ya {provider})',
+        reconnectSubCode: 'Ingiza voucher au msimbo wako kuunganisha tena',
+        reconnectHintCode: 'Ingiza voucher au msimbo wako',
+        reconnectPlaceholderCode: 'Msimbo k.m. 12345678 au ABC-DEF',
+        reconnectInvalidCode: 'Ingiza voucher au msimbo sahihi (k.m. 12345678 au ABC-DEF)',
         reconnectPhoneDetected: '📱 Nambari ya simu imetambuliwa',
         reconnectCodeDetected: '🎟️ Msimbo umetambuliwa',
         codeTitle: 'Una voucher au msimbo wa kuingia?',
@@ -1356,6 +1365,10 @@ const I18N = {
         reconnectHint: 'Entrez votre numéro {provider} ou code',
         reconnectPlaceholder: 'Numéro ou code ex. 0712… ou ABC-DEF',
         reconnectInvalid: 'Entrez un numéro {provider} valide ou un code (ex. ABC-DEF ou votre reçu {provider})',
+        reconnectSubCode: 'Entrez votre voucher ou code',
+        reconnectHintCode: 'Entrez votre voucher ou code',
+        reconnectPlaceholderCode: 'Code ex. 12345678 ou ABC-DEF',
+        reconnectInvalidCode: 'Entrez un voucher ou un code valide (ex. 12345678 ou ABC-DEF)',
         reconnectPhoneDetected: '📱 Numéro détecté',
         reconnectCodeDetected: '🎟️ Code détecté',
         codeTitle: "Vous avez un voucher ou un code d'accès ?",
@@ -1538,6 +1551,20 @@ function applyPaymentMethods(methods) {
     if (paymentDivider) {
         paymentDivider.classList.toggle('hidden', !(hasMpesa && showCodeSection));
     }
+
+    // Voucher-only routers: reconnect takes a code, never a phone number.
+    reconnectByPhone = hasMpesa;
+    const reconnectSub = document.querySelector('#reconnectSection .reconnect-header-subtitle');
+    const reconnectInput = document.getElementById('reconnectInput');
+    if (reconnectSub) {
+        reconnectSub.dataset.i18n = hasMpesa ? 'reconnectSub' : 'reconnectSubCode';
+        reconnectSub.textContent = tr(reconnectSub.dataset.i18n);
+    }
+    if (reconnectInput) {
+        reconnectInput.dataset.i18nPlaceholder = hasMpesa ? 'reconnectPlaceholder' : 'reconnectPlaceholderCode';
+        reconnectInput.placeholder = tr(reconnectInput.dataset.i18nPlaceholder);
+    }
+    updateReconnectHint();
 
     console.log('💳 Payment methods applied:', methods, '| mpesa:', hasMpesa, '| voucher:', hasVoucher, '| share code:', hasShareCode, '| saved code:', hasSavedCode);
 }
@@ -3206,7 +3233,7 @@ function updateReconnectHint() {
     } else if (val && isReconnectCodeInput(val)) {
         hint.textContent = tr('reconnectCodeDetected');
     } else {
-        hint.textContent = tr('reconnectHint');
+        hint.textContent = tr(reconnectByPhone ? 'reconnectHint' : 'reconnectHintCode');
     }
 }
 
@@ -3292,7 +3319,7 @@ function setupReconnectUI() {
         // Validate: either a valid phone number or something shaped like a code
         const validPhone = isPhoneInput(val) && validatePhoneNumber(val.replace(/[^0-9]/g, ''));
         if (!validPhone && !isReconnectCodeInput(val)) {
-            showReconnectError(tr('reconnectInvalid'));
+            showReconnectError(tr(reconnectByPhone ? 'reconnectInvalid' : 'reconnectInvalidCode'));
             return;
         }
 

@@ -71,6 +71,22 @@ test('Voucher-only Zambian router shows the code box and no M-Pesa', async ({ pa
     expect(await page.evaluate(() => getPaymentCurrencyCode())).toBe('ZMW');
 });
 
+test('Voucher-only router asks for a code, not an M-Pesa number, to reconnect', async ({ page }) => {
+    await openPortal(page, { currency: 'ZMW', paymentMethods: ['voucher'] });
+    await expect(page.locator('#voucherSection')).toBeVisible();
+    const reconnect = page.locator('#reconnectSection');
+    await expect(page.locator('#reconnectHint')).toHaveText('Enter your voucher or access code');
+    await expect(reconnect).not.toContainText(/m-?pesa|phone/i);
+    await expect(page.locator('#reconnectInput')).toHaveAttribute('placeholder', 'Code e.g. 12345678 or ABC-DEF');
+    // Visible text only: the hidden M-Pesa section still holds its markup.
+    expect(await page.evaluate(() => document.body.innerText)).not.toMatch(/m-?pesa/i);
+});
+
+test('M-Pesa router keeps the phone-or-code reconnect wording', async ({ page }) => {
+    await openPortal(page, { currency: 'KES' });
+    await expect(page.locator('#reconnectHint')).toHaveText('Enter your M-Pesa phone number or code');
+});
+
 test('Kenyan router keeps KSH 500/-', async ({ page }) => {
     await openPortal(page, { currency: 'KES' });
     await expect(page.locator('#plansGrid .plan-card')).toContainText('KSH 500/-');
