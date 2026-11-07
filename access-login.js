@@ -160,11 +160,6 @@
         try {
             if (typeof routerId !== 'undefined' && routerId) return routerId;
         } catch (e) { /* not yet defined */ }
-        try {
-            if (typeof FALLBACK_ROUTER_ID !== 'undefined' && FALLBACK_ROUTER_ID) {
-                return FALLBACK_ROUTER_ID;
-            }
-        } catch (e) { /* not defined */ }
         return null;
     }
 
