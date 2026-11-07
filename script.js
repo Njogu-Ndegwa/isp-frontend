@@ -1026,6 +1026,47 @@ function renderStandardHeader(settings) {
     refreshSupportLinks();
 }
 
+// A reseller's own hero photo, uploaded from the dashboard. Only this exact shape
+// is ever loaded (backend: is_portal_hero_url in app/services/ad_media.py), on the
+// backend host every router has in its walled garden. Any other stored value keeps
+// the bundled-preset behaviour below, and the strict pattern is also what makes the
+// value safe to put in HTML.
+const CUSTOM_HERO_URL = /^https:\/\/isp\.bitwavetechnologies\.com\/media\/(c\/\d{4}\/\d{2}\/[A-Za-z0-9_-]+\.(?:jpg|webp))$/;
+const CUSTOM_HERO_TIMEOUT_MS = 3000;
+
+function customHeroSources(url) {
+    const match = CUSTOM_HERO_URL.exec(url || '');
+    if (!match) return null;
+    // Same origin is reachable by definition (see api/bw.js): vercel.json forwards
+    // /portal-media/ to the media host for phones that cannot reach it directly.
+    const sameOrigin = `/portal-media/${match[1]}`;
+    return window.__apiFallback && window.__apiFallback.active ? [sameOrigin] : [match[0], sameOrigin];
+}
+
+// Try each source in turn, then the bundled preset. A walled garden often drops
+// the connection silently instead of refusing it, so waiting for 'error' alone
+// could leave the hero bare for a long time.
+function loadCustomHero(img, sources, presetSrc) {
+    const queue = [...sources.slice(1), presetSrc];
+    let timer = null;
+    const next = () => {
+        clearTimeout(timer);
+        const src = queue.shift();
+        if (!src) {
+            img.closest('picture').classList.add('loaded'); // gradient-only fallback
+            return;
+        }
+        if (queue.length) timer = setTimeout(next, CUSTOM_HERO_TIMEOUT_MS);
+        img.src = src;
+    };
+    timer = setTimeout(next, CUSTOM_HERO_TIMEOUT_MS);
+    img.addEventListener('load', () => {
+        clearTimeout(timer);
+        img.closest('picture').classList.add('loaded');
+    });
+    img.addEventListener('error', next);
+}
+
 function renderHeroHeader(settings) {
     const header = document.getElementById('portal-header');
     if (!header) return;
@@ -1053,7 +1094,12 @@ function renderHeroHeader(settings) {
         PRESET_NAMES.find(p => configuredUrl.includes(p))   ||
         'city';
 
-    const picHtml = `
+    const customSources = customHeroSources(settings.header_bg_image_url);
+
+    const picHtml = customSources ? `
+        <picture class="hero-bg-img">
+            <img src="${customSources[0]}" alt="" aria-hidden="true" decoding="async" fetchpriority="high">
+        </picture>` : `
         <picture class="hero-bg-img">
             <source srcset="images/presets/${preset}.webp" type="image/webp">
             <img src="images/presets/${preset}.jpg" alt="" aria-hidden="true" decoding="async" fetchpriority="high">
@@ -1089,7 +1135,9 @@ function renderHeroHeader(settings) {
     if (window.mountHeroAds) window.mountHeroAds();
 
     const img = header.querySelector('.hero-bg-img img');
-    if (img) {
+    if (img && customSources) {
+        loadCustomHero(img, customSources, `images/presets/${preset}.jpg`);
+    } else if (img) {
         const markLoaded = () => img.closest('picture').classList.add('loaded');
         if (img.complete && img.naturalWidth > 0) {
             markLoaded();

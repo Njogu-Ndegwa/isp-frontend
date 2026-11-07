@@ -6,6 +6,7 @@
     }
   },
   "rewrites": [
-    { "source": "/api/bw/:path*", "destination": "/api/bw?path=:path*" }
+    { "source": "/api/bw/:path*", "destination": "/api/bw?path=:path*" },
+    { "source": "/portal-media/:path*", "destination": "https://isp.bitwavetechnologies.com/media/:path*" }
   ]
 }
