@@ -56,7 +56,7 @@
 
     // ---- Price formatter (mirrors script.js) ----
     function fmtPrice(price) {
-        const m = String(price).match(/^(KSH|XAF)\s*(.+)$/);
+        const m = String(price).match(/^([A-Z]{3})\s*(.+)$/);
         if (m) return `<span class="currency-code">${m[1]}</span> ${m[2]}`;
         return price;
     }
