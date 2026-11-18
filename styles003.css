@@ -5438,6 +5438,16 @@ body::before {
     text-align: center;
 }
 .hero-wifi-icon { width: 48px; height: 36px; margin-bottom: 8px; }
+.hero-logo {
+    display: block;
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 10px;
+    border-radius: 14px;
+    object-fit: cover;
+    background: rgba(255,255,255,0.15);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
 .hero-title { font-size: 24px; font-weight: 800; margin: 0 0 4px; color: #fff; }
 .hero-subtitle { font-size: 14px; margin: 0 0 12px; opacity: 0.85; color: #fff; }
 .hero-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; justify-content: center; }

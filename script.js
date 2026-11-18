@@ -979,6 +979,41 @@ function wifiSvgHtml() {
     </svg>`;
 }
 
+// Reseller logo for the hero header. Only our own media host is used: the
+// walled garden lets it through before login, while any other host would hang
+// or break on a phone that has not paid yet.
+const LOGO_HOSTS = ['isp.bitwavetechnologies.com', 'isp.bitwavetechnologies.net'];
+
+function allowedLogoUrl(url) {
+    const m = /^https:\/\/([^\/?#:]+)(?::\d+)?\//i.exec(String(url || '').trim());
+    if (!m || LOGO_HOSTS.indexOf(m[1].toLowerCase()) === -1) return '';
+    return String(url).trim();
+}
+
+function heroLogoHtml(url, name) {
+    // width/height attributes keep the logo small even if a phone still has an
+    // older cached stylesheet without .hero-logo.
+    return `<img class="hero-logo" src="${escapeHtml(url)}" alt="${escapeHtml(name)}" width="64" height="64" decoding="async">`;
+}
+
+// Swap a logo that fails to load for the Wi-Fi icon, so the hero never shows a
+// broken-image box.
+function wireHeroLogoFallback(header) {
+    const logo = header.querySelector('.hero-logo');
+    if (!logo) return;
+    const fallBack = () => {
+        if (!logo.parentNode) return;
+        const holder = document.createElement('div');
+        holder.innerHTML = wifiSvgHtml();
+        logo.parentNode.replaceChild(holder.firstChild, logo);
+    };
+    if (logo.complete && logo.naturalWidth === 0 && logo.getAttribute('src')) {
+        fallBack();
+    } else {
+        logo.addEventListener('error', fallBack);
+    }
+}
+
 // Device-allowance icon. Inline SVG rather than an emoji: the portal is loaded
 // almost entirely by low-end Android handsets, where emoji font coverage is
 // patchy and a missing glyph renders as a blank box next to the text.
@@ -1033,6 +1068,8 @@ function renderHeroHeader(settings) {
     const palette = THEMES[settings.color_theme] || THEMES.sunset_orange;
     const title = settings.welcome_title || window._routerBusinessName || 'Welcome';
     const subtitle = settings.welcome_subtitle || 'Fast & Reliable Internet Access';
+    const logoUrl = allowedLogoUrl(settings.company_logo_url);
+    const businessName = window._routerBusinessName || settings.welcome_title || 'Logo';
 
     // Portal runs behind a walled garden — always use a bundled local preset.
     // Resolution order:
@@ -1073,7 +1110,7 @@ function renderHeroHeader(settings) {
         ${picHtml}
         <div class="hero-gradient-overlay" style="background: linear-gradient(135deg, ${palette.primary}bb 0%, ${palette.primaryDark}88 100%)"></div>
         <div class="hero-content">
-            ${wifiSvgHtml()}
+            ${logoUrl ? heroLogoHtml(logoUrl, businessName) : wifiSvgHtml()}
             <h1 class="hero-title">${escapeHtml(title)}</h1>
             <p class="hero-subtitle">${escapeHtml(subtitle)}</p>
             <div class="hero-pills">
@@ -1084,6 +1121,7 @@ function renderHeroHeader(settings) {
             ${supportHtml}
         </div>`;
 
+    wireHeroLogoFallback(header);
     refreshSupportLinks();
     // Hero ads (spots.js) turn this header into a carousel; re-mount after
     // every render because the innerHTML above wipes it.
