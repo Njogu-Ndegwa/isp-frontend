@@ -23,7 +23,7 @@
     }
 
     function getRouterIdSafe() {
-        try { return routerId || FALLBACK_ROUTER_ID || 2; } catch (e) { return 2; }
+        try { return routerId || null; } catch (e) { return null; }
     }
 
     function getGlobalPlans() {
