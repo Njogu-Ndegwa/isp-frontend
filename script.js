@@ -887,6 +887,42 @@ const THEMES = {
         accent: '#F97316', background: '#F8FAFC', surface: '#FFFFFF',
         text: '#1A1A1A', textSecondary: '#6B7280', textInverse: '#FFFFFF',
         border: '#E5E7EB', success: '#10B981', error: '#EF4444', info: '#3B82F6', warning: '#F59E0B'
+    },
+    teal_lagoon: {
+        primary: '#0D9488', primaryLight: '#14B8A6', primaryDark: '#0F766E',
+        accent: '#F59E0B', background: '#F0FDFA', surface: '#FFFFFF',
+        text: '#1A1A1A', textSecondary: '#6B7280', textInverse: '#FFFFFF',
+        border: '#E5E7EB', success: '#10B981', error: '#EF4444', info: '#3B82F6', warning: '#F59E0B'
+    },
+    royal_blue: {
+        primary: '#1D4ED8', primaryLight: '#3B82F6', primaryDark: '#1E3A8A',
+        accent: '#F59E0B', background: '#EFF6FF', surface: '#FFFFFF',
+        text: '#1A1A1A', textSecondary: '#6B7280', textInverse: '#FFFFFF',
+        border: '#E5E7EB', success: '#10B981', error: '#EF4444', info: '#3B82F6', warning: '#F59E0B'
+    },
+    cherry_red: {
+        primary: '#DC2626', primaryLight: '#EF4444', primaryDark: '#B91C1C',
+        accent: '#FBBF24', background: '#FEF2F2', surface: '#FFFFFF',
+        text: '#1A1A1A', textSecondary: '#6B7280', textInverse: '#FFFFFF',
+        border: '#E5E7EB', success: '#10B981', error: '#EF4444', info: '#3B82F6', warning: '#F59E0B'
+    },
+    amber_gold: {
+        primary: '#B45309', primaryLight: '#D97706', primaryDark: '#92400E',
+        accent: '#0EA5E9', background: '#FFFBEB', surface: '#FFFFFF',
+        text: '#1A1A1A', textSecondary: '#6B7280', textInverse: '#FFFFFF',
+        border: '#E5E7EB', success: '#10B981', error: '#EF4444', info: '#3B82F6', warning: '#F59E0B'
+    },
+    hot_pink: {
+        primary: '#DB2777', primaryLight: '#EC4899', primaryDark: '#BE185D',
+        accent: '#8B5CF6', background: '#FDF2F8', surface: '#FFFFFF',
+        text: '#1A1A1A', textSecondary: '#6B7280', textInverse: '#FFFFFF',
+        border: '#E5E7EB', success: '#10B981', error: '#EF4444', info: '#3B82F6', warning: '#F59E0B'
+    },
+    charcoal_black: {
+        primary: '#1F2937', primaryLight: '#374151', primaryDark: '#111827',
+        accent: '#F59E0B', background: '#F9FAFB', surface: '#FFFFFF',
+        text: '#1A1A1A', textSecondary: '#6B7280', textInverse: '#FFFFFF',
+        border: '#E5E7EB', success: '#10B981', error: '#EF4444', info: '#3B82F6', warning: '#F59E0B'
     }
 };
 
@@ -1084,14 +1120,25 @@ function renderHeroHeader(settings) {
         '1518770660439-4636190af475': 'tech',
     };
     const PRESET_NAMES = ['city', 'cafe', 'nature', 'people', 'tech'];
-    const configuredUrl = (settings.header_bg_image_url || '').toLowerCase();
+    // A photo the reseller uploaded is used when it sits on our media host
+    // (walled garden, same rule as the logo); anything else keeps the preset.
+    // Its fallback is the default preset: keyword matching would pick "tech"
+    // out of "bitwavetechnologies".
+    const ownPhotoUrl = allowedLogoUrl(settings.header_bg_image_url);
+    const configuredUrl = ownPhotoUrl ? '' : (settings.header_bg_image_url || '').toLowerCase();
     const photoIdMatch  = configuredUrl.match(/photo-([\w-]+)/);
     const preset =
         (photoIdMatch && PRESET_PHOTO_IDS[photoIdMatch[1]]) ||
         PRESET_NAMES.find(p => configuredUrl.includes(p))   ||
         'city';
 
-    const picHtml = `
+    const picHtml = ownPhotoUrl
+        ? `
+        <picture class="hero-bg-img hero-bg-img--own">
+            <img src="${escapeHtml(ownPhotoUrl)}" alt="" aria-hidden="true" decoding="async" fetchpriority="high"
+                 data-fallback-jpg="images/presets/${preset}.jpg">
+        </picture>`
+        : `
         <picture class="hero-bg-img">
             <source srcset="images/presets/${preset}.webp" type="image/webp">
             <img src="images/presets/${preset}.jpg" alt="" aria-hidden="true" decoding="async" fetchpriority="high">
@@ -1130,11 +1177,27 @@ function renderHeroHeader(settings) {
     const img = header.querySelector('.hero-bg-img img');
     if (img) {
         const markLoaded = () => img.closest('picture').classList.add('loaded');
+        // An own photo that fails to load (deleted, blocked) swaps to the
+        // bundled preset once, so the hero never shows just a gradient box.
+        const onError = () => {
+            const fallback = img.getAttribute('data-fallback-jpg');
+            if (fallback) {
+                img.removeAttribute('data-fallback-jpg');
+                img.closest('picture').classList.remove('hero-bg-img--own');
+                img.src = fallback;
+                return;
+            }
+            markLoaded(); // gradient-only fallback (local file missing)
+        };
         if (img.complete && img.naturalWidth > 0) {
             markLoaded();
+        } else if (img.complete && img.getAttribute('src') && img.getAttribute('data-fallback-jpg')) {
+            img.addEventListener('load', markLoaded);
+            img.addEventListener('error', onError);
+            onError();
         } else {
             img.addEventListener('load', markLoaded);
-            img.addEventListener('error', markLoaded); // gradient-only fallback (local file missing)
+            img.addEventListener('error', onError);
         }
     }
 }

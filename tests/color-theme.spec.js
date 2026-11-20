@@ -1,7 +1,7 @@
 const { test, expect } = require('@playwright/test');
 
 // portal_settings.color_theme paints the whole portal through CSS variables
-// set by applyTheme() in script.js. The admin app offers these six themes
+// set by applyTheme() in script.js. The admin app offers these twelve themes
 // (isp-frontend-admin app/lib/portalThemes.ts) and the backend accepts them
 // (isp-billing app/api/portal_routes.py OFFERED_THEMES). Bright Violet was
 // offered by the admin app but rejected by the backend until 2026-10-23; this
@@ -14,6 +14,12 @@ const EXPECTED_PRIMARY = {
     bright_violet: '#8B5CF6',
     rose_gold: '#E11D48',
     slate_gray: '#475569',
+    teal_lagoon: '#0D9488',
+    royal_blue: '#1D4ED8',
+    cherry_red: '#DC2626',
+    amber_gold: '#B45309',
+    hot_pink: '#DB2777',
+    charcoal_black: '#1F2937',
 };
 
 function portalPayload(portalSettings) {
