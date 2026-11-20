@@ -29,7 +29,13 @@
         emerald_green: ['#10B981', '#059669', '#F0FDF4'],
         bright_violet: ['#8B5CF6', '#7C3AED', '#FAF5FF'],
         rose_gold: ['#E11D48', '#BE123C', '#FFF1F2'],
-        slate_gray: ['#475569', '#334155', '#F8FAFC']
+        slate_gray: ['#475569', '#334155', '#F8FAFC'],
+        teal_lagoon: ['#0D9488', '#0F766E', '#F0FDFA'],
+        royal_blue: ['#1D4ED8', '#1E3A8A', '#EFF6FF'],
+        cherry_red: ['#DC2626', '#B91C1C', '#FEF2F2'],
+        amber_gold: ['#B45309', '#92400E', '#FFFBEB'],
+        hot_pink: ['#DB2777', '#BE185D', '#FDF2F8'],
+        charcoal_black: ['#1F2937', '#111827', '#F9FAFB']
     };
 
     var params = new URLSearchParams(location.search);

@@ -96,3 +96,39 @@ test.describe('hero logo on a phone', () => {
         expect(errors).toEqual([]);
     });
 });
+
+// portal_settings.header_bg_image_url: a photo the reseller uploaded replaces
+// the bundled preset, under the same media-host rule as the logo.
+const PHOTO = 'https://isp.bitwavetechnologies.com/media/c/2026/11/r1-shop.jpg';
+
+test.describe('hero own header photo on a phone', () => {
+    test.use({ viewport: { width: 390, height: 844 }, isMobile: true });
+
+    test('an uploaded photo on our media host is drawn behind the hero', async ({ page }) => {
+        const errors = await openPortal(page, { header_bg_image_url: PHOTO });
+        const img = page.locator('#portal-header .hero-bg-img img');
+        await expect(img).toHaveAttribute('src', PHOTO);
+        await expect(page.locator('#portal-header .hero-bg-img source')).toHaveCount(0);
+        await expect(page.locator('#portal-header .hero-bg-img')).toHaveClass(/loaded/);
+        expect(errors).toEqual([]);
+    });
+
+    test('a preset link keeps the bundled photo', async ({ page }) => {
+        await openPortal(page, {
+            header_bg_image_url: 'https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=750&h=370&fit=crop&q=80',
+        });
+        await expect(page.locator('#portal-header .hero-bg-img img')).toHaveAttribute('src', 'images/presets/nature.jpg');
+    });
+
+    test('a photo on any other host is ignored', async ({ page }) => {
+        await openPortal(page, { header_bg_image_url: 'https://example.com/shop.jpg' });
+        await expect(page.locator('#portal-header .hero-bg-img img')).toHaveAttribute('src', /^images\/presets\//);
+    });
+
+    test('an uploaded photo that fails to load falls back to a bundled photo', async ({ page }) => {
+        const errors = await openPortal(page, { header_bg_image_url: PHOTO }, { logoStatus: 404 });
+        await expect(page.locator('#portal-header .hero-bg-img img')).toHaveAttribute('src', /^images\/presets\/city\.jpg$/);
+        await expect(page.locator('#portal-header .hero-bg-img')).toHaveClass(/loaded/);
+        expect(errors).toEqual([]);
+    });
+});
