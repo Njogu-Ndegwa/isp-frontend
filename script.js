@@ -1995,9 +1995,7 @@ function transformPlansData(apiPlans) {
         } else if (bestseller) {
             valueMessage = '🔥 Bestseller';
         } else if (popular) {
-            const hours = convertToHours(plan.duration_value, plan.duration_unit);
-            const pricePerDay = (plan.price / (hours / 24)).toFixed(0);
-            valueMessage = `Only ${currency} ${pricePerDay}/day`;
+            valueMessage = perDayValueMessage(plan, currency);
         }
 
         return {
@@ -2086,6 +2084,22 @@ function comparePlansBy(sortOrder, a, b) {
     // Break ties on id, ascending in both directions, so two packages at the
     // same price never swap places between page loads.
     return diff !== 0 ? diff : a.id - b.id;
+}
+
+// ========================================
+// PER-DAY PRICE BADGE ("Only KSH 7/day")
+// ========================================
+// Returns '' (no badge) when the number would mislead a customer:
+//  - the package is shorter than a day, so a per-day figure is an
+//    extrapolation bigger than the price they actually pay;
+//  - the per-day figure rounds to 0 (e.g. KSH 1 for 30 days -> "KSH 0/day").
+function perDayValueMessage(plan, currency) {
+    const hours = convertToHours(plan.duration_value, plan.duration_unit);
+    const price = Number(plan.price);
+    if (!(hours >= 24) || !(price > 0)) return '';
+    const pricePerDay = Math.round(price / (hours / 24));
+    if (pricePerDay < 1) return '';
+    return `Only ${currency} ${pricePerDay}/day`;
 }
 
 // ========================================
