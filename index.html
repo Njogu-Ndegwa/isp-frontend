@@ -4,6 +4,71 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <script>
+        // Preview mode: the admin dashboard frames this exact page (?preview=1)
+        // to show a reseller what customers will see, with unsaved settings.
+        // The page then renders data the dashboard posts to it, and nothing on
+        // it can reach the network, a router or a payment: fetch, XHR and
+        // beacons are cut before any other script runs, storage is in memory
+        // only, and links and forms go nowhere. Off unless framed.
+        (function () {
+            var on = false;
+            try { on = window.parent !== window && /[?&]preview=1(&|$)/.test(location.search); } catch (e) {}
+            if (!on) return;
+
+            var ALLOWED = /^(https:\/\/([a-z0-9-]+\.)*bitwavetechnologies\.(com|net)|https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?)$/i;
+            var off = function () { return Promise.reject(new Error('preview: network is off')); };
+            window.fetch = off;
+            if (window.XMLHttpRequest) {
+                window.XMLHttpRequest.prototype.send = function () { throw new Error('preview: network is off'); };
+            }
+            try { navigator.sendBeacon = function () { return false; }; } catch (e) {}
+            window.open = function () { return null; };
+
+            function memoryStorage() {
+                var items = {};
+                return {
+                    getItem: function (k) { return Object.prototype.hasOwnProperty.call(items, k) ? items[k] : null; },
+                    setItem: function (k, v) { items[k] = String(v); },
+                    removeItem: function (k) { delete items[k]; },
+                    clear: function () { items = {}; },
+                    key: function (i) { return Object.keys(items)[i] || null; },
+                    get length() { return Object.keys(items).length; }
+                };
+            }
+            try { Object.defineProperty(window, 'localStorage', { value: memoryStorage(), configurable: true }); } catch (e) {}
+            try { Object.defineProperty(window, 'sessionStorage', { value: memoryStorage(), configurable: true }); } catch (e) {}
+
+            function block(e) {
+                var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+                if (e.type === 'submit' || (a && a.getAttribute('href').charAt(0) !== '#')) e.preventDefault();
+            }
+            document.addEventListener('click', block, true);
+            document.addEventListener('submit', block, true);
+
+            var parentOrigin = null;
+            var preview = window.__portalPreview = {};
+            preview.data = new Promise(function (resolve) {
+                window.addEventListener('message', function (e) {
+                    var m = e.data;
+                    if (e.source !== window.parent || !ALLOWED.test(e.origin)) return;
+                    if (!m || m.type !== 'bw-portal-preview:data' || !m.data) return;
+                    parentOrigin = e.origin;
+                    resolve(m.data);
+                });
+            });
+            // Tell the dashboard once everything has rendered from its data.
+            preview.rendered = function () {
+                var fonts = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+                fonts.then(function () {
+                    setTimeout(function () {
+                        if (parentOrigin) window.parent.postMessage({ type: 'bw-portal-preview:rendered' }, parentOrigin);
+                    }, 50);
+                });
+            };
+            window.parent.postMessage({ type: 'bw-portal-preview:ready' }, '*');
+        })();
+    </script>
+    <script>
         // Old browsers (smart TVs) can't parse the modern scripts at all, and a file
         // that doesn't parse does nothing: the page stayed on its loading state for
         // ever. They get the compiled copies in legacy/ instead (npm run build:legacy).
@@ -62,7 +127,7 @@
 
             var identity = null;
             try { identity = new URLSearchParams(location.search).get('router'); } catch (e) {}
-            if (!identity || !window.fetch || !window.Promise) return;
+            if (!identity || !window.fetch || !window.Promise || window.__portalPreview) return;
             try {
                 if (sessionStorage.getItem('__DEMO_PORTAL__') || sessionStorage.getItem('__DEV_MOCK_PORTAL__')) return;
             } catch (e) {}
@@ -154,7 +219,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Outfit:wght@600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <!-- Fallback for no-JS -->
     <noscript><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Outfit:wght@600;700&display=swap" rel="stylesheet"></noscript>
-    <link rel="stylesheet" href="styles003.css?v=22">
+    <link rel="stylesheet" href="styles003.css?v=23">
     
 </head>
 <body>
@@ -1051,7 +1116,7 @@
         if (window.__legacyPortal) {
             document.write(
                 '<script src="legacy/polyfills.js?v=1" defer><\/script>' +
-                '<script src="legacy/script.js?v=21" defer><\/script>' +
+                '<script src="legacy/script.js?v=22" defer><\/script>' +
                 '<script src="legacy/script003.js" defer><\/script>' +
                 '<script src="legacy/spots.js?v=3" defer><\/script>' +
                 '<script src="legacy/device-pairing.js?v=2" defer><\/script>' +
@@ -1060,7 +1125,7 @@
             );
         }
     </script>
-    <script src="script.js?v=21" defer></script>
+    <script src="script.js?v=22" defer></script>
     <script src="script003.js" defer></script>
     <script src="spots.js?v=3" defer></script>
     <script src="device-pairing.js?v=2" defer></script>

@@ -1,0 +1,20 @@
+<!doctype html>
+<!-- Stands in for the admin dashboard in tests/dashboard-preview.spec.js: frames
+     the portal in preview mode and posts it window.previewData. -->
+<html>
+<body style="margin:0">
+<iframe id="f" sandbox="allow-scripts" style="width:360px;height:780px;border:0"></iframe>
+<script>
+  var f = document.getElementById('f');
+  window.events = [];
+  window.addEventListener('message', function (e) {
+    if (e.source !== f.contentWindow) return;
+    window.events.push(e.data && e.data.type);
+    if (e.data && e.data.type === 'bw-portal-preview:ready') {
+      f.contentWindow.postMessage({ type: 'bw-portal-preview:data', data: window.previewData }, '*');
+    }
+  });
+  f.src = new URLSearchParams(location.search).get('portal');
+</script>
+</body>
+</html>
