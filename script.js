@@ -769,6 +769,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 applyPortalSettings(data.portal_settings); // also sets portalSettings global
             }
 
+            // ---- Loyalty points (before plans: reward cards show "or N pts") ----
+            setLoyaltyConfig(data.loyalty, data.plans);
+
             // ---- Plans ----
             if (Array.isArray(data.plans) && data.plans.length > 0) {
                 const apiBestseller = data.plans.find(p => p.is_bestseller);
@@ -823,6 +826,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // router_id and the plan list are both known now.
             loadFreeTrials();
+            renderLoyaltySection();
 
             // Safety net: clear the loading shimmer on the standard header
             // and fill in a fallback name so the header never stays blank.
@@ -1394,6 +1398,45 @@ const I18N = {
         connectingSubtext: 'Connecting your device. This usually takes a few seconds.',
         connectingStatus: 'Connecting…',
         connectingSlow: "This is taking longer than usual. Wait a minute, then tap Start Browsing. If pages still don't load, turn WiFi off and on.",
+        pointsTitle: 'Use my points',
+        pointsEarnPerKes: 'Earn 1 point for every {currency} {n} you pay',
+        pointsEarnPerPurchaseOne: 'Earn 1 point for every purchase',
+        pointsEarnPerPurchase: 'Earn {n} points for every purchase',
+        pointsEarnDefault: 'Earn points every time you pay',
+        pointsPhonePlaceholder: 'Phone number you pay with',
+        pointsCheck: 'Check',
+        pointsBalanceLabel: 'Your points',
+        pointsExpiring: '{n} pts expire on {date}',
+        pointsRewardsTitle: 'Free plans you can get',
+        pointsCost: '{n} pts',
+        pointsOrCost: 'or {n} pts',
+        pointsRedeem: 'Redeem',
+        pointsNeedMore: 'Need {n} more pts',
+        pointsNoRewards: 'No free plans to redeem yet.',
+        pointsChangePhone: 'Use another number',
+        pointsCodeSent: 'We sent a 6-digit code by SMS to {phone}. Enter it below.',
+        pointsCodePlaceholder: '6-digit code',
+        pointsCodeConfirm: 'Confirm',
+        pointsCodeInvalid: 'Enter the 6-digit code from the SMS.',
+        pointsPhoneInvalid: 'Enter the phone number you pay with (e.g. 07XXXXXXXX).',
+        pointsFailed: "Couldn't check your points. Please try again.",
+        pointsErr_use_paying_device: 'Open this page on the phone you usually pay with to use your points.',
+        pointsErr_rate_limited: 'Too many tries. Please wait a few minutes and try again.',
+        pointsErr_bad_code: 'That code is wrong or has expired. Check the SMS and try again.',
+        pointsErr_not_enough_points: "You don't have enough points for this plan yet.",
+        pointsErr_limit_reached: "You've reached today's limit for using points. Try again tomorrow.",
+        pointsErr_not_a_reward: "This plan can't be bought with points any more. Pick another one.",
+        pointsErr_loyalty_off: 'Points are not available on this WiFi right now.',
+        pointsActivating: 'Activating your free plan',
+        pointsActivatingSub: 'Your points were accepted. Connecting your device…',
+        pointsStepUsed: 'Points used',
+        pointsStepApproved: 'Plan approved',
+        pointsPaidWith: 'Paid with',
+        pointsUsed: '{n} points',
+        pointsEarnedOne: 'You earned 1 point. Balance {balance}.',
+        pointsEarned: 'You earned {earned} points. Balance {balance}.',
+        pointsRedeemed: 'You used {n} points. Balance {balance}.',
+        pointsActivateSlow: 'Your points were used, but connecting is taking longer than usual. Use "Already paid? Reconnect" with your phone number, or contact support.',
     },
     sw: {
         mpesaFail_insufficient_balance: 'Salio lako la M-Pesa halitoshi kwa mpango huu. Ongeza salio la M-Pesa, kisha ujaribu tena.',
@@ -1467,6 +1510,45 @@ const I18N = {
         connectingSubtext: 'Tunaunganisha kifaa chako. Huchukua sekunde chache tu.',
         connectingStatus: 'Inaunganisha…',
         connectingSlow: 'Inachukua muda zaidi kuliko kawaida. Subiri dakika moja, kisha bonyeza Start Browsing. Kurasa zikikataa kufunguka, zima WiFi kisha uiwashe tena.',
+        pointsTitle: 'Tumia pointi zangu',
+        pointsEarnPerKes: 'Pata pointi 1 kwa kila {currency} {n} unayolipa',
+        pointsEarnPerPurchaseOne: 'Pata pointi 1 kwa kila ununuzi',
+        pointsEarnPerPurchase: 'Pata pointi {n} kwa kila ununuzi',
+        pointsEarnDefault: 'Pata pointi kila unapolipa',
+        pointsPhonePlaceholder: 'Nambari ya simu unayolipia',
+        pointsCheck: 'Angalia',
+        pointsBalanceLabel: 'Pointi zako',
+        pointsExpiring: 'Pointi {n} zitaisha tarehe {date}',
+        pointsRewardsTitle: 'Mipango ya bure unayoweza kupata',
+        pointsCost: 'pointi {n}',
+        pointsOrCost: 'au pointi {n}',
+        pointsRedeem: 'Pata',
+        pointsNeedMore: 'Unahitaji pointi {n} zaidi',
+        pointsNoRewards: 'Bado hakuna mpango wa bure wa kupata kwa pointi.',
+        pointsChangePhone: 'Tumia nambari nyingine',
+        pointsCodeSent: 'Tumekutumia msimbo wa tarakimu 6 kwa SMS kwenye {phone}. Uingize hapa chini.',
+        pointsCodePlaceholder: 'Msimbo wa tarakimu 6',
+        pointsCodeConfirm: 'Thibitisha',
+        pointsCodeInvalid: 'Ingiza msimbo wa tarakimu 6 ulio kwenye SMS.',
+        pointsPhoneInvalid: 'Ingiza nambari ya simu unayolipia (k.m. 07XXXXXXXX).',
+        pointsFailed: 'Imeshindikana kuangalia pointi zako. Tafadhali jaribu tena.',
+        pointsErr_use_paying_device: 'Fungua ukurasa huu kwenye simu unayolipia kwa kawaida ili kutumia pointi zako.',
+        pointsErr_rate_limited: 'Majaribio mengi mno. Subiri dakika chache kisha ujaribu tena.',
+        pointsErr_bad_code: 'Msimbo si sahihi au umeisha muda. Kagua SMS na ujaribu tena.',
+        pointsErr_not_enough_points: 'Bado huna pointi za kutosha kwa mpango huu.',
+        pointsErr_limit_reached: 'Umefikia kikomo cha leo cha kutumia pointi. Jaribu tena kesho.',
+        pointsErr_not_a_reward: 'Mpango huu hauwezi tena kupatikana kwa pointi. Chagua mwingine.',
+        pointsErr_loyalty_off: 'Pointi hazipatikani kwenye WiFi hii kwa sasa.',
+        pointsActivating: 'Tunawasha mpango wako wa bure',
+        pointsActivatingSub: 'Pointi zako zimekubaliwa. Tunaunganisha kifaa chako…',
+        pointsStepUsed: 'Pointi zimetumika',
+        pointsStepApproved: 'Mpango umekubaliwa',
+        pointsPaidWith: 'Umelipa kwa',
+        pointsUsed: 'pointi {n}',
+        pointsEarnedOne: 'Umepata pointi 1. Salio {balance}.',
+        pointsEarned: 'Umepata pointi {earned}. Salio {balance}.',
+        pointsRedeemed: 'Umetumia pointi {n}. Salio {balance}.',
+        pointsActivateSlow: 'Pointi zako zimetumika, lakini kuunganisha kunachukua muda zaidi. Tumia "Ulisha lipa? Unganisha tena" na nambari yako ya simu, au wasiliana na msaada.',
     },
     fr: {
         confirmationPending: 'Confirmation en attente',
@@ -1539,6 +1621,45 @@ const I18N = {
         connectingSubtext: 'Connexion de votre appareil. Cela prend généralement quelques secondes.',
         connectingStatus: 'Connexion…',
         connectingSlow: "Cela prend plus de temps que d'habitude. Patientez une minute, puis touchez « Start Browsing ». Si les pages ne s'ouvrent toujours pas, désactivez puis réactivez le WiFi.",
+        pointsTitle: 'Utiliser mes points',
+        pointsEarnPerKes: 'Gagnez 1 point tous les {n} {currency} payés',
+        pointsEarnPerPurchaseOne: 'Gagnez 1 point à chaque achat',
+        pointsEarnPerPurchase: 'Gagnez {n} points à chaque achat',
+        pointsEarnDefault: 'Gagnez des points à chaque paiement',
+        pointsPhonePlaceholder: 'Numéro avec lequel vous payez',
+        pointsCheck: 'Vérifier',
+        pointsBalanceLabel: 'Vos points',
+        pointsExpiring: '{n} pts expirent le {date}',
+        pointsRewardsTitle: 'Forfaits gratuits disponibles',
+        pointsCost: '{n} pts',
+        pointsOrCost: 'ou {n} pts',
+        pointsRedeem: 'Obtenir',
+        pointsNeedMore: 'Encore {n} pts',
+        pointsNoRewards: 'Aucun forfait gratuit à obtenir pour le moment.',
+        pointsChangePhone: 'Utiliser un autre numéro',
+        pointsCodeSent: 'Nous avons envoyé un code à 6 chiffres par SMS au {phone}. Saisissez-le ci-dessous.',
+        pointsCodePlaceholder: 'Code à 6 chiffres',
+        pointsCodeConfirm: 'Confirmer',
+        pointsCodeInvalid: 'Saisissez le code à 6 chiffres reçu par SMS.',
+        pointsPhoneInvalid: 'Saisissez le numéro avec lequel vous payez.',
+        pointsFailed: 'Impossible de vérifier vos points. Veuillez réessayer.',
+        pointsErr_use_paying_device: "Ouvrez cette page sur le téléphone avec lequel vous payez d'habitude pour utiliser vos points.",
+        pointsErr_rate_limited: 'Trop de tentatives. Patientez quelques minutes puis réessayez.',
+        pointsErr_bad_code: 'Ce code est incorrect ou a expiré. Vérifiez le SMS et réessayez.',
+        pointsErr_not_enough_points: "Vous n'avez pas encore assez de points pour ce forfait.",
+        pointsErr_limit_reached: "Vous avez atteint la limite d'utilisation des points pour aujourd'hui. Réessayez demain.",
+        pointsErr_not_a_reward: "Ce forfait ne s'obtient plus avec des points. Choisissez-en un autre.",
+        pointsErr_loyalty_off: 'Les points ne sont pas disponibles sur ce WiFi pour le moment.',
+        pointsActivating: 'Activation de votre forfait gratuit',
+        pointsActivatingSub: 'Vos points ont été acceptés. Connexion de votre appareil…',
+        pointsStepUsed: 'Points utilisés',
+        pointsStepApproved: 'Forfait approuvé',
+        pointsPaidWith: 'Payé avec',
+        pointsUsed: '{n} points',
+        pointsEarnedOne: 'Vous avez gagné 1 point. Solde {balance}.',
+        pointsEarned: 'Vous avez gagné {earned} points. Solde {balance}.',
+        pointsRedeemed: 'Vous avez utilisé {n} points. Solde {balance}.',
+        pointsActivateSlow: 'Vos points ont été utilisés, mais la connexion prend plus de temps que prévu. Utilisez « Déjà payé ? Reconnectez » avec votre numéro, ou contactez le support.',
     }
 };
 
@@ -2355,9 +2476,16 @@ function createPlanCard(plan) {
     const devicesLabel = plan.maxDevices > 1 ? `, up to ${plan.maxDevices} devices` : '';
     const planName = planNameLine(plan);
     const spokenName = planName ? `${planName}, ` : '';
-    card.setAttribute('aria-label', `Select ${spokenName}${plan.duration} plan for ${plan.price}, ${plan.speed}${devicesLabel}`);
+    // A loyalty reward can also be had for points ("or 150 pts"). Cards that
+    // are not rewards render exactly as before.
+    const pointsCost = loyaltyRewardCost(plan.id);
+    const pointsLabel = pointsCost ? tr('pointsOrCost', { n: pointsCost }) : '';
+    card.setAttribute('aria-label', `Select ${spokenName}${plan.duration} plan for ${plan.price}${pointsLabel ? ' ' + pointsLabel : ''}, ${plan.speed}${devicesLabel}`);
 
     const formattedPrice = formatPrice(plan.price);
+    const pointsHtml = pointsLabel
+        ? `<div class="plan-points-cost"><span aria-hidden="true">⭐</span> ${escapeHtml(pointsLabel)}</div>`
+        : '';
 
     // Package name headline. Escaped because the text is reseller input.
     const nameHtml = planName
@@ -2404,6 +2532,7 @@ function createPlanCard(plan) {
         ${durationHtml}
         ${originalPriceHtml}
         <div class="plan-price">${formattedPrice}</div>
+        ${pointsHtml}
         ${speedHtml}
         ${devicesHtml}
         ${plan.valueMessage ? `<div class="plan-value-msg">${plan.valueMessage}</div>` : ''}
@@ -3300,6 +3429,543 @@ async function claimFreeTrial(trial, btn) {
 }
 
 // ========================================
+// LOYALTY POINTS — "Use my points"
+// The portal payload carries `loyalty` ({enabled, earn_mode, kes_per_point,
+// points_per_purchase, rewards:[{plan_id, points_cost}], ...}). It is null,
+// {enabled:false} or simply absent when the reseller has it off or the backend
+// predates it, and then nothing on the page changes.
+// POST /api/public/loyalty/balance   {identity, phone, mac, code?}
+// POST /api/public/loyalty/send-code {identity, phone, mac}
+// POST /api/public/loyalty/redeem    {identity, phone, mac, plan_id, code?}
+// Every reply is {ok:true, ...} or {ok:false, code}. A balance is only shown
+// when the backend recognises this device as the one the customer pays with,
+// or after an SMS code. A redeem returns customer_id, and from there it is the
+// same payment-status polling and login as a paid plan.
+// ========================================
+const LOYALTY_ENDPOINT = `${API_BASE_URL}/public/loyalty`;
+const LOYALTY_ERROR_CODES = ['use_paying_device', 'rate_limited', 'bad_code', 'not_enough_points',
+    'limit_reached', 'not_a_reward', 'loyalty_off'];
+
+let loyaltyConfig = null;      // the enabled loyalty block, or null
+let loyaltyPlansById = {};     // raw portal plans, to name the rewards
+let pendingLoyaltyRedemption = null; // {points, balance} while a redeemed plan connects
+const loyaltyState = { phone: '', code: '', pending: null, busy: false };
+
+function setLoyaltyConfig(raw, plans) {
+    loyaltyConfig = raw && typeof raw === 'object' && raw.enabled === true ? raw : null;
+    loyaltyPlansById = {};
+    if (loyaltyConfig && Array.isArray(plans)) {
+        plans.forEach(p => { if (p && p.id !== undefined && p.id !== null) loyaltyPlansById[p.id] = p; });
+    }
+}
+
+function loyaltyRewards() {
+    if (!loyaltyConfig || !Array.isArray(loyaltyConfig.rewards)) return [];
+    return loyaltyConfig.rewards.filter(r => r && Number(r.points_cost) > 0);
+}
+
+// Points a plan costs as a reward, or 0 when it is not one.
+function loyaltyRewardCost(planId) {
+    const reward = loyaltyRewards().find(r => Number(r.plan_id) === Number(planId));
+    return reward ? Number(reward.points_cost) : 0;
+}
+
+// "Earn 1 point for every KSH 10 you pay" / "Earn 1 point for every purchase".
+function loyaltyEarnHint() {
+    const c = loyaltyConfig;
+    if (!c) return '';
+    if (c.earn_mode === 'per_purchase') {
+        const n = Math.max(1, parseInt(c.points_per_purchase, 10) || 1);
+        return n === 1 ? tr('pointsEarnPerPurchaseOne') : tr('pointsEarnPerPurchase', { n });
+    }
+    if (c.earn_mode === 'per_kes') {
+        const n = Number(c.kes_per_point) > 0 ? Number(c.kes_per_point) : 10;
+        return tr('pointsEarnPerKes', { currency: getPaymentCurrencyCode(), n });
+    }
+    return tr('pointsEarnDefault');
+}
+
+// A whole number from the API, or null when the field is missing or junk.
+function loyaltyNumber(value) {
+    if (value === undefined || value === null || value === '') return null;
+    const n = Number(value);
+    return isFinite(n) ? n : null;
+}
+
+function loyaltySavedPhone() {
+    let saved = '';
+    try { saved = localStorage.getItem('bitwave_phone_number') || ''; } catch (e) { /* storage blocked */ }
+    if (!saved) {
+        try { saved = getCookie('bitwave_phone') || ''; } catch (e) { /* ignore */ }
+    }
+    return String(saved).replace(/\D/g, '');
+}
+
+function renderLoyaltySection() {
+    const section = document.getElementById('pointsSection');
+    if (!section) return;
+    if (!loyaltyConfig) {
+        section.classList.add('hidden');
+        return;
+    }
+    const hint = document.getElementById('pointsEarnHint');
+    if (hint) hint.textContent = loyaltyEarnHint();
+    const input = document.getElementById('pointsPhoneInput');
+    if (input && !input.value) input.value = loyaltySavedPhone();
+    if (section.dataset.wired !== '1') {
+        section.dataset.wired = '1';
+        wireLoyaltySection();
+    }
+    section.classList.remove('hidden');
+}
+
+function wireLoyaltySection() {
+    const phoneInput = document.getElementById('pointsPhoneInput');
+    const codeInput = document.getElementById('pointsCodeInput');
+    const checkBtn = document.getElementById('pointsCheckBtn');
+    const codeBtn = document.getElementById('pointsCodeBtn');
+
+    if (phoneInput) {
+        phoneInput.addEventListener('input', () => {
+            const digits = phoneInput.value.replace(/\D/g, '').slice(0, 15);
+            if (phoneInput.value !== digits) phoneInput.value = digits;
+            // A different number means a different balance: drop what is shown.
+            if (loyaltyState.phone && digits !== loyaltyState.phone) resetLoyaltyResults();
+        });
+        phoneInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); loyaltyCheck(); }
+        });
+    }
+    if (codeInput) {
+        codeInput.addEventListener('input', () => {
+            const digits = codeInput.value.replace(/\D/g, '').slice(0, 6);
+            if (codeInput.value !== digits) codeInput.value = digits;
+        });
+        codeInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); loyaltySubmitCode(); }
+        });
+    }
+    if (checkBtn) checkBtn.addEventListener('click', () => loyaltyCheck());
+    if (codeBtn) codeBtn.addEventListener('click', () => loyaltySubmitCode());
+}
+
+function resetLoyaltyResults() {
+    loyaltyState.phone = '';
+    loyaltyState.code = '';
+    loyaltyState.pending = null;
+    const balance = document.getElementById('pointsBalance');
+    if (balance) { balance.textContent = ''; balance.classList.add('hidden'); }
+    hideLoyaltyCodeStep();
+    hideLoyaltyMessage();
+}
+
+// Error codes come back as {ok:false, code}; a FastAPI error body
+// ({detail:{code}} or {detail:"code"}) is read the same way.
+function loyaltyErrorCode(response, data) {
+    const detail = data ? data.detail : undefined;
+    let code = data && typeof data.code === 'string' ? data.code : '';
+    if (!code && detail && typeof detail === 'object' && typeof detail.code === 'string') code = detail.code;
+    if (!code && typeof detail === 'string' && /^[a-z_]+$/.test(detail)) code = detail;
+    if (!code && response && response.status === 429) code = 'rate_limited';
+    return code || 'failed';
+}
+
+async function postLoyalty(action, extra) {
+    const body = Object.assign({
+        identity: mikrotikParams.router || 'MikroTik',
+        phone: loyaltyState.phone,
+        mac: getClientMac()
+    }, extra || {});
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
+    let response;
+    try {
+        response = await fetch(getProxiedUrl(`${LOYALTY_ENDPOINT}/${action}`), {
+            method: 'POST',
+            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+            mode: 'cors',
+            body: JSON.stringify(body),
+            signal: controller.signal
+        });
+    } finally {
+        clearTimeout(timeoutId);
+    }
+    let data = null;
+    try { data = await response.json(); } catch (e) { data = null; }
+    if (response.ok && data && data.ok === true) return data;
+    return { ok: false, code: loyaltyErrorCode(response, data) };
+}
+
+async function loyaltyRequest(action, extra, btn) {
+    setLoyaltyBusy(btn, true);
+    hideLoyaltyMessage();
+    try {
+        return await postLoyalty(action, extra);
+    } catch (err) {
+        console.warn('⚠️ [LOYALTY] ' + action + ' failed:', err && err.message);
+        return { ok: false, code: 'failed' };
+    } finally {
+        setLoyaltyBusy(btn, false);
+    }
+}
+
+function loyaltyCodeBody() {
+    return loyaltyState.code ? { code: loyaltyState.code } : {};
+}
+
+function loyaltyErrorMessage(code) {
+    if (LOYALTY_ERROR_CODES.indexOf(code) !== -1) return tr('pointsErr_' + code);
+    return tr('pointsFailed');
+}
+
+async function loyaltyCheck() {
+    if (loyaltyState.busy) return;
+    const input = document.getElementById('pointsPhoneInput');
+    const phone = input ? input.value.replace(/\D/g, '') : '';
+    if (!getClientMac()) { showLoyaltyMessage(tr('noMac')); return; }
+    if (phone.length < 9 || phone.length > 15) { showLoyaltyMessage(tr('pointsPhoneInvalid')); return; }
+    if (phone !== loyaltyState.phone) loyaltyState.code = '';
+    loyaltyState.phone = phone;
+    savePhoneNumber(phone);
+    await loyaltyLoadBalance(document.getElementById('pointsCheckBtn'));
+}
+
+async function loyaltyLoadBalance(btn) {
+    const data = await loyaltyRequest('balance', loyaltyCodeBody(), btn);
+    if (data.ok) {
+        hideLoyaltyCodeStep();
+        renderLoyaltyBalance(data);
+        return;
+    }
+    handleLoyaltyRefusal(data.code, { action: 'balance' }, btn);
+}
+
+async function loyaltyRedeem(reward, btn) {
+    if (loyaltyState.busy) return;
+    const data = await loyaltyRequest('redeem', Object.assign({ plan_id: reward.plan_id }, loyaltyCodeBody()), btn);
+    if (data.ok && data.customer_id) {
+        startLoyaltyActivation(reward, data);
+        return;
+    }
+    handleLoyaltyRefusal(data.ok ? 'failed' : data.code, { action: 'redeem', reward }, btn);
+}
+
+function handleLoyaltyRefusal(code, pending, btn) {
+    // First refusal without a code: this is not the paying device, so prove
+    // the phone with an SMS code and then repeat what the customer asked for.
+    if (code === 'needs_code' && !loyaltyState.code) {
+        loyaltyAskForCode(pending, btn);
+        return;
+    }
+    // A code we sent was refused (or no longer counts): ask for it again.
+    if (code === 'needs_code' || code === 'bad_code') {
+        loyaltyState.code = '';
+        loyaltyState.pending = pending;
+        showLoyaltyCodeStep();
+        const codeInput = document.getElementById('pointsCodeInput');
+        if (codeInput) codeInput.value = '';
+        showLoyaltyMessage(tr('pointsErr_bad_code'));
+        return;
+    }
+    if (code === 'loyalty_off') {
+        const balance = document.getElementById('pointsBalance');
+        if (balance) balance.classList.add('hidden');
+        hideLoyaltyCodeStep();
+    }
+    showLoyaltyMessage(loyaltyErrorMessage(code));
+}
+
+async function loyaltyAskForCode(pending, btn) {
+    loyaltyState.code = '';
+    loyaltyState.pending = pending;
+    const sent = await loyaltyRequest('send-code', {}, btn);
+    if (!sent.ok) {
+        showLoyaltyMessage(loyaltyErrorMessage(sent.code));
+        return;
+    }
+    showLoyaltyCodeStep();
+}
+
+async function loyaltySubmitCode() {
+    if (loyaltyState.busy) return;
+    const input = document.getElementById('pointsCodeInput');
+    const code = input ? input.value.replace(/\D/g, '') : '';
+    if (code.length !== 6) { showLoyaltyMessage(tr('pointsCodeInvalid')); return; }
+    loyaltyState.code = code;
+    const pending = loyaltyState.pending || { action: 'balance' };
+    const btn = document.getElementById('pointsCodeBtn');
+    if (pending.action === 'redeem' && pending.reward) await loyaltyRedeem(pending.reward, btn);
+    else await loyaltyLoadBalance(btn);
+}
+
+function showLoyaltyCodeStep() {
+    const step = document.getElementById('pointsCodeStep');
+    const hint = document.getElementById('pointsCodeHint');
+    if (hint) hint.textContent = tr('pointsCodeSent', { phone: loyaltyState.phone });
+    if (step) step.classList.remove('hidden');
+    const input = document.getElementById('pointsCodeInput');
+    if (input) { try { input.focus(); } catch (e) { /* ignore */ } }
+}
+
+function hideLoyaltyCodeStep() {
+    const step = document.getElementById('pointsCodeStep');
+    if (step) step.classList.add('hidden');
+    const input = document.getElementById('pointsCodeInput');
+    if (input) input.value = '';
+}
+
+function showLoyaltyMessage(message) {
+    renderResultError(document.getElementById('pointsResult'), message);
+}
+
+function hideLoyaltyMessage() {
+    const result = document.getElementById('pointsResult');
+    if (result) { result.classList.add('hidden'); result.textContent = ''; }
+}
+
+function setLoyaltyBusy(btn, busy) {
+    loyaltyState.busy = busy;
+    document.querySelectorAll('#pointsSection button').forEach(b => {
+        if (busy) b.disabled = true;
+        else b.disabled = b.dataset.unaffordable === '1';
+    });
+    if (!btn) return;
+    const text = btn.querySelector('.voucher-verify-text');
+    const loader = btn.querySelector('.voucher-verify-loader');
+    if (text) text.classList.toggle('hidden', busy);
+    if (loader) loader.classList.toggle('hidden', !busy);
+}
+
+function formatLoyaltyDate(value) {
+    const date = new Date(value);
+    if (!value || isNaN(date.getTime())) return String(value || '');
+    const locale = currentLang === 'sw' ? 'sw-KE' : (currentLang === 'fr' ? 'fr-FR' : 'en-KE');
+    try {
+        return date.toLocaleDateString(locale, { day: 'numeric', month: 'short', timeZone: 'Africa/Nairobi' });
+    } catch (e) {
+        // Old engines without Intl time zones.
+        return String(value).slice(0, 10);
+    }
+}
+
+// The reward's plan as the portal knows it, for its name and duration.
+function loyaltyRewardPlan(planId) {
+    return loyaltyPlansById[planId] || loyaltyPlansById[Number(planId)] || null;
+}
+
+function renderLoyaltyBalance(data) {
+    const box = document.getElementById('pointsBalance');
+    if (!box) return;
+    const balance = Math.max(0, Number(data.balance) || 0);
+    box.textContent = '';
+
+    const card = document.createElement('div');
+    card.className = 'points-balance-card';
+    const label = document.createElement('div');
+    label.className = 'points-balance-label';
+    label.textContent = tr('pointsBalanceLabel');
+    const value = document.createElement('div');
+    value.className = 'points-balance-value';
+    value.textContent = String(balance);
+    card.append(label, value);
+
+    const expiring = data.expiring;
+    if (expiring && Number(expiring.points) > 0 && expiring.on) {
+        const exp = document.createElement('div');
+        exp.className = 'points-expiring';
+        exp.textContent = tr('pointsExpiring', { n: Number(expiring.points), date: formatLoyaltyDate(expiring.on) });
+        card.appendChild(exp);
+    }
+
+    const change = document.createElement('button');
+    change.type = 'button';
+    change.className = 'points-change-link';
+    change.textContent = tr('pointsChangePhone');
+    change.addEventListener('click', () => {
+        const input = document.getElementById('pointsPhoneInput');
+        resetLoyaltyResults();
+        if (input) { input.value = ''; try { input.focus(); } catch (e) { /* ignore */ } }
+    });
+    card.appendChild(change);
+    box.appendChild(card);
+
+    // The backend's list says what this customer can afford; fall back to the
+    // portal's own reward list if a reply leaves it out.
+    const rewards = (Array.isArray(data.rewards) ? data.rewards : loyaltyRewards().map(r => ({
+        plan_id: r.plan_id, points_cost: r.points_cost, affordable: balance >= Number(r.points_cost)
+    }))).filter(r => r && Number(r.points_cost) > 0 && loyaltyRewardPlan(r.plan_id));
+
+    const title = document.createElement('div');
+    title.className = 'points-rewards-title';
+    title.textContent = rewards.length ? tr('pointsRewardsTitle') : tr('pointsNoRewards');
+    box.appendChild(title);
+
+    if (rewards.length) {
+        const list = document.createElement('div');
+        list.className = 'points-reward-list';
+        rewards.forEach(r => list.appendChild(createLoyaltyRewardRow(r, balance)));
+        box.appendChild(list);
+    }
+    box.classList.remove('hidden');
+}
+
+// Reseller-typed plan names go in via textContent.
+function createLoyaltyRewardRow(reward, balance) {
+    const raw = loyaltyRewardPlan(reward.plan_id);
+    const cost = Number(reward.points_cost);
+    const affordable = reward.affordable === undefined ? balance >= cost : Boolean(reward.affordable);
+    const duration = formatDuration(raw.duration_value, raw.duration_unit);
+    const name = planNameLine({ name: raw.name, duration }) || duration;
+
+    const row = document.createElement('div');
+    row.className = 'points-reward' + (affordable ? '' : ' is-locked');
+    row.dataset.planId = String(reward.plan_id);
+
+    const text = document.createElement('div');
+    text.className = 'points-reward-text';
+    const nameEl = document.createElement('span');
+    nameEl.className = 'points-reward-name';
+    nameEl.textContent = name;
+    const sub = document.createElement('span');
+    sub.className = 'points-reward-sub';
+    const speed = portalSettings.show_plan_speed !== false && raw.speed ? formatSpeed(raw.speed) : '';
+    const parts = [name !== duration ? duration : '', speed, tr('pointsCost', { n: cost })];
+    if (!affordable) parts.push(tr('pointsNeedMore', { n: Math.max(0, cost - balance) }));
+    sub.textContent = parts.filter(Boolean).join(' · ');
+    text.append(nameEl, sub);
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'voucher-verify-btn points-redeem-btn';
+    btn.disabled = !affordable;
+    if (!affordable) btn.dataset.unaffordable = '1';
+    btn.innerHTML = '<span class="voucher-verify-text"></span>'
+        + '<span class="voucher-verify-loader hidden"><span class="loader-spinner"></span></span>';
+    btn.querySelector('.voucher-verify-text').textContent = tr('pointsRedeem');
+    btn.addEventListener('click', () => loyaltyRedeem({ plan_id: reward.plan_id, points_cost: cost }, btn));
+
+    row.append(text, btn);
+    return row;
+}
+
+// The plan object the payment flow expects (duration, speed, price).
+function loyaltyPlanForPolling(planId) {
+    const known = allPlans.find(p => Number(p.id) === Number(planId));
+    if (known) return known;
+    const raw = loyaltyRewardPlan(planId) || {};
+    return {
+        id: planId,
+        name: typeof raw.name === 'string' ? raw.name.trim() : '',
+        duration: raw.duration_value ? formatDuration(raw.duration_value, raw.duration_unit) : '',
+        speed: raw.speed ? formatSpeed(raw.speed) : '',
+        price: '',
+        maxDevices: 1,
+        originalData: raw
+    };
+}
+
+// The processing screen is worded for a mobile-money prompt; while a
+// redeemed plan connects it talks about points instead. Returns an undo.
+function useRedemptionProcessingCopy() {
+    const labels = [document.querySelector('#step1 .step-label'), document.querySelector('#step2 .step-label')];
+    const before = labels.map(el => (el ? el.textContent : null));
+    const after = [tr('pointsStepUsed'), tr('pointsStepApproved')];
+    labels.forEach((el, i) => { if (el) el.textContent = after[i]; });
+    const tip = document.querySelector('#processingSection .processing-tip-box');
+    const tipWasHidden = !tip || tip.classList.contains('hidden');
+    if (tip) tip.classList.add('hidden');
+    return () => {
+        labels.forEach((el, i) => { if (el && before[i] !== null) el.textContent = before[i]; });
+        if (tip && !tipWasHidden) tip.classList.remove('hidden');
+    };
+}
+
+async function startLoyaltyActivation(reward, data) {
+    const plan = loyaltyPlanForPolling(reward.plan_id);
+    const phone = loyaltyState.phone;
+    pendingLoyaltyRedemption = {
+        points: Number(reward.points_cost),
+        balance: loyaltyNumber(data.balance)
+    };
+
+    hideSection(plansSection);
+    hideSection(paymentSection);
+    showSection(processingSection);
+    if (processingTitle) processingTitle.textContent = tr('pointsActivating');
+    if (processingSubtext) processingSubtext.textContent = tr('pointsActivatingSub');
+    if (processingPlanInfo) {
+        const planName = planNameLine(plan) || plan.duration;
+        processingPlanInfo.innerHTML = `
+            <div class="processing-plan-row">
+                <span class="processing-plan-label">Plan</span>
+                <span class="processing-plan-value">${escapeHtml(planName)}</span>
+            </div>
+            <div class="processing-plan-row">
+                <span class="processing-plan-label">${escapeHtml(tr('pointsPaidWith'))}</span>
+                <span class="processing-plan-value">${escapeHtml(tr('pointsUsed', { n: reward.points_cost }))}</span>
+            </div>
+            <div class="processing-plan-row">
+                <span class="processing-plan-label">Phone</span>
+                <span class="processing-plan-value">${escapeHtml(formatPhoneForPaymentProvider(phone))}</span>
+            </div>
+        `;
+    }
+    const restoreCopy = useRedemptionProcessingCopy();
+    updateProcessingSteps(2);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    try {
+        await pollPaymentStatusAndLogin(data.customer_id, phone, plan, true);
+    } catch (err) {
+        // The points are spent; never suggest redeeming again. Point the
+        // customer at Reconnect, which finds the plan by phone number.
+        console.warn('⚠️ [LOYALTY] Redeemed plan not confirmed yet:', err && err.message);
+        pendingLoyaltyRedemption = null;
+        hideSection(processingSection);
+        showSection(plansSection);
+        resetLoyaltyResults();
+        showLoyaltyMessage(tr('pointsActivateSlow'));
+        const section = document.getElementById('pointsSection');
+        if (section && section.scrollIntoView) section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } finally {
+        restoreCopy();
+    }
+}
+
+// "You earned 5 points. Balance 25." on the success screen, from payment-status
+// loyalty {earned, balance}; or, after a redemption, what the points paid for.
+// Safe to call on every status poll: it keeps one line up to date.
+function renderLoyaltySuccess(data) {
+    const container = document.getElementById('connectionDetails');
+    if (!container) return;
+    const info = data && data.loyalty;
+    const earned = info ? loyaltyNumber(info.earned) || 0 : 0;
+    const balance = info ? loyaltyNumber(info.balance) : null;
+
+    let text = '';
+    if (pendingLoyaltyRedemption) {
+        const left = balance !== null ? balance : pendingLoyaltyRedemption.balance;
+        if (left !== null) {
+            text = tr('pointsRedeemed', { n: pendingLoyaltyRedemption.points, balance: left });
+        }
+    } else if (earned > 0 && balance !== null) {
+        text = earned === 1
+            ? tr('pointsEarnedOne', { balance })
+            : tr('pointsEarned', { earned, balance });
+    }
+    if (!text) return;
+
+    let note = document.getElementById('pointsSuccessNote');
+    if (!note || !container.contains(note)) {
+        note = document.createElement('div');
+        note.id = 'pointsSuccessNote';
+        note.className = 'points-success-note';
+        container.appendChild(note);
+    }
+    note.textContent = '⭐ ' + text;
+}
+
+// ========================================
 // RECONNECT: API CALL
 // POST /api/public/reconnect
 // voucher_code accepts any code (voucher / access code / receipt); the
@@ -3616,7 +4282,8 @@ function setupEventListeners() {
 // ========================================
 async function handlePayment(e) {
     e.preventDefault();
-    
+    pendingLoyaltyRedemption = null; // a paid plan earns points, it did not spend them
+
     const phoneNumber = phoneNumberInput.value.trim();
     
     // Basic validation
@@ -4211,6 +4878,7 @@ function showAuthenticatedMessage(phoneNumber, plan, data, isRadiusAutoLogin = f
         if (data && data.access_code) {
             renderAccessCodeCard(connectionDetails, data.access_code, data.max_devices);
         }
+        renderLoyaltySuccess(data);
     }
     
     // Populate success page ads from the global ads data
@@ -4344,6 +5012,9 @@ async function waitForRouterAccess(customerId) {
             });
             if (!response.ok) continue;
             const data = await response.json();
+            // Points are awarded by a sweep shortly after the payment, so they
+            // can show up on a later status poll than the one that said active.
+            if (data && data.loyalty) renderLoyaltySuccess(data);
             const delivery = data.delivery;
             if (!delivery) {
                 // No delivery record to follow (older path): fall back to a

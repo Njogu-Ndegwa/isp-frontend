@@ -1209,6 +1209,155 @@ body::before {
     margin-top: var(--space-sm);
 }
 
+/* ========================================
+   Loyalty points — "Use my points" (reuses the voucher card) and the
+   "or 150 pts" line on plan cards that are rewards. Theme colours only.
+   ======================================== */
+.plan-points-cost {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--primary);
+    background: rgba(var(--primary-rgb), 0.1);
+    border-radius: var(--radius-full);
+    padding: 2px 10px;
+    margin: -2px 0 var(--space-sm);
+    line-height: 1.4;
+}
+
+/* Same look as the voucher card's title, under its own name. */
+.points-header-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.points-header-subtitle {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.points-section .voucher-input {
+    letter-spacing: 1px;
+}
+
+.points-code-step {
+    margin-top: var(--space-md);
+}
+
+.points-code-hint {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: 0 0 var(--space-sm);
+}
+
+.points-balance {
+    margin-top: var(--space-md);
+}
+
+.points-balance-card {
+    text-align: center;
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.12) 0%, rgba(var(--accent-rgb), 0.04) 100%);
+}
+
+.points-balance-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.points-balance-value {
+    font-family: 'Outfit', sans-serif;
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: var(--primary);
+    line-height: 1.1;
+}
+
+.points-expiring {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+.points-change-link {
+    margin-top: var(--space-sm);
+    background: none;
+    border: none;
+    padding: 4px;
+    font-family: inherit;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.points-rewards-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: var(--space-md) 0 var(--space-sm);
+}
+
+.points-reward-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.points-reward {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    border: 2px solid rgba(var(--accent-rgb), 0.3);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+}
+
+.points-reward.is-locked {
+    opacity: 0.7;
+}
+
+.points-reward-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.points-reward-name {
+    font-weight: 700;
+    color: var(--text);
+    overflow-wrap: anywhere;
+}
+
+.points-reward-sub {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.points-reward .points-redeem-btn {
+    flex-shrink: 0;
+    width: auto;
+    min-height: 40px;
+    padding: var(--space-sm) var(--space-md);
+}
+
+.points-success-note {
+    margin-top: 14px;
+    padding: 12px;
+    border-radius: 8px;
+    background: rgba(var(--accent-rgb), 0.12);
+    color: var(--text);
+    font-weight: 600;
+    text-align: center;
+}
+
 /* OR Divider between voucher and plans */
 .section-divider {
     display: flex;

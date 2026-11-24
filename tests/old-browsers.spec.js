@@ -48,7 +48,7 @@ test('a modern browser loads only the modern scripts', async ({ page }) => {
     await page.goto(OPEN);
     await expect(page.locator('#plansGrid .plan-card')).toHaveCount(1);
     const scripts = await scriptsLoaded(page);
-    expect(scripts).toEqual(['script.js?v=20', 'script003.js', 'spots.js?v=3', 'device-pairing.js?v=2', 'access-login.js']);
+    expect(scripts).toEqual(['script.js?v=21', 'script003.js', 'spots.js?v=3', 'device-pairing.js?v=2', 'access-login.js']);
 });
 
 test('an old browser gets only the compiled scripts, and the plans show', async ({ page }) => {

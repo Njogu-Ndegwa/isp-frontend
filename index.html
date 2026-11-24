@@ -154,7 +154,7 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Outfit:wght@600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <!-- Fallback for no-JS -->
     <noscript><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Outfit:wght@600;700&display=swap" rel="stylesheet"></noscript>
-    <link rel="stylesheet" href="styles003.css?v=21">
+    <link rel="stylesheet" href="styles003.css?v=22">
     
 </head>
 <body>
@@ -355,6 +355,65 @@
                         <div class="voucher-result hidden" id="voucherResult">
                             <!-- Populated by JS: error message or device-limit panel -->
                         </div>
+                    </div>
+                </div>
+
+                <!-- Loyalty points: "Use my points". Shown by renderLoyaltySection()
+                     only when the portal payload has loyalty.enabled; stays hidden
+                     otherwise, including on backends that never send the field. -->
+                <div class="voucher-section points-section hidden" id="pointsSection">
+                    <div class="voucher-header">
+                        <span class="voucher-header-icon" aria-hidden="true">⭐</span>
+                        <div class="voucher-header-text">
+                            <div class="points-header-title" data-i18n="pointsTitle">Use my points</div>
+                            <div class="points-header-subtitle" id="pointsEarnHint"></div>
+                        </div>
+                    </div>
+                    <div class="voucher-body">
+                        <div class="voucher-input-group">
+                            <input
+                                type="tel"
+                                id="pointsPhoneInput"
+                                class="voucher-input points-input"
+                                placeholder="Phone number you pay with"
+                                data-i18n-placeholder="pointsPhonePlaceholder"
+                                aria-label="Phone number"
+                                maxlength="15"
+                                autocomplete="tel"
+                                inputmode="numeric"
+                            >
+                            <button type="button" class="voucher-verify-btn" id="pointsCheckBtn">
+                                <span class="voucher-verify-text" data-i18n="pointsCheck">Check</span>
+                                <span class="voucher-verify-loader hidden"><span class="loader-spinner"></span></span>
+                            </button>
+                        </div>
+
+                        <!-- SMS code, asked for when this is not the device the customer pays with -->
+                        <div class="points-code-step hidden" id="pointsCodeStep">
+                            <p class="points-code-hint" id="pointsCodeHint"></p>
+                            <div class="voucher-input-group">
+                                <input
+                                    type="text"
+                                    id="pointsCodeInput"
+                                    class="voucher-input points-input"
+                                    placeholder="6-digit code"
+                                    data-i18n-placeholder="pointsCodePlaceholder"
+                                    aria-label="SMS code"
+                                    maxlength="6"
+                                    inputmode="numeric"
+                                    autocomplete="one-time-code"
+                                >
+                                <button type="button" class="voucher-verify-btn" id="pointsCodeBtn">
+                                    <span class="voucher-verify-text" data-i18n="pointsCodeConfirm">Confirm</span>
+                                    <span class="voucher-verify-loader hidden"><span class="loader-spinner"></span></span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Balance + rewards, filled by renderLoyaltyBalance() -->
+                        <div class="points-balance hidden" id="pointsBalance"></div>
+
+                        <div class="voucher-result hidden" id="pointsResult" role="alert"></div>
                     </div>
                 </div>
 
@@ -992,7 +1051,7 @@
         if (window.__legacyPortal) {
             document.write(
                 '<script src="legacy/polyfills.js?v=1" defer><\/script>' +
-                '<script src="legacy/script.js?v=20" defer><\/script>' +
+                '<script src="legacy/script.js?v=21" defer><\/script>' +
                 '<script src="legacy/script003.js" defer><\/script>' +
                 '<script src="legacy/spots.js?v=3" defer><\/script>' +
                 '<script src="legacy/device-pairing.js?v=2" defer><\/script>' +
@@ -1001,7 +1060,7 @@
             );
         }
     </script>
-    <script src="script.js?v=20" defer></script>
+    <script src="script.js?v=21" defer></script>
     <script src="script003.js" defer></script>
     <script src="spots.js?v=3" defer></script>
     <script src="device-pairing.js?v=2" defer></script>
