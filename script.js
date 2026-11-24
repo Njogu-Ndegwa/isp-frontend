@@ -350,6 +350,10 @@ function _showDevPreviewBadge() {
 // GET /api/public/portal/{identity}
 // ========================================
 async function fetchPortalData(identity) {
+    // Dashboard preview (index.html, ?preview=1 inside a frame): the data comes
+    // from the dashboard, never from the API.
+    if (window.__portalPreview) return window.__portalPreview.data;
+
     // Demo mode shortcut — set via demo.html redirect.  No badge, silent.
     try {
         const _demoRaw = sessionStorage.getItem('__DEMO_PORTAL__');
@@ -836,6 +840,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (logoEl && !logoEl.textContent.trim()) {
                 logoEl.textContent = 'WiFi Portal';
             }
+            if (window.__portalPreview) window.__portalPreview.rendered();
         });
     
     setupEventListeners();
