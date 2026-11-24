@@ -1323,6 +1323,16 @@ const I18N = {
         statusCheckNoCharge: 'Checking the status will not start another payment or charge.',
         waitingConfirmation: 'Waiting for confirmation',
         providerPaymentFailed: 'The payment provider confirmed that this payment did not complete. If money was deducted, contact support before trying again.',
+        mpesaFail_insufficient_balance: 'Your M-Pesa balance is too low for this plan. Top up M-Pesa, then try again.',
+        mpesaFail_repeat_too_soon: 'M-Pesa blocked a repeat of the same amount. Wait 2 minutes, then try again.',
+        mpesaFail_phone_busy: 'Your phone was busy with another M-Pesa request. Wait a minute, then try again.',
+        mpesaFail_expired: 'The M-Pesa prompt expired before it was answered. Try again and enter your PIN as soon as the prompt shows.',
+        mpesaFail_prompt_not_sent: 'M-Pesa could not send the prompt to your phone. Try again in a moment.',
+        mpesaFail_cancelled: 'The M-Pesa prompt was cancelled on your phone. Try again when you are ready and enter your PIN.',
+        mpesaFail_phone_unreachable: 'M-Pesa could not reach your phone. Check the number, keep the phone on and unlocked with network, then try again.',
+        mpesaFail_no_pin_entered: 'The PIN was not entered on the M-Pesa prompt. Try again and enter your PIN when the prompt shows.',
+        mpesaFail_wrong_pin: 'The M-Pesa PIN was wrong. Try again and enter your PIN carefully.',
+        mpesaFail_pin_locked: 'Your M-Pesa PIN is locked after too many wrong tries. Contact Safaricom to unlock it, then try again.',
         choosePlan: 'Choose Your Plan',
         enterPhone: 'Enter Phone Number',
         pay: 'Pay & Connect',
@@ -1386,6 +1396,16 @@ const I18N = {
         connectingSlow: "This is taking longer than usual. Wait a minute, then tap Start Browsing. If pages still don't load, turn WiFi off and on.",
     },
     sw: {
+        mpesaFail_insufficient_balance: 'Salio lako la M-Pesa halitoshi kwa mpango huu. Ongeza salio la M-Pesa, kisha ujaribu tena.',
+        mpesaFail_repeat_too_soon: 'M-Pesa imezuia kiasi kilekile kulipwa tena haraka. Subiri dakika 2, kisha ujaribu tena.',
+        mpesaFail_phone_busy: 'Simu yako ilikuwa na ombi lingine la M-Pesa. Subiri dakika moja, kisha ujaribu tena.',
+        mpesaFail_expired: 'Ombi la M-Pesa liliisha muda kabla ya kujibiwa. Jaribu tena na uweke PIN yako mara ombi linapotokea.',
+        mpesaFail_prompt_not_sent: 'M-Pesa haikuweza kutuma ombi kwenye simu yako. Jaribu tena baada ya muda mfupi.',
+        mpesaFail_cancelled: 'Ombi la M-Pesa lilighairiwa kwenye simu yako. Jaribu tena ukiwa tayari na uweke PIN yako.',
+        mpesaFail_phone_unreachable: 'M-Pesa haikuweza kufikia simu yako. Hakikisha nambari ni sahihi, simu imewashwa, haijafungwa na ina mtandao, kisha ujaribu tena.',
+        mpesaFail_no_pin_entered: 'PIN haikuwekwa kwenye ombi la M-Pesa. Jaribu tena na uweke PIN yako ombi linapotokea.',
+        mpesaFail_wrong_pin: 'PIN ya M-Pesa haikuwa sahihi. Jaribu tena na uweke PIN yako kwa makini.',
+        mpesaFail_pin_locked: 'PIN yako ya M-Pesa imefungwa baada ya majaribio mengi yasiyo sahihi. Wasiliana na Safaricom ili uifungue, kisha ujaribu tena.',
         choosePlan: 'Chagua Mpango',
         enterPhone: 'Ingiza Nambari ya Simu',
         pay: 'Lipa & Unganisha',
@@ -3903,6 +3923,14 @@ async function pollPaymentStatusAndLogin(customerId, phoneNumber, plan, knownPay
                     reject(new Error(tr('providerPaymentFailed')));
                     return;
                 }
+                // M-Pesa confirmed this prompt failed (wrong PIN, cancelled, phone
+                // not reached...): stop waiting and say why. The backend sends
+                // mpesa_failure only for a confirmed failure, never a timeout.
+                if (!isFapshi && data.status !== 'active' && data.mpesa_failure) {
+                    clearInterval(pollInterval);
+                    reject(new Error(mpesaFailureMessage(data.mpesa_failure)));
+                    return;
+                }
                 if (isFapshi && data.payment_review_required && data.status !== 'active') {
                     clearInterval(pollInterval);
                     reject(stillPending());
@@ -4022,6 +4050,16 @@ async function pollPaymentStatusAndLogin(customerId, phoneNumber, plan, knownPay
             }
         }, PAYMENT_POLL_INTERVAL);
     });
+}
+
+// Why M-Pesa refused the prompt and what to do, in the portal's language.
+// Falls back to the backend's English words for a reason the portal has no
+// translation for yet.
+function mpesaFailureMessage(failure) {
+    const key = 'mpesaFail_' + String(failure.reason_key || '');
+    if (I18N.en[key] !== undefined) return tr(key);
+    const text = [failure.reason, failure.next_step].filter(Boolean).join(' ');
+    return text || tr('providerPaymentFailed');
 }
 
 function showUnconfirmedPayment(error) {

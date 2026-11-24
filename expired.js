@@ -312,7 +312,9 @@
                     var p = s.payment;
                     if (state.promptAt && p && p.status === 'failed') {
                         state.promptAt = 0;
-                        promptDone(p.result_desc ? 'Payment not completed: ' + p.result_desc : 'Payment not completed. Try again.');
+                        var f = p.failure;
+                        promptDone(f && f.reason ? 'Payment not completed. ' + f.reason + (f.next_step ? ' ' + f.next_step : '')
+                            : p.result_desc ? 'Payment not completed: ' + p.result_desc : 'Payment not completed. Try again.');
                     } else if (state.promptAt && Date.now() - state.promptAt > PROMPT_WAIT_MS) {
                         state.promptAt = 0;
                         promptDone("We haven't received the payment yet. If you paid, this page updates when it arrives.");

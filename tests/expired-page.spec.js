@@ -122,6 +122,21 @@ test('blank phone uses the number on file; a failed prompt can be retried', asyn
     expect(calls.pay[0]).toEqual({ router_id: 42, username: 'jane', plan_id: 11, phone: null });
 });
 
+test('a failed prompt says why M-Pesa refused it and what to do', async ({ page }) => {
+    await mockApi(page, {
+        statuses: [{ online: false, payment: { status: 'failed', result_desc: 'The initiator information is invalid.',
+            failure: { reason_key: 'wrong_pin', reason: 'The M-Pesa PIN was wrong.', next_step: 'Try again and enter your PIN carefully.' } } }],
+    });
+    await page.goto(PAGE + 'r=42&u=jane');
+    await expect(page.locator('.x-plan')).toHaveCount(2);
+
+    await page.click('#payBtn');
+
+    await expect(page.locator('#payError')).toContainText('The M-Pesa PIN was wrong. Try again and enter your PIN carefully.', { timeout: 10_000 });
+    await expect(page.locator('#payError')).not.toContainText('initiator');
+    await expect(page.locator('#payBtn')).toBeEnabled();
+});
+
 test('without a username the page asks for the account, then loads it', async ({ page }) => {
     const calls = await mockApi(page, {
         data: (u) => (u ? pageData() : pageData({ customer: null, lookup: 'none' })),
