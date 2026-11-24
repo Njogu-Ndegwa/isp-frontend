@@ -33,6 +33,10 @@ function payload(theme) {
 // frames it cross-origin.
 async function openHost(page, hostHost, data) {
     const portalHost = hostHost === 'localhost' ? '127.0.0.1' : 'localhost';
+    return openPage(page, `http://${hostHost}:${PORT}`, `http://${portalHost}:${PORT}`, data);
+}
+
+async function openPage(page, hostOrigin, portalOrigin, data) {
     const apiCalls = [];
     page.on('request', req => {
         const url = req.url();
@@ -41,8 +45,8 @@ async function openHost(page, hostHost, data) {
     // Nothing may leave the test, even if preview mode were broken.
     await page.route(/\/api\/|bitwavetechnologies\.(com|net)/, route => route.abort());
     await page.addInitScript(d => { window.previewData = d; }, data);
-    const portal = encodeURIComponent(`http://${portalHost}:${PORT}/?preview=1`);
-    await page.goto(`http://${hostHost}:${PORT}/tests/fixtures/preview-host?portal=${portal}`);
+    const portal = encodeURIComponent(`${portalOrigin}/?preview=1`);
+    await page.goto(`${hostOrigin}/tests/fixtures/preview-host?portal=${portal}`);
     return { apiCalls, frame: page.frameLocator('#f') };
 }
 
@@ -80,7 +84,14 @@ test('loyalty points render from the posted data, and checking a balance stays o
 });
 
 test('ignores data posted by a site that is not the dashboard', async ({ page }) => {
-    const { apiCalls, frame } = await openHost(page, '[::1]', payload('ocean_blue'));
+    // Two made-up public hosts, both served by the test server: a public page
+    // may not frame a local one (Chrome's local network access rules).
+    await page.route(/^http:\/\/(not-the-dashboard|portal)\.example\//, async route => {
+        const url = route.request().url().replace(/^http:\/\/[^/]+/, `http://127.0.0.1:${PORT}`);
+        await route.fulfill({ response: await route.fetch({ url }) });
+    });
+    const { apiCalls, frame } = await openPage(page, 'http://not-the-dashboard.example', 'http://portal.example',
+        payload('ocean_blue'));
     await page.waitForTimeout(1500);
     await expect(frame.locator('#plansGrid .plan-card')).toHaveCount(0);
     await expect.poll(() => page.evaluate(() => window.events)).toEqual(['bw-portal-preview:ready']);
