@@ -792,6 +792,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // ---- Ads (store for spots.js to consume) ----
             window._portalAds = Array.isArray(data.ads) ? data.ads : [];
+            // A photo (hero) header carries the login page's only ads: spots.js
+            // keeps the deals row and form mini-ads off when this is set.
+            window._portalHeroHeader = !!(data.portal_settings && data.portal_settings.header_style === 'hero');
             console.log('✅ [PORTAL] Ads received:', window._portalAds.length);
 
             return data;
@@ -1228,10 +1231,11 @@ function applyFeatureFlags(settings) {
 
     const adsSection = document.getElementById('spots-section');
     if (adsSection) {
-        // With hero ads the login page's ads live in the hero (spots.js), so
-        // the showcase above the plans stays hidden.
+        // A photo (hero) header carries the login page's only ads: hero ads
+        // rotate inside it (spots.js), and the deals row above the plans is
+        // never shown under it, with or without hero ads (Dennis, 24 Nov).
         const portalAds = window._portalAds || [];
-        const heroMode = portalAds.some(ad => ad && ad.placement === 'hero');
+        const heroMode = settings.header_style === 'hero' || portalAds.some(ad => ad && ad.placement === 'hero');
         const showAds = settings.show_ads && !heroMode && portalAds.length > 0;
         // Only ever hides: spots.js shows it once it has cards to put in it.
         if (!showAds) adsSection.style.display = 'none';
@@ -1698,6 +1702,7 @@ function applyLanguage(lang) {
 // ========================================
 function applyPortalSettings(settings) {
     portalSettings = settings; // keep global in sync (covers startup-cache path)
+    window._portalHeroHeader = settings.header_style === 'hero';
     applyTheme(settings.color_theme || 'sunset_orange');
     // Persist the full settings object so the next page load renders
     // the correct theme, header style, branding, and feature flags

@@ -290,6 +290,8 @@ async function fetchAds() {
             adsData = applyLocalImages(apiAds);
             if (window._portalShowAds === false) {
                 hideAdSections();
+            } else if (heroHeaderOn()) {
+                keepLoginPageAdsInHero();
             } else {
                 showAdSections();
                 renderAds(adsData);
@@ -799,8 +801,8 @@ function populateMiniProducts() {
     if (!container) return;
 
     // Hero mode keeps the phone-number form free of ads; the sponsor plays
-    // on the processing screen instead.
-    if (window._heroAdsActive) {
+    // on the processing screen instead. A photo header does the same.
+    if (window._heroAdsActive || heroHeaderOn()) {
         if (paymentAdSection) paymentAdSection.style.display = 'none';
         return;
     }
@@ -884,6 +886,20 @@ const heroRot = { idx: 0, timer: null, stopWatching: null, seen: new Set(), seen
 
 function adEsc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// A photo (hero) header: the login page shows no deals row and no mini-ads on
+// the phone-number form, only hero ads inside the header. Local ads still show
+// on the success page once the customer is online.
+function heroHeaderOn() {
+    return window._portalHeroHeader === true;
+}
+
+function keepLoginPageAdsInHero() {
+    ['.spots-showcase', '.pay-spot'].forEach(selector => {
+        const section = document.querySelector(selector);
+        if (section) section.style.display = 'none';
+    });
 }
 
 function adPlacement(ad) {
@@ -1408,6 +1424,12 @@ function initAdsFromPortalData(rawAds) {
             const showcase = document.querySelector('.spots-showcase');
             if (showcase) showcase.style.display = 'none';
             console.log('✅ [ADS] Hero ads:', heroAds.length, '| local ads:', adsData.length);
+            return;
+        }
+        if (heroHeaderOn()) {
+            // Photo header without hero ads: nothing under it on the login page.
+            keepLoginPageAdsInHero();
+            console.log('✅ [ADS] Hero header: local ads kept for the success page:', adsData.length);
             return;
         }
         showAdSections();
