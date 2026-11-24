@@ -106,3 +106,20 @@ test('hero ads: no slide asks customers to advertise, and the label stays', asyn
     await page.locator('#portal-header .hero-seg[data-go="1"]').click();
     await shot(page, 'spots-hero-mobile');
 });
+
+test('hero header with only local ads: no deals row or form ads under the photo header', async ({ page }) => {
+    // Dennis, 24 Nov: a photo (hero) header carries the login page's only ads. Local
+    // (deals) ads stay for the success page once the customer is online.
+    await open(page, portal([LOCAL], { header_style: 'hero' }));
+    await expect(page.locator('.portal-header--hero')).toBeVisible();
+    await expect(page.locator('#spots-section')).toBeHidden();
+    await expect(page.locator('.showcase-badge')).toBeHidden();
+    await expect(page.locator('.pay-spot')).toBeHidden();
+    await expect(page.locator('#mpesaQuickSteps')).toBeVisible();
+    await shot(page, 'hero-header-local-ads-mobile');
+});
+
+test('standard header with local ads still shows the deals row', async ({ page }) => {
+    await open(page, portal([LOCAL], { header_style: 'standard' }));
+    await expect(page.locator('#spots-section')).toBeVisible();
+});
